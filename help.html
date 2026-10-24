@@ -1,0 +1,97 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/png" href="assets/favicon-32.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/style.css"><script>try{document.documentElement.dataset.theme=localStorage.getItem("viora_theme")||"dark"}catch(e){}</script>
+
+<title>Help center — Viora</title>
+<meta name="description" content="Guides, answers and troubleshooting for the Viora AI browser extension.">
+</head>
+<body data-page="help">
+<header id="site-header"></header>
+<main class="wrap">
+  <section class="help-hero">
+    <span class="eyebrow">Help center</span>
+    <h1>How can we <span class="grad-text">help</span>?</h1>
+    <p>Search guides and answers, or browse by topic.</p>
+    <div class="search"><span data-i="search"></span><input id="help-search" type="search" placeholder="Search: backup, agents, microphone…  (press / to focus)" aria-label="Search the help center" autocomplete="off"></div>
+    <div class="chips" role="group" aria-label="Topics"><button class="chip" data-cat="all" aria-pressed="true" type="button">All topics</button><button class="chip" data-cat="assistants" aria-pressed="false" type="button">Assistants</button><button class="chip" data-cat="agents" aria-pressed="false" type="button">Agents &amp; memory</button><button class="chip" data-cat="automate" aria-pressed="false" type="button">Automate &amp; Linux</button><button class="chip" data-cat="humanizer" aria-pressed="false" type="button">Humanizer</button><button class="chip" data-cat="backup" aria-pressed="false" type="button">Account &amp; backup</button><button class="chip" data-cat="troubleshooting" aria-pressed="false" type="button">Troubleshooting</button></div>
+  </section>
+
+  <div class="help-grid">
+    <nav class="toc" aria-label="On this page"><h4>On this page</h4>
+      <a href="#start">Get started</a><a href="#faq">Questions &amp; answers</a><a href="#troubleshooting">Troubleshooting</a><a href="#contact">Contact us</a></nav>
+    <div>
+      <section class="help-sec" id="start">
+        <h2>Get started in four steps</h2><p class="lead">From zero to your first answer.</p>
+        <div class="quick">
+          <div class="qcard" id="install"><div class="num">1</div><div><b>Install Viora</b><span>Add the extension to Chrome (version 116 or newer). No key or setup needed.</span></div></div>
+          <div class="qcard"><div class="num">2</div><div><b>Open the panel</b><span>Click the Viora icon or press <span class="code">Ctrl</span>+<span class="code">Shift</span>+<span class="code">Y</span>.</span></div></div>
+          <div class="qcard"><div class="num">3</div><div><b>Choose an assistant</b><span>Tap the pill next to the name to switch between Flash, Deep Search and the rest.</span></div></div>
+          <div class="qcard"><div class="num">4</div><div><b>Ask anything</b><span>Type, talk with the mic, or attach a file, page or image with the <b>+</b> menu.</span></div></div>
+        </div>
+        <p style="margin-top:18px"><a class="btn btn-primary" data-install href="#"><span data-i="download"></span>Add to Chrome</a></p>
+      </section>
+
+      <section class="help-sec" id="faq">
+        <h2>Questions &amp; answers</h2><p class="lead">Tap a question to expand it.</p>
+        <div id="help-empty" class="empty"><b>No matches.</b><br>Try a different word, or <a href="#contact" style="color:#9b86ff;text-decoration:underline">ask us directly</a>.</div>
+        <div class="group" id="g-assistants"><h3 class="group-title"><span data-i="zap"></span>Assistants</h3><div class="faq-list">
+<details class="q" data-cat="assistants"><summary>Which assistant should I use?<span data-i="chev"></span></summary><div class="ans"><p>Use <b>Flash</b> for everyday questions, <b>Deep Search</b> when you want sources and fresh facts, <b>Math &amp; Code</b> for calculations and programming, <b>Automate</b> to act on a web page, and <b>Humanizer</b> to rewrite AI-sounding text.</p><p>Switch with the pill next to the Viora name at the top of the panel.</p></div></details>
+<details class="q" data-cat="assistants"><summary>Why does an answer show sources sometimes and not others?<span data-i="chev"></span></summary><div class="ans"><p>Sources appear only when the answer really used the web. Small talk, writing jobs, simple maths and code questions skip the search. Deep Search always researches.</p><p>Open the <b>…</b> menu under a reply and choose <b>Sources</b> to see the numbered list.</p></div></details>
+<details class="q" data-cat="assistants"><summary>Can I send a message while Viora is still answering?<span data-i="chev"></span></summary><div class="ans"><p>Yes. Press Enter and Viora keeps your message and sends it as soon as the current answer finishes. Only the Stop button ends an answer.</p></div></details>
+<details class="q" data-cat="assistants"><summary>Does it keep working if I close the panel?<span data-i="chev"></span></summary><div class="ans"><p>Pictures, research reports, Humanizer rewrites and ordinary chat replies keep going in the background. When they finish you get a notification, and clicking it opens the chat. <b>Automate</b> is the exception: it needs the panel open, so it pauses and saves its place if you close it.</p></div></details>
+<details class="q" data-cat="assistants"><summary>Can I edit a PDF?<span data-i="chev"></span></summary><div class="ans"><p>Attach a PDF with the <b>+</b> menu and say what to change: replace text, redact, highlight, add page numbers or a watermark, or delete, reorder, extract and rotate pages. Viora returns an edited copy to download.</p><p>Scanned (image-only) and encrypted PDFs can't be edited.</p></div></details>
+</div></div>
+<div class="group" id="g-agents"><h3 class="group-title"><span data-i="at"></span>Agents &amp; memory</h3><div class="faq-list">
+<details class="q" data-cat="agents"><summary>What are agents?<span data-i="chev"></span></summary><div class="ans"><p>Agents are specialists you create with their own name, instructions and abilities (such as searching the web or using Linux). Type <span class='code'>@</span> in any chat and pick one to summon it. You can mention several in one message and each answers in turn.</p></div></details>
+<details class="q" data-cat="agents"><summary>How do I create an agent?<span data-i="chev"></span></summary><div class="ans"><p>Open the <b>+</b> menu and choose <b>Create agent</b>, or type <span class='code'>@</span> and pick it. Viora Flash interviews you one question at a time, then writes and saves the agent for you. A built-in <span class='code'>@planner</span> turns goals into step-by-step plans.</p></div></details>
+<details class="q" data-cat="agents"><summary>What does Viora remember about me?<span data-i="chev"></span></summary><div class="ans"><p>It keeps a few lasting facts you share and a one-line note about what past chats were about, so later answers feel continuous. Everything is listed in <b>Settings</b>, where you can delete items one by one, delete all, or switch off <i>Learn from my past chats</i>.</p><p>Humanizer and Automate chats are never read for memory.</p></div></details>
+</div></div>
+<div class="group" id="g-automate"><h3 class="group-title"><span data-i="pointer"></span>Automate &amp; Linux</h3><div class="faq-list">
+<details class="q" data-cat="automate"><summary>What can Automate do?<span data-i="chev"></span></summary><div class="ans"><p>It looks at the page you're on, then clicks, types, scrolls and navigates across tabs to finish a task. Each step is verified, and a task you interrupted shows <b>Resume</b> or <b>Discard</b> next time you open Viora.</p></div></details>
+<details class="q" data-cat="automate"><summary>Will it do something I didn't approve?<span data-i="chev"></span></summary><div class="ans"><p>Clicks that look like buying, paying, sending, deleting, submitting or logging out ask first. Decline and it never clicks. Text on a web page that tries to give Viora orders is marked untrusted and refused.</p></div></details>
+<details class="q" data-cat="automate"><summary>What is the Linux option?<span data-i="chev"></span></summary><div class="ans"><p>An optional bridge that lets Viora run real shell commands on your own computer (on Windows it uses WSL). It is <b>off by default</b>. Turn it on in <b>Settings → Linux</b>, install the small helper once, and every command shows a Run / Don't run card first.</p><p>Only run security tools on machines and networks you own or have written permission to test.</p></div></details>
+</div></div>
+<div class="group" id="g-humanizer"><h3 class="group-title"><span data-i="pen"></span>Humanizer</h3><div class="faq-list">
+<details class="q" data-cat="humanizer"><summary>How do I use the Humanizer?<span data-i="chev"></span></summary><div class="ans"><p>Switch to <b>Humanizer</b>, paste your text and send. You get the same meaning, facts and structure in a more human voice. Say <i>shorter</i>, <i>more casual</i> or <i>for a school essay</i> to redo the last rewrite that way.</p></div></details>
+<details class="q" data-cat="humanizer"><summary>Can it match my own writing?<span data-i="chev"></span></summary><div class="ans"><p>Yes. Answer the short style questions the first time, or paste a writing sample in Settings. Viora measures things like sentence length and contractions, and matches those habits without copying your sentences.</p></div></details>
+<details class="q" data-cat="humanizer"><summary>Will it beat every AI detector?<span data-i="chev"></span></summary><div class="ans"><p>No tool can promise that. Viora runs its own check and can use a ZeroGPT score when available, retrying when text is flagged. Treat scores as a guide, and always read the result before you submit it.</p></div></details>
+</div></div>
+<div class="group" id="g-backup"><h3 class="group-title"><span data-i="cloud"></span>Account &amp; backup</h3><div class="faq-list">
+<details class="q" data-cat="backup"><summary>Do I need an account?<span data-i="chev"></span></summary><div class="ans"><p>No. Everything works without one. An account only adds cloud backup and syncing across devices.</p></div></details>
+<details class="q" data-cat="backup" id="backup-how"><summary>How do I back up my chats?<span data-i="chev"></span></summary><div class="ans"><p>Open Viora → <b>Settings → Account</b>, create an account or sign in, then press <b>Back up now</b>. After that, changes upload automatically about 30 seconds later, even with the panel closed. Use <b>Restore from cloud</b> on a new device.</p></div></details>
+<details class="q" data-cat="backup"><summary>What does a sync "conflict" mean?<span data-i="chev"></span></summary><div class="ans"><p>Another device backed up since this one last synced, so Viora stops instead of overwriting newer data. Press <b>Restore from cloud</b> to take the cloud copy, or <b>Back up now</b> to replace it with this device's copy.</p></div></details>
+<details class="q" data-cat="backup"><summary>Are my API keys uploaded?<span data-i="chev"></span></summary><div class="ans"><p>No. Personal API keys and per-device model memory are never part of a backup.</p></div></details>
+</div></div>
+<div class="group" id="g-troubleshooting"><h3 class="group-title"><span data-i="bug"></span>Troubleshooting</h3><div class="faq-list">
+<details class="q" data-cat="troubleshooting"><summary>The panel won't open.<span data-i="chev"></span></summary><div class="ans"><ul><li>Click the Viora icon in the toolbar. If you can't see it, open the puzzle-piece menu and pin Viora.</li><li>Try <span class='code'>Ctrl</span>+<span class='code'>Shift</span>+<span class='code'>Y</span> (<span class='code'>⌘</span>+<span class='code'>Shift</span>+<span class='code'>Y</span> on Mac). Check or change it at <span class='code'>chrome://extensions/shortcuts</span>.</li><li>You need Chrome 116 or newer.</li></ul></div></details>
+<details class="q" data-cat="troubleshooting"><summary>I see "Could not reach…" or a key was rejected.<span data-i="chev"></span></summary><div class="ans"><p>"Could not reach" means the request died before the AI provider answered, usually because of your network, a VPN or a firewall. The message includes the browser's reason, so read it.</p><p>If a provider says it rejected the API key, the built-in key may have been revoked. Add your own key in <b>Settings</b>, or use <b>Try again</b> after a moment.</p></div></details>
+<details class="q" data-cat="troubleshooting"><summary>The microphone doesn't work.<span data-i="chev"></span></summary><div class="ans"><p>Allow microphone access when the browser asks. If you blocked it, click the lock icon in the address bar and allow the microphone for Viora, then reload the panel.</p></div></details>
+<details class="q" data-cat="troubleshooting"><summary>Google sign-in failed or was cancelled.<span data-i="chev"></span></summary><div class="ans"><p>Make sure you finish the Google window and choose an account. While the sign-in app is in testing, only approved test users can sign in. Email sign-in always works as an alternative.</p></div></details>
+<details class="q" data-cat="troubleshooting"><summary>Automate stopped when I closed the panel.<span data-i="chev"></span></summary><div class="ans"><p>That's expected. Automate works through your tabs and the panel's view, so it pauses and saves its place. Reopen Viora and press <b>Resume</b>.</p></div></details>
+<details class="q" data-cat="troubleshooting"><summary>Linux commands say the helper isn't found.<span data-i="chev"></span></summary><div class="ans"><p>Run the helper installer again (Settings → Linux shows the exact command), then fully restart the browser. Streaming output and Stop need the latest helper version.</p></div></details>
+<details class="q" data-cat="troubleshooting"><summary>Something else is wrong.<span data-i="chev"></span></summary><div class="ans"><p>Press the thumbs-down or report button in Viora if you see one, or <a href='#contact'>contact us</a> with what you did, what you expected and any message shown on screen.</p></div></details>
+</div></div>
+
+      </section>
+
+      <section class="help-sec" id="troubleshooting">
+        <h2>Still stuck?</h2><p class="lead">The Troubleshooting questions above cover the most common problems. If yours isn't there, we'd like to hear about it.</p>
+      </section>
+
+      <section class="help-sec" id="contact">
+        <h2>Contact us</h2><p class="lead">A real person reads every message.</p>
+        <div class="contact">
+          <a class="c-card" data-mail href="#"><span data-i="mail"></span><b>Email support</b><span>Best for account and backup issues.</span></a>
+          <button class="c-card" id="contact-copy" type="button" style="text-align:left;cursor:pointer;color:inherit;font:inherit"><span data-i="check"></span><b>Copy our email</b><span>Paste it into your mail app.</span></button>
+          <a class="c-card" href="login.html#signup"><span data-i="user"></span><b>Manage your account</b><span>Sign in to see your details and sync info.</span></a>
+        </div>
+      </section>
+    </div>
+  </div>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/app.js"></script>
+<script>document.querySelectorAll('[data-install]').forEach(a=>a.href=VIORA.installUrl==='help.html#install'?'#install':VIORA.installUrl);document.querySelectorAll('[data-mail]').forEach(a=>a.href='mailto:'+VIORA.supportEmail)</script>
+</body>
+</html>

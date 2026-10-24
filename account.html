@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="dark">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/png" href="assets/favicon-32.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/style.css"><script>try{document.documentElement.dataset.theme=localStorage.getItem("viora_theme")||"dark"}catch(e){}</script>
+<title>Your account — Viora</title>
+<meta name="robots" content="noindex">
+</head>
+<body data-page="account">
+<header id="site-header"></header>
+<main class="wrap acct">
+  <div class="acct-head">
+    <div class="avatar" id="avatar" aria-hidden="true"></div>
+    <div><h1 id="a-name">Your account</h1><p id="a-email"></p></div>
+  </div>
+  <div class="acct-grid">
+    <section class="a-box"><h3><span data-i="user"></span>Profile</h3><p>The details tied to your Viora account.</p>
+      <dl class="kv"><dt>Name</dt><dd id="kv-name"></dd><dt>Email</dt><dd id="kv-email"></dd><dt>Sign-in</dt><dd id="kv-prov"></dd><dt>Last signed in</dt><dd id="kv-since"></dd></dl></section>
+    <section class="a-box"><h3><span data-i="cloud"></span>Backup &amp; sync</h3><p>Open Viora, go to <b>Settings → Account</b> and sign in with this email. Changes to chats, agents and settings upload automatically in the background.</p>
+      <a class="btn btn-ghost" href="help.html#g-backup">How backup works <span data-i="arrow"></span></a></section>
+    <section class="a-box"><h3><span data-i="download"></span>Get Viora</h3><p>Not installed yet, or setting up another device? Add it to your browser in a few clicks.</p>
+      <a class="btn btn-primary" data-install href="#"><span data-i="download"></span>Add to Chrome</a></section>
+    <section class="a-box"><h3><span data-i="help"></span>Need a hand?</h3><p>Guides, troubleshooting and answers to common questions.</p>
+      <a class="btn btn-ghost" href="help.html">Open the Help center <span data-i="arrow"></span></a></section>
+    <section class="a-box danger" style="grid-column:1/-1"><h3><span data-i="logout"></span>Session</h3><p>Sign out on this device, or remove the account stored in this browser.</p>
+      <div class="cta-row" style="justify-content:flex-start"><button class="btn btn-ghost" id="signout" type="button"><span data-i="logout"></span>Sign out</button><button class="btn btn-danger" id="delete" type="button"><span data-i="trash"></span>Delete account</button></div></section>
+  </div>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/app.js"></script>
+<script>document.querySelectorAll('[data-install]').forEach(a=>a.href=VIORA.installUrl)</script>
+</body>
+</html>
