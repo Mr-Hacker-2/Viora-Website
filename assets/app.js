@@ -204,7 +204,7 @@ if (page === 'login') {
   setMode(location.hash === '#signup' ? 'up' : 'in');
   $('#peek').onclick = e => { const p = $('#password'), v = p.type === 'password'; p.type = v ? 'text' : 'password'; e.currentTarget.innerHTML = ico(v ? 'eyeoff' : 'eye'); e.currentTarget.setAttribute('aria-label', v ? 'Hide password' : 'Show password'); };
   $('#password').addEventListener('input', e => { $('#meter').dataset.s = mode === 'up' ? strength(e.target.value) : 0; });
-  $('#google').onclick = () => { if (!VIORA.authApi) { show(err, 'Google sign-in needs the server connected. Use email for now.'); return; } location.href = Auth.googleUrl(); };
+  $('#google').onclick = () => { if (!VIORA.authApi) { show(err, 'Google sign-in works inside the Viora extension: open Settings → Account → Continue with Google. On the website, use email for now.'); return; } location.href = Auth.googleUrl(); };
   $('#forgot').onclick = e => { e.preventDefault(); const em = $('#email').value.trim(); if (!validEmail(em)) { show(err, 'Type your email above first, then press “Forgot password”.'); $('#email').focus(); return; } show(ok, VIORA.authApi ? 'If that email has an account, a reset link is on its way.' : 'Password reset needs the server connected. In demo mode, create a new account with a different email.'); };
   form.addEventListener('submit', async e => {
     e.preventDefault(); show(err, '');

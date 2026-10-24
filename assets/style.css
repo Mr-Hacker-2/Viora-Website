@@ -354,3 +354,10 @@ details.q .ans{padding:0 20px 20px;color:var(--muted);font-size:15.5px}
 .send{width:38px;height:38px;border-radius:50%;background:var(--grad);color:#fff;display:grid;place-items:center;flex:none}
 .send .i{width:18px;height:18px;stroke:#fff;fill:none;stroke-width:2.4}
 @media(max-width:560px){.msg{max-width:100%}.thread{min-height:230px}}
+
+/* ===== polish ===== */
+.try .f-card{border-top:2px solid var(--c)}
+.try .f-card .i{color:var(--c)}
+a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--sky);outline-offset:3px;border-radius:8px}
+@media(max-width:560px){.chips{flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:4px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}.chip-a{flex:none}.c-bar{flex-wrap:nowrap}.hero h1{font-size:clamp(30px,9vw,40px)}}
+@media(prefers-reduced-motion:reduce){.rv{opacity:1!important;transform:none!important;transition:none!important}*{animation-duration:.01ms!important}}
