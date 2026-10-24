@@ -14,22 +14,29 @@
 
 <section class="hero">
   <div class="wrap">
-    <div class="badge rv"><b>Free</b> No API key. No setup. Just install and talk.</div>
-    <h1 class="rv">One AI panel for <span class="grad-text">everything</span> you do online</h1>
-    <p class="lede rv">Viora lives in your browser. Chat fast, research the live web with sources, solve math and code, let it click and type for you, and make AI text sound like you.</p>
-    <div class="cta-row rv">
-      <a class="btn btn-primary btn-lg" href="#" data-install><span data-i="download"></span>Add to Chrome — it's free</a>
-      <a class="btn btn-ghost btn-lg" href="#assistants">Meet the assistants <span data-i="arrow"></span></a>
+    <h1 class="rv">What can I help you with?</h1>
+    <p class="lede rv">Viora is the free AI that lives in your browser. Chat, research the live web, solve math and code, automate pages and rewrite text in your voice.</p>
+    <div class="demo rv" id="demo">
+      <div class="thread" id="thread" aria-live="polite">
+        <div class="msg me" id="m-q"></div>
+        <div class="msg ai"><img src="assets/mark.png" alt="" width="26" height="26"><div id="m-a"></div></div>
+      </div>
+      <div class="composer">
+        <div class="c-input" id="c-input"></div>
+        <div class="c-bar">
+          <div class="chips" role="tablist" aria-label="Choose an assistant">
+            <button class="chip-a" role="tab" data-k="flash" style="--c:#8f7bff" aria-selected="true"><span data-i="zap"></span>Flash</button>
+            <button class="chip-a" role="tab" data-k="search" style="--c:#3b9bf0"><span data-i="search"></span>Deep Search</button>
+            <button class="chip-a" role="tab" data-k="code" style="--c:#2fc08f"><span data-i="code"></span>Math &amp; Code</button>
+            <button class="chip-a" role="tab" data-k="auto" style="--c:#ee9a2c"><span data-i="pointer"></span>Automate</button>
+            <button class="chip-a" role="tab" data-k="human" style="--c:#ee5f8b"><span data-i="pen"></span>Humanizer</button>
+          </div>
+          <a class="send" data-install href="#" aria-label="Add Viora to Chrome"><span data-i="arrow" style="transform:rotate(-90deg);display:flex"></span></a>
+        </div>
+      </div>
+      <p class="fine" style="margin-top:14px">Pick an assistant to see how it answers. Free, no API key. Open it anywhere with <kbd class="kbd">Ctrl</kbd> <kbd class="kbd">Shift</kbd> <kbd class="kbd">Y</kbd></p>
     </div>
-    <p class="fine rv">Works in Chrome 116+ and other Chromium browsers · Open it any time with <kbd class="kbd">Ctrl</kbd> <kbd class="kbd">Shift</kbd> <kbd class="kbd">Y</kbd></p>
-    <div class="orbit rv" aria-hidden="true">
-      <div class="ring"></div><div class="ring r2"></div>
-      <div class="core"><img src="assets/mark.png" alt="" width="256" height="256"></div>
-      <div class="sat" style="--c:#9b86ff"><span data-i="zap"></span></div>
-      <div class="sat" style="--c:#4aa8ff"><span data-i="search"></span></div>
-      <div class="sat" style="--c:#2fd4a0"><span data-i="code"></span></div>
-      <div class="sat" style="--c:#f0a23c"><span data-i="pointer"></span></div>
-    </div>
+    <div class="cta-row rv"><a class="btn btn-primary btn-lg" href="#" data-install><span data-i="download"></span>Add to Chrome, it's free</a><a class="btn btn-ghost btn-lg" href="#assistants">Meet the assistants</a></div>
     <div class="stats rv">
       <div class="stat"><b class="grad-text">5</b><span>built-in assistants</span></div>
       <div class="stat"><b class="grad-text">0</b><span>API keys to find</span></div>
@@ -129,6 +136,18 @@
 </main>
 <footer id="site-footer"></footer>
 <script src="assets/app.js"></script>
+<script>
+(()=>{const D={
+flash:["Plan a 3-day trip to Lisbon on a budget","Here's a relaxed plan. Day 1: Alfama on foot and a sunset at Miradouro da Graça. Day 2: Belém, then a cheap tasca lunch. Day 3: day trip to Sintra by train. Roughly €60 a day with a Viva Viagem card."],
+search:["What changed in the latest Chrome release?","I checked 6 sources. Chrome's newest stable build focuses on side-panel and security updates. Two sources disagree on the rollout date, so I've flagged both with their publication dates."],
+code:["Solve 3x² − 12 = 0 and show the steps","Add 12 to both sides: 3x² = 12. Divide by 3: x² = 4. Take the square root: x = 2 or x = −2. Check: 3(4) − 12 = 0 ✓"],
+auto:["Fill in this form with my details and stop before submitting","Found 7 fields on the page. Typed your name, email and address and checked each one by reading it back. I've paused before Submit. Say the word and I'll press it."],
+human:["Make this sound like me: “Leveraging synergies, we deliver value.”","“We work well together, and it shows in what we ship.” Kept your meaning, dropped the buzzwords, and matched your usual short sentences."]};
+const q=document.getElementById('m-q'),a=document.getElementById('m-a'),inp=document.getElementById('c-input');let t;
+function type(el,s,done){clearTimeout(t);el.textContent='';if(matchMedia('(prefers-reduced-motion:reduce)').matches){el.textContent=s;done&&done();return}let i=0;(function n(){el.textContent=s.slice(0,++i);if(i<s.length)t=setTimeout(n,14);else done&&done()})()}
+function pick(k){document.querySelectorAll('.chip-a').forEach(c=>c.setAttribute('aria-selected',c.dataset.k===k));const[d,r]=D[k];q.textContent=d;inp.textContent='Ask '+document.querySelector('.chip-a[data-k='+k+']').textContent.trim()+' anything…';a.textContent='';type(a,r)}
+document.querySelectorAll('.chip-a').forEach(c=>c.onclick=()=>pick(c.dataset.k));pick('flash');})();
+</script>
 <script>document.querySelectorAll('[data-install]').forEach(a=>a.href=VIORA.installUrl)</script>
 </body>
 </html>
