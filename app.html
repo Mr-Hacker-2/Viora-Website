@@ -139,6 +139,41 @@ dialog input[type=text],dialog input[type=search]{width:100%;background:var(--ca
 #mlist{max-height:240px;overflow:auto;margin-bottom:10px}
 @media(max-width:820px){#art{position:fixed;inset:0;width:100%;max-width:none;z-index:35}#sb{position:fixed;inset:0 auto 0 0;z-index:30;width:min(300px,86vw);margin-left:0!important;transform:translateX(-102%);transition:transform .2s}body.drawer #sb{transform:none}#open{display:grid!important}#amenu{left:8px;width:calc(100vw - 32px)}.m.u .b{max-width:92%}#main.empty #dock{padding-bottom:6vh}}
 @media(prefers-reduced-motion:reduce){*{transition:none!important;animation:none!important}}
+
+/* ---- Viora green theme (matches the extension) ---- */
+:root{--bg:#050706;--sb:#101411;--card:#171c18;--hov:#1f2621;--line:#242b26;--tx:#f2f5f3;--mu:#9aa49e;--fa:#6b756f;--vi:#4ade50;--sky:#4ade50;--on:#04130a;--grad:linear-gradient(135deg,#62e868,#2fb645);--sh:0 4px 10px rgba(0,0,0,.5),0 14px 34px rgba(0,0,0,.5)}
+:root[data-theme=light]{--bg:#eaf1ed;--sb:#fff;--card:#f1f6f3;--hov:#e3ece6;--line:#d6e0da;--tx:#13201a;--mu:#52625a;--fa:#82908a;--vi:#178a31;--sky:#178a31;--on:#fff;--grad:linear-gradient(135deg,#22a443,#178a31);--sh:0 2px 6px rgba(20,60,30,.08),0 10px 28px rgba(20,60,30,.12)}
+body{background:radial-gradient(120% 60% at 50% -10%,#1d3320 0,transparent 60%),var(--bg)}
+:root[data-theme=light] body{background:radial-gradient(120% 60% at 50% -10%,#cfeed8 0,transparent 60%),var(--bg)}
+.logo,.pick,#greet,dialog h3,.b h3,.a-h b{font-family:Inter,system-ui,sans-serif!important}
+#greet{font-weight:600}
+.btn.p,#go{color:var(--on)}#go{background:var(--vi)}
+#new{background:var(--vi);color:var(--on);font-weight:600;justify-content:center;margin:4px 0 6px}#new:hover{background:var(--vi);filter:brightness(1.1)}
+.it.on{box-shadow:inset 3px 0 var(--vi)}
+.m.u .b{background:var(--hov);border:1px solid var(--line);border-radius:18px 18px 4px 18px}
+.dots{background:var(--vi);margin-right:6px}
+.box{background:var(--sb);border-radius:18px}
+.box:focus-within{border-color:var(--vi);box-shadow:0 0 0 3px color-mix(in srgb,var(--vi) 18%,transparent)}
+.tools{flex-wrap:wrap;gap:6px}
+.tl{padding:7px 13px}.tl svg{width:16px;height:16px;fill:none;stroke:currentColor;stroke-width:1.6;stroke-linecap:round;stroke-linejoin:round}
+.mini{width:26px;height:15px;border-radius:9px;background:var(--line);position:relative;transition:.15s}
+.mini::after{content:"";position:absolute;left:2px;top:2px;width:11px;height:11px;border-radius:50%;background:var(--fa);transition:.15s}
+.tl.on .mini{background:var(--vi)}.tl.on .mini::after{transform:translateX(11px);background:var(--on)}
+.chip{background:var(--card);border:1px solid var(--line)}
+#sug{display:grid;grid-template-columns:1fr 1fr;gap:10px}
+#sug button{border-radius:14px;background:var(--sb);padding:14px 16px;line-height:1.35}
+#sug button:hover{border-color:var(--vi);color:var(--tx)}
+#toast{position:fixed;left:50%;bottom:96px;transform:translate(-50%,10px);background:var(--card);border:1px solid var(--line);padding:10px 16px;border-radius:12px;box-shadow:var(--sh);opacity:0;pointer-events:none;transition:.2s;z-index:60;max-width:90vw}
+#toast.show{opacity:1;transform:translate(-50%,0)}
+#dropov{position:fixed;inset:14px;z-index:70;display:grid;place-items:center;border:2px dashed var(--vi);border-radius:22px;background:color-mix(in srgb,var(--bg) 88%,transparent);font-size:20px;font-weight:600;color:var(--vi);pointer-events:none}
+@media(min-width:821px){
+#app{padding:14px;gap:14px}
+#sb,#main,#art{border:1px solid var(--line);border-radius:22px}
+#sb{padding:16px;background:linear-gradient(var(--sb),var(--bg))}
+#main{background:radial-gradient(circle at 50% 0,#1d2e1f,var(--bg) 62%);overflow:hidden}
+:root[data-theme=light] #main{background:radial-gradient(circle at 50% 0,#d9f0e0,#fff 62%)}
+body.off #sb{margin-left:-286px}}
+@media(max-width:560px){#sug{grid-template-columns:1fr}}
 </style>
 </head>
 <body>
@@ -177,7 +212,7 @@ dialog input[type=text],dialog input[type=search]{width:100%;background:var(--ca
         <div class="box">
           <div id="chip"></div>
           <textarea id="in" rows="1" aria-label="Message"></textarea>
-          <div class="tools"><button class="tl" id="att" type="button" title="Attach a web page">＋ Page</button><button class="tl" id="web" type="button" title="Search the web before answering">🌐 Search</button><button id="go" type="button" aria-label="Send" disabled>↑</button></div>
+          <div class="tools"><button class="tl" id="up" type="button" title="Upload files: PDF, Word, PowerPoint, text, code, CSV"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M16 9.5l-6.2 6.2a3.6 3.6 0 0 1-5.1-5.1l6.6-6.6a2.4 2.4 0 0 1 3.4 3.4l-6.6 6.6a1.2 1.2 0 0 1-1.7-1.7l6-6"/></svg> Upload</button><button class="tl" id="att" type="button" title="Read a web page from its link"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M8.5 11.5a3 3 0 0 0 4.2 0l2.6-2.6a3 3 0 0 0-4.2-4.2l-.9.9M11.5 8.5a3 3 0 0 0-4.2 0L4.7 11.1a3 3 0 0 0 4.2 4.2l.9-.9"/></svg> Link</button><button class="tl" id="web" type="button" role="switch" title="Search the internet before answering"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M17 10a7 7 0 1 1-14 0 7 7 0 0 1 14 0zM3 10h14M10 3c2.4 2.2 2.4 11.8 0 14M10 3c-2.4 2.2-2.4 11.8 0 14"/></svg> Web search <i class="mini"></i></button><button id="go" type="button" aria-label="Send" disabled>↑</button></div>
         </div>
       </div>
       <div id="sug"></div>
@@ -191,6 +226,8 @@ dialog input[type=text],dialog input[type=search]{width:100%;background:var(--ca
   </aside>
 </div>
 <div id="shade" hidden></div>
+<input type="file" id="file" multiple hidden accept=".pdf,.docx,.pptx,.txt,.md,.csv,.tsv,.json,.xml,.yml,.yaml,.html,.htm,.js,.ts,.py,.css,.java,.c,.cpp,.sql,.sh,.log">
+<div id="toast" role="status"></div><div id="dropov" hidden>Drop files to attach them</div>
 <dialog id="pdlg">
   <h3 id="p-h">New project</h3><p>Instructions and notes are sent with every chat in this project.</p>
   <input type="text" id="p-name" placeholder="Project name (e.g. Science Fair)" maxlength="60">
@@ -234,6 +271,7 @@ const A = {
 const key = 'viora_chats_' + S.email;
 let chats = ls.get(key, []), cur = null, asst = ls.get('viora_assistant', 'auto'), web = ls.get('viora_web', true), busy = null, filter = '';
 if (!A[asst]) asst = 'flash';
+chats.forEach(c => { if (c.page && !c.page.files) c.page.files = [{ id: 'o', name: c.page.title || c.page.source || 'Page', text: c.page.text || '', source: c.page.source }]; });
 const dkey = 'viora_data_' + S.email; let D = ls.get(dkey, { projects: [], memory: [], memOn: true }), curP = null, editP = null;
 const saveD = () => ls.set(dkey, D);
 const save = () => ls.set(key, chats.slice(0, 80));
@@ -255,7 +293,8 @@ function route(t, c) {
   if (c && c.page && /\b(click|fill|sign ?up|log ?in|form|navigate|automate|button)\b/.test(x)) return 'automate';
   if (/humani[sz]e|paraphrase|rewrite this|sound (more )?(human|natural)/.test(x)) return 'human';
   if (/```|\b(bug|error|function|compile|python|javascript|typescript|html|css|sql|regex|code|script|solve|equation|integral|derivative|calculate|algorithm)\b/.test(x)) return 'math';
-  if (/\b(latest|news|today|current|currently|price|who won|this week|this year|202\d|compare|research|sources|release)\b/.test(x)) return 'search';
+  const fileQ = c && c.page && !/\b(search|look up|online|on the web|latest news)\b/.test(x);
+  if (!fileQ && /\b(latest|news|today|current|currently|price|who won|who is|who are|this week|this year|202\d|compare|research|sources|release|weather|score|stock|forecast|trending|election|near me)\b/.test(x)) return 'search';
   return 'flash';
 }
 const grp = ts => { const d = (Date.now() - ts) / 864e5; return d < 1 ? 'Today' : d < 2 ? 'Yesterday' : d < 8 ? 'Previous 7 days' : 'Older'; };
@@ -265,21 +304,22 @@ function side() {
   $('#hist').innerHTML = list.map(c => { const g = grp(c.updated || +c.id), h = g !== last ? `<div class="grp">${g}</div>` : ''; last = g;
     return h + `<div class="it${c.id === cur ? ' on' : ''}" data-id="${c.id}"><span>${esc(c.title)}</span><button data-del="${c.id}" aria-label="Delete chat">×</button></div>`; }).join('') || `<div class="emp">${filter ? 'No matches' : curP ? 'No chats in this project yet' : 'Your chats will show up here'}</div>`;
 }
+const stat = m => m.searching ? '<span class="dots"></span>Searching the web…' : '<span class="dots"></span>';
 function msgHtml(m, i, last) {
   if (m.role === 'user') return `<div class="m u"><div class="b">${esc(m.content)}</div></div>`;
   const srcs = (m.src || []).map((s, n) => `<a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer" title="${esc(s.title)}">${n + 1} · ${esc(host(s.url))}</a>`).join('');
-  return `<div class="m a"><img src="assets/mark.png" alt=""><div class="col">${m.mode ? `<div class="note">Auto → ${esc(A[m.mode].n)}. Pick another assistant at the top to override.</div>` : ''}${m.note ? `<div class="note">${esc(m.note)}</div>` : ''}${srcs ? `<div class="srcs">${srcs}</div>` : ''}<div class="b" id="b${i}">${m.content ? md(m.content, m.src) : '<span class="dots"></span>'}</div><div class="acts"><button data-copy="${i}">Copy</button>${last ? '<button data-regen>Regenerate</button>' : ''}</div></div></div>`;
+  return `<div class="m a"><img src="assets/mark.png" alt=""><div class="col">${m.mode ? `<div class="note">Auto → ${esc(A[m.mode].n)}. Pick another assistant at the top to override.</div>` : ''}${m.note ? `<div class="note">${esc(m.note)}</div>` : ''}${srcs ? `<div class="note">Searched the web · ${m.src.length} sources</div><div class="srcs">${srcs}</div>` : ''}<div class="b" id="b${i}">${m.content ? md(m.content, m.src) : stat(m)}</div><div class="acts"><button data-copy="${i}">Copy</button>${last ? '<button data-regen>Regenerate</button>' : ''}</div></div></div>`;
 }
 function render() {
   const a = A[asst], c = chat(), has = c && c.messages.length;
   $('#main').classList.toggle('empty', !has);
   $('.pick i').style.setProperty('--c', a.c); $('#pname').textContent = a.n; $('#in').placeholder = a.ph;
-  $('#web').hidden = !a.web; $('#web').classList.toggle('on', !!web); $('#att').hidden = asst === 'human';
+  $('#web').hidden = !a.web; $('#web').classList.toggle('on', !!web); $('#web').setAttribute('aria-checked', !!web); $('#up').hidden = asst === 'human'; $('#att').hidden = asst === 'human';
   const pj0 = D.projects.find(x => x.id === curP); $('#pbar').hidden = !pj0; if (pj0) $('#pbar').textContent = '📁 ' + pj0.name + ' ✎';
   const h = new Date().getHours(), first = (S.name || S.email.split('@')[0]).split(' ')[0];
   $('#greet').innerHTML = `${h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'}, ${esc(first)}<small>${esc(a.b)}</small>`;
   $('#sug').style.setProperty('--c', a.c); $('#sug').innerHTML = a.s.map(s => `<button type="button">${esc(s)}</button>`).join('');
-  $('#chip').innerHTML = c && c.page ? `<div class="chip"><span>📄 ${esc(c.page.title || c.page.source)}</span><button id="unatt" aria-label="Remove page">×</button></div>` : '';
+  $('#chip').innerHTML = (c && c.page ? c.page.files : []).map(f => `<div class="chip" title="${esc(f.name)}"><span>${esc(f.name)}${f.cut ? ' · partly read' : ''}</span><button data-rm="${f.id}" aria-label="Remove">×</button></div>`).join('');
   $('#amenu').innerHTML = Object.entries(A).map(([k, v]) => `<button class="opt" data-k="${k}" style="--c:${v.c}"><i></i><div><b>${v.n}</b><span>${esc(v.b)}</span></div>${k === asst ? '<span class="ck">✓</span>' : ''}</button>`).join('');
   $('#msgs').innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy)).join('') : '';
   $('#go').disabled = !busy && !$('#in').value.trim();
@@ -294,13 +334,14 @@ async function send(text) {
   c.messages.push({ role: 'user', content: text }, { role: 'assistant', content: '' });
   $('#in').value = ''; grow(); save(); render();
   const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); busy = ctl; sendState(true);
-  const sc = $('#scroll'), paint = () => { const near = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 140, b = $('#b' + idx); if (b) { b.innerHTML = m.content ? md(m.content, m.src) : '<span class="dots"></span>'; if (near) sc.scrollTop = sc.scrollHeight; } };
+  const sc = $('#scroll'), paint = () => { const near = sc.scrollHeight - sc.scrollTop - sc.clientHeight < 140, b = $('#b' + idx); if (b) { b.innerHTML = m.content ? md(m.content, m.src) : stat(m); if (near) sc.scrollTop = sc.scrollHeight; } };
   const eff = asst === 'auto' ? route(text, c) : asst; if (asst === 'auto') m.mode = eff; if (asst === 'auto') render();
   const useWeb = !!(A[eff].web && web && (asst !== 'auto' || eff === 'search')), pj = D.projects.find(x => x.id === c.pid);
   const context = { instructions: pj ? pj.instr : '', notes: pj ? pj.notes : '', memory: D.memOn ? D.memory.filter(k => !k.pid || k.pid === c.pid).map(k => k.t).slice(0, 60) : [] };
+  m.searching = useWeb; paint();
   try {
     const r = await fetch(API + '/api/chat', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-      body: JSON.stringify({ assistant: eff === 'human' ? 'humanize' : eff, web: useWeb, context, messages: c.messages.slice(0, -1).map(x => ({ role: x.role, content: x.content })), page: c.page }) });
+      body: JSON.stringify({ assistant: eff === 'human' ? 'humanize' : eff, web: useWeb, context, messages: c.messages.slice(0, -1).map(x => ({ role: x.role, content: x.content })), page: c.page && { title: c.page.title, text: c.page.text, source: c.page.source } }) });
     if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'Something went wrong. Please try again.'); }
     const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0;
@@ -309,7 +350,7 @@ async function send(text) {
       buf += dec.decode(value, { stream: true }); const lines = buf.split('\n'); buf = lines.pop();
       for (const l of lines) { if (!l.startsWith('data:')) continue; const d = l.slice(5).trim(); if (!d || d === '[DONE]') continue;
         try { const j = JSON.parse(d);
-          if (j.viora_sources) { m.src = j.viora_sources; if (!m.src.length) m.note = 'Web search found nothing, so this answer is from what I already know.'; render(); }
+          if (j.viora_sources) { m.searching = false; m.src = j.viora_sources; if (!m.src.length) m.note = 'Web search found nothing, so this answer is from what I already know.'; render(); }
           else { const t = j.choices?.[0]?.delta?.content; if (t) m.content += t; } } catch {} }
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); });
     }
@@ -318,7 +359,7 @@ async function send(text) {
     if (e.name === 'AbortError') { if (!m.content) m.content = '_Stopped._'; }
     else m.content = (m.content ? m.content + '\n\n' : '') + '⚠️ ' + (/fetch|network/i.test(e.message) ? 'Could not reach Viora. The server may be waking up, so try again in 30 seconds.' : e.message);
   }
-  busy = null; sendState(false); save(); render();
+  m.searching = false; busy = null; sendState(false); save(); render();
 }
 function grow() { const t = $('#in'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 200) + 'px'; $('#go').disabled = !busy && !t.value.trim(); }
 const wide = () => matchMedia('(min-width:821px)').matches;
@@ -330,9 +371,32 @@ const hide = () => { $('#amenu').hidden = true; $('#umenu').hidden = true; };
 /* attach a page */
 const dlg = $('#dlg');
 const plain = html => { const d = new DOMParser().parseFromString(html, 'text/html'); d.querySelectorAll('script,style,noscript,svg,template').forEach(n => n.remove()); return { title: (d.title || '').trim().slice(0, 200), text: (d.body?.textContent || html).replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim().slice(0, 24000) }; };
-function setPage(p, source) {
-  let c = chat(); if (!c) { c = { id: String(Date.now()), title: (p.title || 'Attached page').slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
-  c.page = { title: p.title, text: p.text, source }; save(); render();
+function setPage(p, source) { addAtt({ name: (p.title || source || 'Page').slice(0, 80), text: p.text, source, kind: 'web' }); }
+function addAtt(a) {
+  let c = chat(); if (!c) { c = { id: String(Date.now()), title: a.name.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
+  const p = c.page || (c.page = { files: [] }); p.files.push({ id: 'f' + Date.now() + p.files.length, ...a }); rebuild(c); save(); render();
+}
+function rebuild(c) { const p = c.page; if (!p || !p.files.length) { c.page = null; return; } p.text = p.files.map(f => '### ' + f.name + '\n' + f.text).join('\n\n').slice(0, 24000); p.title = p.files.length === 1 ? p.files[0].name : p.files.length + ' attachments'; p.source = p.files.length === 1 ? p.files[0].source : 'attachments'; }
+let tt = 0; const toast = (m, ms = 3500) => { const t = $('#toast'); t.textContent = m; t.classList.toggle('show', !!m); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), ms); };
+const lib = {}, CDN = 'https://cdnjs.cloudflare.com/ajax/libs/';
+const load = src => lib[src] || (lib[src] = new Promise((ok, no) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = () => no(new Error('Could not load the file reader. Check your connection.')); document.head.appendChild(e); }));
+const xml = t => t.replace(/<\/(?:w|a):p>/g, '\n').replace(/<w:tab\/>/g, '\t').replace(/<[^>]+>/g, '').replace(/&lt;/g, '<').replace(/&gt;/g, '>').replace(/&quot;/g, '"').replace(/&apos;/g, "'").replace(/&amp;/g, '&');
+async function readFile(f) {
+  const ext = (f.name.split('.').pop() || '').toLowerCase();
+  if (f.size > 15e6) throw new Error('is over 15 MB.');
+  if (/^(png|jpe?g|gif|webp|bmp|svg|heic)$/.test(ext)) throw new Error('is an image. Images are not supported yet.');
+  if (ext === 'pdf') { await load(CDN + 'pdf.js/3.11.174/pdf.min.js'); pdfjsLib.GlobalWorkerOptions.workerSrc = CDN + 'pdf.js/3.11.174/pdf.worker.min.js'; const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise; let t = ''; for (let i = 1; i <= Math.min(pdf.numPages, 80) && t.length < 30000; i++) { const pg = await (await pdf.getPage(i)).getTextContent(); t += pg.items.map(x => x.str + (x.hasEOL ? '\n' : ' ')).join('') + '\n\n'; } if (!t.trim()) throw new Error('has no readable text (it may be a scan).'); return t; }
+  if (ext === 'docx' || ext === 'pptx') { await load(CDN + 'jszip/3.10.1/jszip.min.js'); const z = await JSZip.loadAsync(await f.arrayBuffer()); if (ext === 'docx') return xml(await z.file('word/document.xml').async('string')); const n = k => +k.match(/\d+/g).pop(); const sl = Object.keys(z.files).filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k)).sort((a, b) => n(a) - n(b)); let t = ''; for (const [i, k] of sl.entries()) t += 'Slide ' + (i + 1) + '\n' + xml(await z.file(k).async('string')) + '\n'; return t; }
+  const t = await f.text(); if (t.slice(0, 2000).includes('\u0000')) throw new Error('is not a text file I can read.');
+  return /^html?$/.test(ext) ? plain(t).text : t;
+}
+async function addFiles(fl) {
+  for (const f of [...fl]) {
+    if ((chat()?.page?.files.length || 0) >= 8) { toast('You can attach up to 8 items per chat.'); break; }
+    toast('Reading ' + f.name + '…', 60000);
+    try { const t = (await readFile(f)).replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim(); if (!t) throw new Error('has no readable text.'); addAtt({ name: f.name, text: t.slice(0, 24000), cut: t.length > 24000, kind: 'file', source: f.name }); toast(''); }
+    catch (e) { toast(/^(is|has)\b/.test(e.message) ? f.name + ' ' + e.message : 'Could not read ' + f.name + '.'); }
+  }
 }
 $('#att').onclick = () => { $('#derr').textContent = ''; dlg.showModal(); };
 $('#d-x').onclick = () => dlg.close();
@@ -352,6 +416,14 @@ $('#d-ok').onclick = async () => {
 };
 
 /* events */
+$('#up').onclick = () => $('#file').click();
+$('#file').onchange = e => { addFiles(e.target.files); e.target.value = ''; };
+let dn = 0; const hasF = e => [...(e.dataTransfer?.types || [])].includes('Files');
+addEventListener('dragenter', e => { if (hasF(e)) { dn++; $('#dropov').hidden = false; } });
+addEventListener('dragleave', e => { if (hasF(e) && --dn <= 0) { dn = 0; $('#dropov').hidden = true; } });
+addEventListener('dragover', e => { if (hasF(e)) e.preventDefault(); });
+addEventListener('drop', e => { if (hasF(e)) { e.preventDefault(); dn = 0; $('#dropov').hidden = true; addFiles(e.dataTransfer.files); } });
+$('#in').addEventListener('paste', e => { const fs = e.clipboardData?.files; if (fs && fs.length) { e.preventDefault(); addFiles(fs); } });
 $('#go').onclick = () => busy ? busy.abort() : send($('#in').value);
 $('#in').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); busy || send(e.target.value); } });
 $('#in').addEventListener('input', grow);
@@ -374,7 +446,7 @@ $('#msgs').onclick = e => {
   const cp = e.target.closest('[data-copy]'); if (cp) { navigator.clipboard?.writeText(chat().messages[+cp.dataset.copy].content); cp.textContent = 'Copied'; setTimeout(() => cp.textContent = 'Copy', 1400); return; }
   if (e.target.closest('[data-regen]')) { const c = chat(); c.messages.pop(); const u = c.messages.pop(); send(u.content); }
 };
-$('#chip').onclick = e => { if (e.target.id === 'unatt') { chat().page = null; save(); render(); } };
+$('#chip').onclick = e => { const b = e.target.closest('[data-rm]'), c = chat(); if (!b || !c || !c.page) return; c.page.files = c.page.files.filter(f => f.id !== b.dataset.rm); rebuild(c); save(); render(); };
 $('#theme').onclick = () => { const n = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = n; try { localStorage.setItem('viora_theme', n); } catch {} hide(); };
 $('#out').onclick = () => { localStorage.removeItem('viora_session'); location.href = 'index.html'; };
 /* projects */
