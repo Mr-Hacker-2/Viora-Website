@@ -1,17 +1,16 @@
 /* Viora appearance preferences (shared by the website and the web app).
-   - Default look = light (white) with the green accent.
+   - Default look = the extension's light pastel look with the violet accent.
    - Users can change theme (light/dark) and accent in Settings; the choice is stored in
      localStorage (viora_theme, viora_accent) and applied before first paint to avoid a flash.
    - The web app now supports both themes; <html data-fixed-theme> still pins a page to one. */
 (function () {
   'use strict';
   var ACCENTS = [
-    { id: 'green',  name: 'Viora green', hex: '#4ade50' },
-    { id: 'blue',   name: 'Blue',        hex: '#4aa8ff' },
-    { id: 'teal',   name: 'Teal',        hex: '#2dd4bf' },
-    { id: 'violet', name: 'Violet',      hex: '#9b86ff' },
-    { id: 'amber',  name: 'Amber',       hex: '#f5b83d' },
-    { id: 'rose',   name: 'Rose',        hex: '#ff6f95' }
+    { id: 'violet', name: 'Viora violet', hex: '#7a58ff' },
+    { id: 'blue',   name: 'Sky',          hex: '#2f8fe8' },
+    { id: 'mint',   name: 'Mint',         hex: '#1fa97f' },
+    { id: 'amber',  name: 'Amber',        hex: '#e08a1e' },
+    { id: 'rose',   name: 'Rose',         hex: '#e8527f' }
   ];
   var root = document.documentElement;
   function get(k) { try { return localStorage.getItem(k); } catch (e) { return null; } }
@@ -19,12 +18,12 @@
   function validAccent(a) { return ACCENTS.some(function (x) { return x.id === a; }); }
   function apply() {
     var a = get('viora_accent');
-    if (validAccent(a) && a !== 'green') root.setAttribute('data-accent', a); else root.removeAttribute('data-accent');
+    if (validAccent(a) && a !== 'violet') root.setAttribute('data-accent', a); else root.removeAttribute('data-accent');
     if (!root.hasAttribute('data-fixed-theme')) {
       var t = get('viora_theme'); root.setAttribute('data-theme', t === 'dark' ? 'dark' : 'light');
     }
     var m = document.querySelector('meta[name="theme-color"]');
-    if (m) m.setAttribute('content', root.getAttribute('data-theme') === 'light' ? '#f4f8f5' : '#050706');
+    if (m) m.setAttribute('content', root.getAttribute('data-theme') === 'light' ? '#f6f8fe' : '#17141f');
   }
   function setAccent(id) { if (!validAccent(id)) return; put('viora_accent', id); apply(); }
   function setTheme(t) { put('viora_theme', t === 'dark' ? 'dark' : 'light'); apply(); }
@@ -32,7 +31,7 @@
   /* Render the picker into a container element. opts.theme=false hides the dark/light choice. */
   function mount(el, opts) {
     opts = opts || {};
-    var cur = validAccent(get('viora_accent')) ? get('viora_accent') : 'green';
+    var cur = validAccent(get('viora_accent')) ? get('viora_accent') : 'violet';
     var showTheme = opts.theme !== false && !root.hasAttribute('data-fixed-theme');
     var th = root.getAttribute('data-theme') === 'dark' ? 'dark' : 'light';
     el.innerHTML =

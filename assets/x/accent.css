@@ -1,21 +1,40 @@
-/* Viora accent system. Default = the Viora extension's green. Users can change it in Settings
-   (saved as viora_accent; applied as html[data-accent]). Everything below derives from --accent. */
-:root{ --accent-user:#4ade50; --on-accent:#04130a; }
-:root[data-accent="blue"]{ --accent-user:#4aa8ff; --on-accent:#041322; }
-:root[data-accent="violet"]{ --accent-user:#9b86ff; --on-accent:#120a2e; }
-:root[data-accent="amber"]{ --accent-user:#f5b83d; --on-accent:#221600; }
-:root[data-accent="rose"]{ --accent-user:#ff6f95; --on-accent:#2a0610; }
-:root[data-accent="teal"]{ --accent-user:#2dd4bf; --on-accent:#032320; }
+/* Viora accent system — same palette as the Viora extension.
+   Default = the extension's violet; each assistant has its own hue (Flash violet, Deep Search sky,
+   Math & Code mint, Automate amber, Humanizer rose) unless the visitor picks one accent in Settings
+   (saved as viora_accent, applied as html[data-accent]). Everything below derives from --accent. */
+:root{
+  --hue-flash:#7a58ff; --hue-search:#2f8fe8; --hue-math:#1fa97f; --hue-automate:#e08a1e; --hue-humanize:#e8527f;
+  --accent-user:var(--hue-flash); --on-accent:#ffffff;
+}
+:root[data-theme="dark"]{
+  --hue-flash:#8b6bff; --hue-search:#6cb8ff; --hue-math:#5fcfa8; --hue-automate:#ffab5b; --hue-humanize:#ff7fa8;
+  --on-accent:#15111f;
+}
+html[data-model="search"]:not([data-accent]){ --accent-user:var(--hue-search); }
+html[data-model="math"]:not([data-accent]){ --accent-user:var(--hue-math); }
+html[data-model="automate"]:not([data-accent]){ --accent-user:var(--hue-automate); }
+html[data-model="humanize"]:not([data-accent]){ --accent-user:var(--hue-humanize); }
+:root[data-accent="blue"]{ --accent-user:var(--hue-search); }
+:root[data-accent="mint"]{ --accent-user:var(--hue-math); }
+:root[data-accent="amber"]{ --accent-user:var(--hue-automate); }
+:root[data-accent="rose"]{ --accent-user:var(--hue-humanize); }
+:root[data-accent="mint"],:root[data-accent="amber"]{ --on-accent:#ffffff; }
+:root[data-theme="dark"][data-accent="mint"],:root[data-theme="dark"][data-accent="amber"]{ --on-accent:#15111f; }
 :root{
   --accent: var(--accent-user);
-  --accent-hi: color-mix(in srgb, var(--accent) 80%, #fff);
-  --accent-deep: color-mix(in srgb, var(--accent) 24%, #0a0d0b);
-  --accent-line: color-mix(in srgb, var(--accent) 48%, #0a0d0b);
-  --accent-bg: color-mix(in srgb, var(--accent) 12%, #0a0d0b);
+  --accent-hi: color-mix(in srgb, var(--accent) 78%, #fff);
+  --accent-deep: color-mix(in srgb, var(--accent) 22%, #17141f);
+  --accent-line: color-mix(in srgb, var(--accent) 48%, #17141f);
+  --accent-bg: color-mix(in srgb, var(--accent) 12%, #17141f);
 }
 /* Marketing-site helpers derived from the accent */
 :root{
-  --accent-2: color-mix(in srgb, var(--accent-user) 55%, #2dd4bf);
+  --accent-2: color-mix(in srgb, var(--accent-user) 45%, #2f8fe8);
   --accent-ink: var(--accent-user);
 }
-:root[data-theme="light"]{ --accent-ink: color-mix(in srgb, var(--accent-user) 52%, #000); }
+:root[data-theme="light"]{
+  --accent-deep: color-mix(in srgb, var(--accent-user) 14%, #fff);
+  --accent-line: color-mix(in srgb, var(--accent-user) 40%, #fff);
+  --accent-bg: color-mix(in srgb, var(--accent-user) 8%, #fff);
+  --accent-ink: color-mix(in srgb, var(--accent-user) 78%, #000);
+}
