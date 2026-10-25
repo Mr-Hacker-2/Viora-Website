@@ -174,6 +174,14 @@ body{background:radial-gradient(120% 60% at 50% -10%,#1d3320 0,transparent 60%),
 :root[data-theme=light] #main{background:radial-gradient(circle at 50% 0,#d9f0e0,#fff 62%)}
 body.off #sb{margin-left:-286px}}
 @media(max-width:560px){#sug{grid-template-columns:1fr}}
+#sr{display:none}
+@media(min-width:1180px){#sr{display:block;width:290px;flex:none;overflow:auto;padding:16px;border:1px solid var(--line);border-radius:22px;background:linear-gradient(var(--sb),var(--bg))}
+#app:has(#art:not([hidden])) #sr{display:none}}
+#sr h2{font:600 12px Inter,sans-serif;color:var(--fa);margin:18px 0 8px;letter-spacing:.07em;text-transform:uppercase}#sr h2:first-child{margin-top:0}
+#sr .opt{padding:8px}#sr .swr{display:flex;justify-content:space-between;align-items:center;gap:10px}
+#sr small{display:block;color:var(--fa);font-size:12px}
+.fi{display:flex;align-items:center;gap:6px;padding:6px 0;font-size:14px}.fi span{flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}.fi button{border:0;background:none;color:var(--fa);font-size:17px}
+.srb{width:100%;margin-top:8px;padding:11px;border-radius:12px;background:var(--card);border:1px solid var(--line)}.srb:hover{border-color:var(--vi);color:var(--vi)}
 </style>
 </head>
 <body>
@@ -219,6 +227,7 @@ body.off #sb{margin-left:-286px}}
       <p class="fine">Viora can make mistakes. Check important info.</p>
     </div>
   </main>
+  <aside id="sr"><h2>Assistant</h2><div id="alist"></div><h2>Web search</h2><div class="swr"><div><b>Search the internet</b><small>Looks things up and cites sources</small></div><button class="tl" id="web2" type="button" role="switch" aria-label="Web search"><i class="mini"></i></button></div><h2>Attached</h2><div id="flist"></div><button class="srb" id="up2" type="button">Upload files, images or video</button></aside>
   <aside id="art" hidden>
     <div class="a-h"><b id="a-title">code</b><span id="a-tabs"><button id="t-prev" type="button">Preview</button> <button id="t-code" type="button">Code</button></span><select id="a-ver" aria-label="Versions"></select><button id="a-save" type="button">Save</button><button id="a-copy" type="button">Copy</button><button id="a-dl" type="button">Download</button><button id="a-x" type="button" aria-label="Close">✕</button></div>
     <iframe id="a-prev" sandbox="allow-scripts" title="Preview"></iframe>
@@ -226,7 +235,7 @@ body.off #sb{margin-left:-286px}}
   </aside>
 </div>
 <div id="shade" hidden></div>
-<input type="file" id="file" multiple hidden accept=".pdf,.docx,.pptx,.txt,.md,.csv,.tsv,.json,.xml,.yml,.yaml,.html,.htm,.js,.ts,.py,.css,.java,.c,.cpp,.sql,.sh,.log">
+<input type="file" id="file" multiple hidden accept="image/*,video/*,.xlsx,.pdf,.docx,.pptx,.txt,.md,.csv,.tsv,.json,.xml,.yml,.yaml,.html,.htm,.js,.ts,.py,.css,.java,.c,.cpp,.sql,.sh,.log">
 <div id="toast" role="status"></div><div id="dropov" hidden>Drop files to attach them</div>
 <dialog id="pdlg">
   <h3 id="p-h">New project</h3><p>Instructions and notes are sent with every chat in this project.</p>
@@ -314,7 +323,9 @@ function render() {
   const a = A[asst], c = chat(), has = c && c.messages.length;
   $('#main').classList.toggle('empty', !has);
   $('.pick i').style.setProperty('--c', a.c); $('#pname').textContent = a.n; $('#in').placeholder = a.ph;
-  $('#web').hidden = !a.web; $('#web').classList.toggle('on', !!web); $('#web').setAttribute('aria-checked', !!web); $('#up').hidden = asst === 'human'; $('#att').hidden = asst === 'human';
+  $('#web').hidden = !a.web; $('#web').classList.toggle('on', !!web); $('#web').setAttribute('aria-checked', !!web); $('#up').hidden = asst === 'human';
+  $('#alist').innerHTML = $('#amenu').innerHTML; $('#web2').classList.toggle('on', !!web); $('#web2').setAttribute('aria-checked', !!web);
+  $('#flist').innerHTML = (c && c.page ? c.page.files : []).map(f => `<div class="fi"><span>${esc(f.name)}<small>${f.kind === 'file' ? (f.n ? Math.round(f.n / 1000) + 'k characters, searched in full' : 'text') : f.kind === 'video' ? 'video, ' + (f.ni || 0) + ' frames' : 'image'}</small></span><button data-rm="${f.id}" aria-label="Remove">×</button></div>`).join('') || '<small>Nothing attached yet</small>'; $('#att').hidden = asst === 'human';
   const pj0 = D.projects.find(x => x.id === curP); $('#pbar').hidden = !pj0; if (pj0) $('#pbar').textContent = '📁 ' + pj0.name + ' ✎';
   const h = new Date().getHours(), first = (S.name || S.email.split('@')[0]).split(' ')[0];
   $('#greet').innerHTML = `${h < 5 ? 'Up late' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'}, ${esc(first)}<small>${esc(a.b)}</small>`;
@@ -340,8 +351,9 @@ async function send(text) {
   const context = { instructions: pj ? pj.instr : '', notes: pj ? pj.notes : '', memory: D.memOn ? D.memory.filter(k => !k.pid || k.pid === c.pid).map(k => k.t).slice(0, 60) : [] };
   m.searching = useWeb; paint();
   try {
+    const pp = await pagePayload(c, text);
     const r = await fetch(API + '/api/chat', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-      body: JSON.stringify({ assistant: eff === 'human' ? 'humanize' : eff, web: useWeb, context, messages: c.messages.slice(0, -1).map(x => ({ role: x.role, content: x.content })), page: c.page && { title: c.page.title, text: c.page.text, source: c.page.source } }) });
+      body: JSON.stringify({ assistant: eff === 'human' ? 'humanize' : eff, web: useWeb, context, messages: c.messages.slice(0, -1).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images }) });
     if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || 'Something went wrong. Please try again.'); }
     const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0;
@@ -372,11 +384,33 @@ const hide = () => { $('#amenu').hidden = true; $('#umenu').hidden = true; };
 const dlg = $('#dlg');
 const plain = html => { const d = new DOMParser().parseFromString(html, 'text/html'); d.querySelectorAll('script,style,noscript,svg,template').forEach(n => n.remove()); return { title: (d.title || '').trim().slice(0, 200), text: (d.body?.textContent || html).replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim().slice(0, 24000) }; };
 function setPage(p, source) { addAtt({ name: (p.title || source || 'Page').slice(0, 80), text: p.text, source, kind: 'web' }); }
+const FT = {}, IM = {};
+const idb = () => idb.p || (idb.p = new Promise((ok, no) => { const r = indexedDB.open('viora_files', 1); r.onupgradeneeded = () => r.result.createObjectStore('f'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
+const idbSet = async (k, v) => { try { (await idb()).transaction('f', 'readwrite').objectStore('f').put(v, k); } catch {} };
+const idbGet = async k => { try { const d = await idb(); return await new Promise(ok => { const q = d.transaction('f').objectStore('f').get(k); q.onsuccess = () => ok(q.result); q.onerror = () => ok(null); }); } catch { return null; } };
+async function full(f) { if (FT[f.id] == null) { const v = f.text != null ? { t: f.text, i: [] } : await idbGet(f.id); FT[f.id] = v?.t || ''; IM[f.id] = v?.i || []; } return FT[f.id]; }
 function addAtt(a) {
   let c = chat(); if (!c) { c = { id: String(Date.now()), title: a.name.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
-  const p = c.page || (c.page = { files: [] }); p.files.push({ id: 'f' + Date.now() + p.files.length, ...a }); rebuild(c); save(); render();
+  const p = c.page || (c.page = { files: [] }), id = 'f' + Date.now() + p.files.length, imgs = a.imgs || [];
+  FT[id] = a.text; IM[id] = imgs; idbSet(id, { t: a.text, i: imgs });
+  p.files.push({ id, name: a.name, kind: a.kind, source: a.source, n: a.text.length, ni: imgs.length }); rebuild(c); save(); render();
 }
-function rebuild(c) { const p = c.page; if (!p || !p.files.length) { c.page = null; return; } p.text = p.files.map(f => '### ' + f.name + '\n' + f.text).join('\n\n').slice(0, 24000); p.title = p.files.length === 1 ? p.files[0].name : p.files.length + ' attachments'; p.source = p.files.length === 1 ? p.files[0].source : 'attachments'; }
+function rebuild(c) { const p = c.page; if (!p || !p.files.length) { c.page = null; return; } p.title = p.files.length === 1 ? p.files[0].name : p.files.length + ' attachments'; p.source = p.files.length === 1 ? p.files[0].source : 'attachments'; p.text = ''; }
+/* long files: send the opening plus the passages that best match the question */
+async function pagePayload(c, q) {
+  const fs = c.page ? c.page.files : []; if (!fs.length) return { page: null, images: [] };
+  const words = [...new Set(q.toLowerCase().match(/[a-z0-9]{3,}/g) || [])], B = 24000, per = Math.floor(B / fs.length), out = [], images = [];
+  for (const f of fs) {
+    const t = await full(f); images.push(...(IM[f.id] || []));
+    if (t.length <= per) { out.push('### ' + f.name + '\n' + t); continue; }
+    const ch = []; for (let i = 0; i < t.length; i += 1500) ch.push(t.slice(i, i + 1500));
+    const sc = ch.map((x, k) => ({ k, v: words.filter(w => x.toLowerCase().includes(w)).length })), pick = new Set([0]); let used = 1500;
+    sc.slice(1).sort((a, b) => b.v - a.v).forEach(x => { if (x.v > 0 && used + 1500 <= per - 100) { pick.add(x.k); used += 1500; } });
+    for (let k = 1; k < ch.length && used + 1500 <= per - 100; k++) if (!pick.has(k)) { pick.add(k); used += 1500; }
+    out.push('### ' + f.name + ' (excerpts from a long file, ' + Math.round(t.length / 1000) + 'k characters in total)\n' + [...pick].sort((a, b) => a - b).map(k => ch[k]).join('\n[…]\n'));
+  }
+  return { page: { title: c.page.title, text: out.join('\n\n'), source: c.page.source }, images: images.slice(0, 8) };
+}
 let tt = 0; const toast = (m, ms = 3500) => { const t = $('#toast'); t.textContent = m; t.classList.toggle('show', !!m); clearTimeout(tt); tt = setTimeout(() => t.classList.remove('show'), ms); };
 const lib = {}, CDN = 'https://cdnjs.cloudflare.com/ajax/libs/';
 const load = src => lib[src] || (lib[src] = new Promise((ok, no) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = () => no(new Error('Could not load the file reader. Check your connection.')); document.head.appendChild(e); }));
@@ -385,17 +419,55 @@ async function readFile(f) {
   const ext = (f.name.split('.').pop() || '').toLowerCase();
   if (f.size > 15e6) throw new Error('is over 15 MB.');
   if (/^(png|jpe?g|gif|webp|bmp|svg|heic)$/.test(ext)) throw new Error('is an image. Images are not supported yet.');
-  if (ext === 'pdf') { await load(CDN + 'pdf.js/3.11.174/pdf.min.js'); pdfjsLib.GlobalWorkerOptions.workerSrc = CDN + 'pdf.js/3.11.174/pdf.worker.min.js'; const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise; let t = ''; for (let i = 1; i <= Math.min(pdf.numPages, 80) && t.length < 30000; i++) { const pg = await (await pdf.getPage(i)).getTextContent(); t += pg.items.map(x => x.str + (x.hasEOL ? '\n' : ' ')).join('') + '\n\n'; } if (!t.trim()) throw new Error('has no readable text (it may be a scan).'); return t; }
-  if (ext === 'docx' || ext === 'pptx') { await load(CDN + 'jszip/3.10.1/jszip.min.js'); const z = await JSZip.loadAsync(await f.arrayBuffer()); if (ext === 'docx') return xml(await z.file('word/document.xml').async('string')); const n = k => +k.match(/\d+/g).pop(); const sl = Object.keys(z.files).filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k)).sort((a, b) => n(a) - n(b)); let t = ''; for (const [i, k] of sl.entries()) t += 'Slide ' + (i + 1) + '\n' + xml(await z.file(k).async('string')) + '\n'; return t; }
+  if (ext === 'pdf') { await load(CDN + 'pdf.js/3.11.174/pdf.min.js'); pdfjsLib.GlobalWorkerOptions.workerSrc = CDN + 'pdf.js/3.11.174/pdf.worker.min.js'; const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise; let t = ''; for (let i = 1; i <= Math.min(pdf.numPages, 400) && t.length < 2e6; i++) { const pg = await (await pdf.getPage(i)).getTextContent(); t += pg.items.map(x => x.str + (x.hasEOL ? '\n' : ' ')).join('') + '\n\n'; } if (!t.trim()) throw new Error('has no readable text (it may be a scan).'); return t; }
+  if (ext === 'docx' || ext === 'pptx' || ext === 'xlsx') { await load(CDN + 'jszip/3.10.1/jszip.min.js'); const z = await JSZip.loadAsync(await f.arrayBuffer()); if (ext === 'xlsx') return readXlsx(z); if (ext === 'docx') return xml(await z.file('word/document.xml').async('string')); const n = k => +k.match(/\d+/g).pop(); const sl = Object.keys(z.files).filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k)).sort((a, b) => n(a) - n(b)); let t = ''; for (const [i, k] of sl.entries()) t += 'Slide ' + (i + 1) + '\n' + xml(await z.file(k).async('string')) + '\n'; return t; }
   const t = await f.text(); if (t.slice(0, 2000).includes('\u0000')) throw new Error('is not a text file I can read.');
   return /^html?$/.test(ext) ? plain(t).text : t;
+}
+const col = r => [...r.replace(/\d+/g, '')].reduce((n, ch) => n * 26 + ch.charCodeAt(0) - 64, 0) - 1;
+async function readXlsx(z) {
+  const g = async k => z.file(k) ? z.file(k).async('string') : '';
+  const ss = [...(await g('xl/sharedStrings.xml')).matchAll(/<si>([\s\S]*?)<\/si>/g)].map(m => xml(m[1]));
+  const names = [...(await g('xl/workbook.xml')).matchAll(/<sheet [^>]*?name="([^"]*)"/g)].map(m => xml(m[1]));
+  const files = Object.keys(z.files).filter(k => /^xl\/worksheets\/sheet\d+\.xml$/.test(k)).sort((a, b) => +a.match(/\d+/g).pop() - +b.match(/\d+/g).pop());
+  let out = '';
+  for (const [i, k] of files.entries()) {
+    out += '## Sheet: ' + (names[i] || i + 1) + '\n';
+    for (const r of [...(await g(k)).matchAll(/<row[^>]*>([\s\S]*?)<\/row>/g)].slice(0, 20000)) {
+      const cells = [];
+      for (const c of r[1].matchAll(/<c ([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)) { const at = c[1], ref = (at.match(/r="([A-Z]+\d+)"/) || [])[1], t = (at.match(/t="(\w+)"/) || [])[1], body = c[2] || '', v = (body.match(/<v>([\s\S]*?)<\/v>/) || [])[1]; cells[ref ? col(ref) : cells.length] = t === 's' ? ss[+v] : t === 'inlineStr' ? xml(body) : v != null ? xml(v) : ''; }
+      out += Array.from(cells, x => x ?? '').join('\t') + '\n';
+    }
+    out += '\n';
+  }
+  return out;
+}
+const shrink = (src, w, h, max) => { const r = Math.min(1, max / Math.max(w, h)), c = document.createElement('canvas'); c.width = Math.round(w * r); c.height = Math.round(h * r); c.getContext('2d').drawImage(src, 0, 0, c.width, c.height); return c.toDataURL('image/jpeg', .72); };
+async function readImage(f) {
+  const u = URL.createObjectURL(f), im = new Image(); im.src = u; await im.decode().catch(() => { throw new Error('is an image this browser cannot open.'); });
+  const d = shrink(im, im.naturalWidth, im.naturalHeight, 1280); URL.revokeObjectURL(u);
+  let t = ''; try { toast('Reading text in ' + f.name + '…', 90000); await load(CDN + 'tesseract.js/5.1.1/tesseract.min.js'); t = (await Tesseract.recognize(d, 'eng')).data.text.trim(); } catch {}
+  return { text: '[Image: ' + f.name + ']' + (t ? '\nText found in the image (OCR):\n' + t : ''), imgs: [d] };
+}
+async function readVideo(f) {
+  const v = document.createElement('video'), u = URL.createObjectURL(f); v.muted = true; v.preload = 'auto'; v.src = u;
+  await new Promise((ok, no) => { v.onloadeddata = ok; v.onerror = () => no(new Error('is a video this browser cannot open.')); });
+  const dur = v.duration || 0, n = Math.min(8, Math.max(2, Math.ceil(dur / 5))), imgs = [];
+  for (let i = 0; i < n; i++) { v.currentTime = Math.min(Math.max(dur - .1, 0), dur * (i + .5) / n); await new Promise(ok => { v.onseeked = ok; }); imgs.push(shrink(v, v.videoWidth, v.videoHeight, 768)); }
+  URL.revokeObjectURL(u);
+  return { text: '[Video: ' + f.name + ', ' + Math.round(dur) + ' seconds. ' + n + ' frames sampled evenly, in order. Audio is not analysed.]', imgs };
 }
 async function addFiles(fl) {
   for (const f of [...fl]) {
     if ((chat()?.page?.files.length || 0) >= 8) { toast('You can attach up to 8 items per chat.'); break; }
-    toast('Reading ' + f.name + '…', 60000);
-    try { const t = (await readFile(f)).replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim(); if (!t) throw new Error('has no readable text.'); addAtt({ name: f.name, text: t.slice(0, 24000), cut: t.length > 24000, kind: 'file', source: f.name }); toast(''); }
-    catch (e) { toast(/^(is|has)\b/.test(e.message) ? f.name + ' ' + e.message : 'Could not read ' + f.name + '.'); }
+    toast('Reading ' + f.name + '…', 90000);
+    try {
+      const k = /^image\//.test(f.type) ? 'image' : /^video\//.test(f.type) ? 'video' : 'file';
+      if (f.size > (k === 'video' ? 300e6 : k === 'image' ? 25e6 : 40e6)) throw new Error('is too large.');
+      let r; if (k === 'image') r = await readImage(f); else if (k === 'video') r = await readVideo(f);
+      else { const t = (await readFile(f)).replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim(); if (!t) throw new Error('has no readable text.'); r = { text: t.slice(0, 2e6), imgs: [] }; }
+      addAtt({ name: f.name, text: r.text, imgs: r.imgs, kind: k, source: f.name }); toast('');
+    } catch (e) { toast(/^(is|has)\b/.test(e.message) ? f.name + ' ' + e.message : 'Could not read ' + f.name + '.'); }
   }
 }
 $('#att').onclick = () => { $('#derr').textContent = ''; dlg.showModal(); };
@@ -446,9 +518,10 @@ $('#msgs').onclick = e => {
   const cp = e.target.closest('[data-copy]'); if (cp) { navigator.clipboard?.writeText(chat().messages[+cp.dataset.copy].content); cp.textContent = 'Copied'; setTimeout(() => cp.textContent = 'Copy', 1400); return; }
   if (e.target.closest('[data-regen]')) { const c = chat(); c.messages.pop(); const u = c.messages.pop(); send(u.content); }
 };
-$('#chip').onclick = e => { const b = e.target.closest('[data-rm]'), c = chat(); if (!b || !c || !c.page) return; c.page.files = c.page.files.filter(f => f.id !== b.dataset.rm); rebuild(c); save(); render(); };
+document.addEventListener('click', e => { const b = e.target.closest('[data-rm]'), c = chat(); if (!b || !c || !c.page) return; c.page.files = c.page.files.filter(f => f.id !== b.dataset.rm); delete FT[b.dataset.rm]; delete IM[b.dataset.rm]; rebuild(c); save(); render(); });
 $('#theme').onclick = () => { const n = document.documentElement.dataset.theme === 'dark' ? 'light' : 'dark'; document.documentElement.dataset.theme = n; try { localStorage.setItem('viora_theme', n); } catch {} hide(); };
 $('#out').onclick = () => { localStorage.removeItem('viora_session'); location.href = 'index.html'; };
+$('#alist').onclick = $('#amenu').onclick; $('#web2').onclick = $('#web').onclick; $('#up2').onclick = $('#up').onclick;
 /* projects */
 const pdlg = $('#pdlg');
 function openProj(id) { editP = id; const p = D.projects.find(x => x.id === id) || { name: '', instr: '', notes: '' }; $('#p-h').textContent = id ? 'Edit project' : 'New project'; $('#p-name').value = p.name; $('#p-ins').value = p.instr; $('#p-notes').value = p.notes; $('#p-del').hidden = !id; pdlg.showModal(); }
