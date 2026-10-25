@@ -118,7 +118,7 @@ if (header) {
     <div class="nav-right">
       <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle theme">${ico('moon', 't-moon')}${ico('sun', 't-sun')}</button>
       ${s ? `<a class="btn btn-ghost hide-sm" href="account.html">${ico('user')}Account</a>` : `<a class="btn btn-ghost hide-sm" href="login.html">Log in</a>`}
-      <a class="btn btn-primary" href="${VIORA.installUrl}">${ico('download')}Get Viora</a>
+      ${s ? `<a class="btn btn-primary" href="app.html">Open app</a>` : `<a class="btn btn-primary" href="${VIORA.installUrl}">${ico('download')}Get Viora</a>`}
       <button class="icon-btn burger" id="burger" type="button" aria-label="Menu" aria-expanded="false">${ico('menu')}</button>
     </div>
   </div>`;
