@@ -109,6 +109,7 @@ if (header) {
   header.innerHTML = `<div class="wrap nav">
     <a class="brand" href="index.html" aria-label="Viora home"><img src="assets/mark.png" alt="" width="30" height="30">Viora</a>
     <nav class="nav-links" id="nav-links" aria-label="Main">
+      <a href="app.html">Open app</a>
       <a href="index.html#assistants">Assistants</a>
       <a href="index.html#features">Features</a>
       <a href="index.html#how">How it works</a>
@@ -157,8 +158,8 @@ if (page === 'login') {
     if (hp.get('error')) return fail(hp.get('error') === 'access_denied' ? 'Google sign-in was cancelled, or this Google account is not allowed yet.' : 'Google sign-in failed (' + hp.get('error') + '). Please try again.');
     if (hp.get('token')) {
       btn.disabled = true; btn.lastChild.textContent = 'Signing you in…';
-      try { await Auth.finish(hp.get('token')); location.replace('account.html'); } catch (ex) { btn.lastChild.textContent = 'Continue with Google'; fail(ex.message); }
-    } else if (s) location.replace('account.html');
+      try { await Auth.finish(hp.get('token')); location.replace('app.html'); } catch (ex) { btn.lastChild.textContent = 'Continue with Google'; fail(ex.message); }
+    } else if (s) location.replace('app.html');
   })();
   btn.onclick = () => { btn.disabled = true; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(); };
 }
