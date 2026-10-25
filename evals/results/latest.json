@@ -1,0 +1,41 @@
+{
+  "at": "2026-10-25T20:15:49.671Z",
+  "legacy": {
+    "accuracy": 0.828,
+    "correct": 24,
+    "total": 29,
+    "misses": [
+      {
+        "t": "Explain Big-O notation simply",
+        "want": "math",
+        "got": "flash"
+      },
+      {
+        "t": "Explain the function of mitochondria",
+        "want": "flash",
+        "got": "math"
+      },
+      {
+        "t": "I made an error in my essay, can you proofread it?",
+        "want": "flash",
+        "got": "math"
+      },
+      {
+        "t": "Who is the author of Hamlet?",
+        "want": "flash",
+        "got": "search"
+      },
+      {
+        "t": "What is the dress code at a wedding?",
+        "want": "flash",
+        "got": "math"
+      }
+    ]
+  },
+  "current": {
+    "accuracy": 1,
+    "correct": 29,
+    "total": 29,
+    "misses": []
+  }
+}
