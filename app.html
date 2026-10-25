@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Viora</title>
-<meta name="theme-color" content="#f4f8f5">
+<meta name="theme-color" content="#f6f8fe">
 <link rel="icon" href="assets/x/icon32.png">
 <script src="assets/x/prefs.js"></script>
 <link rel="stylesheet" href="assets/x/tab.css">
@@ -24,7 +24,7 @@ html,body{height:100%;margin:0}
 .sh-hist button{position:relative;padding-right:28px}.sh-hist button:hover .hx{opacity:1}
 #projs button.on{color:var(--accent)}:root[data-theme=light] #projs button.on{color:var(--accent-ink)}
 .sh-sw[aria-checked=true]{background:var(--accent)}
-@media(max-width:979px){body.sb #sh-left{display:block!important;position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:40;background:#0d100e;border-right:1px solid var(--line);padding:18px;overflow:auto}}
+@media(max-width:979px){body.sb #sh-left{display:block!important;position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:40;background:var(--ink-2);border-right:1px solid var(--line);padding:18px;overflow:auto}}
 @media(min-width:980px){#shell.no-left #open-full{display:grid!important}}
 #dropov{position:fixed;inset:14px;z-index:90;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:22px;background:color-mix(in srgb,var(--ink) 92%,transparent);font-size:20px;font-weight:600;color:var(--accent-ink,var(--accent));pointer-events:none}
 dialog{background:var(--ink-2);color:var(--paper);border:1px solid var(--line);border-radius:20px;padding:22px;width:min(520px,92vw)}
@@ -35,9 +35,9 @@ dialog textarea{min-height:100px;resize:vertical}dialog input:focus,dialog texta
 .dl{display:flex;gap:8px;align-items:center;flex-wrap:wrap}#derr{color:#ff7b8f;font-size:14px;margin-bottom:8px}
 .mi{display:flex;gap:6px;align-items:center;margin-bottom:6px}.mi input{margin:0!important;flex:1}.mi small{color:var(--faint);white-space:nowrap}.mi button{border:0;background:none;color:var(--faint);font-size:18px;cursor:pointer}
 #mlist{max-height:240px;overflow:auto;margin-bottom:10px}.emp{color:var(--faint);padding:8px;font-size:14px}
-#art{position:fixed;top:14px;right:14px;bottom:14px;width:min(680px,calc(100vw - 28px));z-index:50;display:flex;flex-direction:column;background:#0d100e;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);overflow:hidden}
+#art{position:fixed;top:14px;right:14px;bottom:14px;width:min(680px,calc(100vw - 28px));z-index:50;display:flex;flex-direction:column;background:var(--ink-2);border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);overflow:hidden}
 .a-h{display:flex;gap:6px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}.a-h b{margin-right:auto;text-transform:capitalize}
-.a-h button,.a-h select{border:1px solid var(--line);background:none;color:var(--muted);border-radius:8px;padding:4px 10px;cursor:pointer;font:inherit;font-size:13px}.a-h select{background:#0d100e}.a-h button[aria-selected=true]{background:var(--raised);color:var(--paper)}
+.a-h button,.a-h select{border:1px solid var(--line);background:none;color:var(--muted);border-radius:8px;padding:4px 10px;cursor:pointer;font:inherit;font-size:13px}.a-h select{background:var(--ink-2)}.a-h button[aria-selected=true]{background:var(--raised);color:var(--paper)}
 #a-code{flex:1;border:0;outline:0;resize:none;background:var(--ink);color:var(--paper);padding:14px;font:13.5px/1.55 ui-monospace,Menlo,Consolas,monospace;tab-size:2}#a-prev{flex:1;border:0;background:#fff}
 </style>
 </head>
@@ -133,7 +133,7 @@ dialog textarea{min-height:100px;resize:vertical}dialog input:focus,dialog texta
     <textarea id="a-code" spellcheck="false" aria-label="Code editor"></textarea>
   </aside>
 <dialog id="sdlg">
-  <h3>Settings</h3><p>Viora opens in the white look with its green accent. Change the look here.</p>
+  <h3>Settings</h3><p>Viora opens in the same soft light look as the extension, with its violet accent. Change the look here.</p>
   <div id="pf-mount"></div>
   <h4 class="np-h">Speed &amp; reliability</h4>
   <div id="np-mount"></div>

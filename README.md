@@ -16,7 +16,7 @@ Build command: empty. Publish directory: `.`
 ## v2 upgrade notes
 
 ### Look & feel: Viora extension colours + Settings
-The whole site (marketing pages and web app) now opens in the **white (light) look** with the green accent.
+The whole site (marketing pages and web app) now opens in the **white (light) look** (originally green accent; see v4 below for the extension palette).
 Users can switch to dark and change the accent in **Account → Appearance** or in the app via
 **gear → Settings**. The web app supports both themes (layout in `assets/x/viora-theme.css`, light colours
 in its last block). Saved per device in
@@ -68,3 +68,19 @@ Code: `assets/x/netperf.js` (+ `netperf.css`). Saved per device in `localStorage
 - **Keep the server awake**: pings it every ~8 minutes while the app is open and visible.
 - **Put my message back if it could not be sent**, and **remember what I was typing** (draft).
 - One-tap presets: Fastest / Balanced / Most reliable.
+
+---
+## v4 upgrade notes: the website now looks like the extension (7.24.4)
+
+Same palette, type and shapes as the extension's side panel / tab:
+- **Colours** (`assets/x/accent.css`, `assets/style.css`, `assets/x/viora-theme.css`): light = soft pink/blue pastel wash, white cards,
+  `#f6f8fe` / `#e0e5f2` / `#1d1e2b`; dark = the extension's deep violet (`#17141f`, `#1d1929`, `#322a44`). The green is gone.
+- **Accent**: default is the extension's violet. Like the extension, each assistant has its own hue (Flash violet, Deep Search sky,
+  Math & Code mint, Automate amber, Humanizer rose); the web app switches hue with the chosen assistant (`html[data-model]`).
+  Picking an accent under Settings pins one colour everywhere (`viora_accent`: blue, mint, amber, rose; violet = default behaviour).
+  Old saved `green` values simply fall back to the default.
+- **Shapes**: glass header, gradient "Viora" wordmark (violet to orange), pill chips with soft shadows, white floating composer (radius 26),
+  round lilac send button, shadows instead of hard borders on cards.
+- **Home page**: logo + light-weight "Welcome, what do you want me to do?" greeting, assistant chips use their own hue.
+- **Fonts**: the Google Fonts (Inter / Space Grotesk) are no longer loaded; the site uses the same system font stack as the extension (faster, no third-party request).
+- The web app keeps its three-column layout (chats / chat / tools), only recoloured to match.

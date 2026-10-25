@@ -1,7 +1,7 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="light">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/png" href="assets/favicon-32.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><script src="assets/x/prefs.js"></script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/png" href="assets/favicon-32.png"><script src="assets/x/prefs.js"></script>
 <link rel="stylesheet" href="assets/x/accent.css">
 <link rel="stylesheet" href="assets/x/prefs.css">
 <link rel="stylesheet" href="assets/style.css"><script>try{document.documentElement.dataset.theme=localStorage.getItem("viora_theme")||"light"}catch(e){}</script>
@@ -9,7 +9,7 @@
 <meta name="description" content="Viora puts five AI assistants in your browser: chat, deep web research, math &amp; code, page automation and a Humanizer. Free, no API key.">
 <meta property="og:title" content="Viora — One free AI panel for your whole browser">
 <meta property="og:description" content="Chat, research with sources, solve math &amp; code, automate pages and humanize text. Free, no API key.">
-<meta name="theme-color" content="#f4f8f5"><meta name="twitter:card" content="summary"><meta property="og:type" content="website"><meta property="og:image" content="assets/icon-128.png">
+<meta name="theme-color" content="#f6f8fe"><meta name="twitter:card" content="summary"><meta property="og:type" content="website"><meta property="og:image" content="assets/icon-128.png">
 </head>
 <body data-page="home">
 <noscript><style>.rv{opacity:1!important;transform:none!important}</style></noscript>
@@ -18,7 +18,8 @@
 
 <section class="hero">
   <div class="wrap">
-    <h1 class="rv">What can I help you with?</h1>
+    <img class="hero-logo rv" src="assets/mark.png" alt="" width="78" height="78">
+    <h1 class="rv">Welcome, what do you want me to do?</h1>
     <p class="lede rv">Viora is the free AI that lives in your browser. Chat, research the live web, solve math and code, automate pages and rewrite text in your voice.</p>
     <div class="demo rv" id="demo">
       <div class="thread" id="thread" aria-live="polite">
@@ -29,11 +30,11 @@
         <div class="c-input" id="c-input"></div>
         <div class="c-bar">
           <div class="chips" role="tablist" aria-label="Choose an assistant">
-            <button class="chip-a" role="tab" data-k="flash" style="--c:var(--accent)" aria-selected="true"><span data-i="zap"></span>Flash</button>
-            <button class="chip-a" role="tab" data-k="search" style="--c:var(--accent)"><span data-i="search"></span>Deep Search</button>
-            <button class="chip-a" role="tab" data-k="code" style="--c:var(--accent)"><span data-i="code"></span>Math &amp; Code</button>
-            <button class="chip-a" role="tab" data-k="auto" style="--c:var(--accent)"><span data-i="pointer"></span>Automate</button>
-            <button class="chip-a" role="tab" data-k="human" style="--c:var(--accent)"><span data-i="pen"></span>Humanizer</button>
+            <button class="chip-a" role="tab" data-k="flash" style="--c:var(--hue-flash)" aria-selected="true"><span data-i="zap"></span>Flash</button>
+            <button class="chip-a" role="tab" data-k="search" style="--c:var(--hue-search)"><span data-i="search"></span>Deep Search</button>
+            <button class="chip-a" role="tab" data-k="code" style="--c:var(--hue-math)"><span data-i="code"></span>Math &amp; Code</button>
+            <button class="chip-a" role="tab" data-k="auto" style="--c:var(--hue-automate)"><span data-i="pointer"></span>Automate</button>
+            <button class="chip-a" role="tab" data-k="human" style="--c:var(--hue-humanize)"><span data-i="pen"></span>Humanizer</button>
           </div>
           <a class="send" data-install href="#" aria-label="Add Viora to Chrome"><span data-i="arrow" style="transform:rotate(-90deg);display:flex"></span></a>
         </div>
@@ -54,15 +55,15 @@
   <div class="wrap">
     <div class="sec-head rv"><span class="eyebrow">The five</span><h2>Pick the right brain for the job</h2><p>Each assistant has its own personality, its own model and its own accent color. Switch in one tap.</p></div>
     <div class="assist">
-      <article class="a-card rv" style="--c:var(--accent)"><div class="a-ico"><span data-i="zap"></span></div><h3>Viora Flash</h3><p>Quick, friendly and good at almost everything. Your default for everyday questions.</p>
+      <article class="a-card rv" style="--c:var(--hue-flash)"><div class="a-ico"><span data-i="zap"></span></div><h3>Viora Flash</h3><p>Quick, friendly and good at almost everything. Your default for everyday questions.</p>
         <ul><li><span data-i="check"></span>Picks a stronger model for harder questions</li><li><span data-i="check"></span>Hands jobs to your own agents</li></ul></article>
-      <article class="a-card rv" style="--c:var(--accent)"><div class="a-ico"><span data-i="search"></span></div><h3>Deep Search</h3><p>Reads the live web, compares sources and writes a report that cites what it found.</p>
+      <article class="a-card rv" style="--c:var(--hue-search)"><div class="a-ico"><span data-i="search"></span></div><h3>Deep Search</h3><p>Reads the live web, compares sources and writes a report that cites what it found.</p>
         <ul><li><span data-i="check"></span>Shows publication dates for each source</li><li><span data-i="check"></span>Flags where sources disagree</li></ul></article>
-      <article class="a-card rv" style="--c:var(--accent)"><div class="a-ico"><span data-i="code"></span></div><h3>Math &amp; Code</h3><p>Shows its working, writes proper fractions and gives complete, runnable code.</p>
+      <article class="a-card rv" style="--c:var(--hue-math)"><div class="a-ico"><span data-i="code"></span></div><h3>Math &amp; Code</h3><p>Shows its working, writes proper fractions and gives complete, runnable code.</p>
         <ul><li><span data-i="check"></span>Step-by-step maths</li><li><span data-i="check"></span>Debugging with a fix, not a guess</li></ul></article>
-      <article class="a-card rv" style="--c:var(--accent)"><div class="a-ico"><span data-i="pointer"></span></div><h3>Automate</h3><p>Looks at the page you're on, then clicks, types and navigates to get the task done. Pause, resume or cancel any time.</p>
+      <article class="a-card rv" style="--c:var(--hue-automate)"><div class="a-ico"><span data-i="pointer"></span></div><h3>Automate</h3><p>Looks at the page you're on, then clicks, types and navigates to get the task done. Pause, resume or cancel any time.</p>
         <ul><li><span data-i="check"></span>Asks before anything risky</li><li><span data-i="check"></span>Picks up where it left off if interrupted</li></ul></article>
-      <article class="a-card rv" style="--c:var(--accent)"><div class="a-ico"><span data-i="pen"></span></div><h3>Humanizer</h3><p>Paste text that sounds like AI and get it back in a natural human voice, matched to your own writing style.</p>
+      <article class="a-card rv" style="--c:var(--hue-humanize)"><div class="a-ico"><span data-i="pen"></span></div><h3>Humanizer</h3><p>Paste text that sounds like AI and get it back in a natural human voice, matched to your own writing style.</p>
         <ul><li><span data-i="check"></span>Keeps your facts, numbers and links</li><li><span data-i="check"></span>Learns how you write</li></ul></article>
     </div>
   </div>
@@ -72,12 +73,12 @@
   <div class="wrap">
     <div class="sec-head rv"><h2>Things people ask Viora</h2><p>Start with one of these, or ask your own.</p></div>
     <div class="feat try">
-      <div class="f-card rv" style="--c:var(--accent)"><span data-i="zap"></span><h3>Summarize this page</h3><p>Get the key points of any article you're reading, in a few lines.</p></div>
-      <div class="f-card rv" style="--c:var(--accent)"><span data-i="search"></span><h3>Compare two laptops, with sources</h3><p>Deep Search reads reviews and spec pages, then cites what it used.</p></div>
-      <div class="f-card rv" style="--c:var(--accent)"><span data-i="code"></span><h3>Why does this code crash?</h3><p>Paste the error and get a fix with a short explanation.</p></div>
-      <div class="f-card rv" style="--c:var(--accent)"><span data-i="pointer"></span><h3>Fill in this form for me</h3><p>Automate types your details and stops before anything is submitted.</p></div>
-      <div class="f-card rv" style="--c:var(--accent)"><span data-i="pen"></span><h3>Make this email sound like me</h3><p>Humanizer rewrites stiff AI text in your own voice.</p></div>
-      <div class="f-card rv" style="--c:var(--accent)"><span data-i="book"></span><h3>Study from my PDFs</h3><p>Add notes and papers to a notebook, then ask questions about only those.</p></div>
+      <div class="f-card rv" style="--c:var(--hue-flash)"><span data-i="zap"></span><h3>Summarize this page</h3><p>Get the key points of any article you're reading, in a few lines.</p></div>
+      <div class="f-card rv" style="--c:var(--hue-search)"><span data-i="search"></span><h3>Compare two laptops, with sources</h3><p>Deep Search reads reviews and spec pages, then cites what it used.</p></div>
+      <div class="f-card rv" style="--c:var(--hue-math)"><span data-i="code"></span><h3>Why does this code crash?</h3><p>Paste the error and get a fix with a short explanation.</p></div>
+      <div class="f-card rv" style="--c:var(--hue-automate)"><span data-i="pointer"></span><h3>Fill in this form for me</h3><p>Automate types your details and stops before anything is submitted.</p></div>
+      <div class="f-card rv" style="--c:var(--hue-humanize)"><span data-i="pen"></span><h3>Make this email sound like me</h3><p>Humanizer rewrites stiff AI text in your own voice.</p></div>
+      <div class="f-card rv" style="--c:var(--hue-flash)"><span data-i="book"></span><h3>Study from my PDFs</h3><p>Add notes and papers to a notebook, then ask questions about only those.</p></div>
     </div>
   </div>
 </section>
