@@ -361,3 +361,21 @@ details.q .ans{padding:0 20px 20px;color:var(--muted);font-size:15.5px}
 a:focus-visible,button:focus-visible,summary:focus-visible{outline:2px solid var(--accent);outline-offset:3px;border-radius:8px}
 @media(max-width:560px){.chips{flex-wrap:nowrap;overflow-x:auto;width:100%;padding-bottom:4px;scrollbar-width:none}.chips::-webkit-scrollbar{display:none}.chip-a{flex:none}.c-bar{flex-wrap:nowrap}.hero h1{font-size:clamp(30px,9vw,40px)}}
 @media(prefers-reduced-motion:reduce){.rv{opacity:1!important;transform:none!important;transition:none!important}*{animation-duration:.01ms!important}}
+
+/* ===== Viora app style (default): same type, surfaces and buttons as the web app / extension ===== */
+:root{
+  --sans:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --display:system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+  --r:14px; --r-lg:22px;
+}
+h1,h2,h3,h4{letter-spacing:-.015em;font-weight:600}
+.btn{border-radius:12px}
+.btn-primary,:root[data-theme="light"] .btn-primary{background:var(--accent);color:var(--on-accent);box-shadow:0 4px 14px color-mix(in srgb,var(--accent) 27%,transparent)}
+.btn-primary:hover{background:var(--accent-hi);box-shadow:0 6px 20px color-mix(in srgb,var(--accent) 40%,transparent)}
+.step::before,.avatar{background:var(--accent);color:var(--on-accent)}
+.grad-text{background:linear-gradient(135deg,var(--accent-hi),var(--accent));-webkit-background-clip:text;background-clip:text;color:transparent}
+:root[data-theme="dark"] body{background:radial-gradient(120% 60% at 50% -10%,#1d3320 0%,transparent 60%),#050706;background-attachment:fixed}
+:root[data-theme="dark"] .site-header{background:linear-gradient(#171c18cc,transparent)}
+:root[data-theme="dark"] .a-card,:root[data-theme="dark"] .f-card,:root[data-theme="dark"] .a-box,:root[data-theme="dark"] .c-card,:root[data-theme="dark"] .panel,:root[data-theme="dark"] .auth-card{background:linear-gradient(#171c18,#0d100e);border-color:var(--line)}
+:root[data-theme="dark"] .composer{background:#131714;border-color:var(--line);border-radius:16px}
+:root[data-theme="dark"] .aura{opacity:.5}
