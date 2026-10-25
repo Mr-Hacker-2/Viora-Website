@@ -1,0 +1,21 @@
+/* Viora accent system. Default = the Viora extension's green. Users can change it in Settings
+   (saved as viora_accent; applied as html[data-accent]). Everything below derives from --accent. */
+:root{ --accent-user:#4ade50; --on-accent:#04130a; }
+:root[data-accent="blue"]{ --accent-user:#4aa8ff; --on-accent:#041322; }
+:root[data-accent="violet"]{ --accent-user:#9b86ff; --on-accent:#120a2e; }
+:root[data-accent="amber"]{ --accent-user:#f5b83d; --on-accent:#221600; }
+:root[data-accent="rose"]{ --accent-user:#ff6f95; --on-accent:#2a0610; }
+:root[data-accent="teal"]{ --accent-user:#2dd4bf; --on-accent:#032320; }
+:root{
+  --accent: var(--accent-user);
+  --accent-hi: color-mix(in srgb, var(--accent) 80%, #fff);
+  --accent-deep: color-mix(in srgb, var(--accent) 24%, #0a0d0b);
+  --accent-line: color-mix(in srgb, var(--accent) 48%, #0a0d0b);
+  --accent-bg: color-mix(in srgb, var(--accent) 12%, #0a0d0b);
+}
+/* Marketing-site helpers derived from the accent */
+:root{
+  --accent-2: color-mix(in srgb, var(--accent-user) 55%, #2dd4bf);
+  --accent-ink: var(--accent-user);
+}
+:root[data-theme="light"]{ --accent-ink: color-mix(in srgb, var(--accent-user) 52%, #000); }

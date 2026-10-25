@@ -1,0 +1,12 @@
+/* Attachment tray states, user-message attachment line, model-switch note */
+.attach-chip.ready .attach-name,.attach-chip.busy .attach-name,.attach-chip.failed .attach-name{display:flex;flex-direction:column;line-height:1.25;max-width:210px;white-space:normal}
+.attach-name small{color:var(--faint);font-size:11.5px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;max-width:200px}
+.attach-chip.failed .attach-name small{white-space:normal;max-width:260px}
+.st-ok{color:var(--accent);font-weight:600}.st-err{color:#ff7b8f;font-weight:600}
+.attach-chip.failed{border-color:#ff7b8f88}.attach-chip.failed .attach-icon{background:#ff7b8f22;color:#ff7b8f;font-weight:700}
+.spin{width:14px;height:14px;border-radius:50%;border:2px solid var(--line);border-top-color:var(--accent);display:block;animation:vspin .8s linear infinite}
+@keyframes vspin{to{transform:rotate(360deg)}}
+@media (prefers-reduced-motion:reduce){.spin{animation-duration:2.4s}}
+.msg-att{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:6px}
+.msg-att-i{display:inline-flex;align-items:center;gap:5px;font-size:12px;padding:2px 9px;border:1px solid var(--line);border-radius:999px;color:var(--muted);max-width:220px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.switch-note{display:inline-block;margin:0 0 6px;padding:3px 10px;border-radius:999px;font-size:12.5px;background:var(--accent-bg);border:1px solid var(--accent-line);color:var(--accent)}
