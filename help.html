@@ -1,7 +1,10 @@
 <!DOCTYPE html>
 <html lang="en" data-theme="dark">
 <head>
-<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/png" href="assets/favicon-32.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><link rel="stylesheet" href="assets/style.css"><script>try{document.documentElement.dataset.theme=localStorage.getItem("viora_theme")||"dark"}catch(e){}</script>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/png" href="assets/favicon-32.png"><link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin><link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Space+Grotesk:wght@500;600;700&display=swap" rel="stylesheet"><script src="assets/x/prefs.js"></script>
+<link rel="stylesheet" href="assets/x/accent.css">
+<link rel="stylesheet" href="assets/x/prefs.css">
+<link rel="stylesheet" href="assets/style.css"><script>try{document.documentElement.dataset.theme=localStorage.getItem("viora_theme")||"dark"}catch(e){}</script>
 
 <title>Help center — Viora</title>
 <meta name="description" content="Guides, answers and troubleshooting for the Viora AI browser extension.">
@@ -34,7 +37,7 @@
 
       <section class="help-sec" id="faq">
         <h2>Questions &amp; answers</h2><p class="lead">Tap a question to expand it.</p>
-        <div id="help-empty" class="empty"><b>No matches.</b><br>Try a different word, or <a href="#contact" style="color:#9b86ff;text-decoration:underline">ask us directly</a>.</div>
+        <div id="help-empty" class="empty"><b>No matches.</b><br>Try a different word, or <a href="#contact" style="color:var(--accent-ink);text-decoration:underline">ask us directly</a>.</div>
         <div class="group" id="g-assistants"><h3 class="group-title"><span data-i="zap"></span>Assistants</h3><div class="faq-list">
 <details class="q" data-cat="assistants"><summary>Which assistant should I use?<span data-i="chev"></span></summary><div class="ans"><p>Use <b>Flash</b> for everyday questions, <b>Deep Search</b> when you want sources and fresh facts, <b>Math &amp; Code</b> for calculations and programming, <b>Automate</b> to act on a web page, and <b>Humanizer</b> to rewrite AI-sounding text.</p><p>Switch with the pill next to the Viora name at the top of the panel.</p></div></details>
 <details class="q" data-cat="assistants"><summary>Why does an answer show sources sometimes and not others?<span data-i="chev"></span></summary><div class="ans"><p>Sources appear only when the answer really used the web. Small talk, writing jobs, simple maths and code questions skip the search. Deep Search always researches.</p><p>Open the <b>…</b> menu under a reply and choose <b>Sources</b> to see the numbered list.</p></div></details>
