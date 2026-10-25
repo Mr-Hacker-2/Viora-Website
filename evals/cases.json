@@ -1,0 +1,12 @@
+[
+["Why does my SQL query return duplicates?","math"],["Write a Python function to reverse a list","math"],["Fix: TypeError: undefined is not a function","math"],
+["calculate 15% of 80","math"],["Solve x^2 = 9 with steps","math"],["Explain Big-O notation simply","math"],
+["What's the latest news on SpaceX?","search"],["Who is the current CEO of OpenAI?","search"],["price of bitcoin today","search"],
+["weather in Paris this weekend","search"],["Who won the most recent Formula 1 race?","search"],["Compare the newest flagship phones","search"],
+["Make this sound more natural: leverage synergies","human"],["Rewrite this paragraph to sound human","human"],
+["What is the capital of France?","flash"],["Who was the first president of the USA?","flash"],["Explain the function of mitochondria","flash"],
+["I made an error in my essay, can you proofread it?","flash"],["Write a poem about spring","flash"],["Translate hello to Spanish","flash"],
+["How are you?","flash"],["Who is the author of Hamlet?","flash"],["What is the dress code at a wedding?","flash"],["Explain how vaccines work","flash"],
+["Plan how to fill this form","automate",1],["Which button submits this page?","automate",1],
+["Summarize this document","flash",1],["what is the latest figure in this report","flash",1],["look up the latest news about this company","search",1]
+]
