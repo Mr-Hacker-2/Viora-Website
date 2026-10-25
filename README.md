@@ -16,9 +16,10 @@ Build command: empty. Publish directory: `.`
 ## v2 upgrade notes
 
 ### Look & feel: Viora extension colours + Settings
-The whole site (marketing pages and web app) now uses the Viora extension's dark green by default.
-Users can change it in **Account → Appearance** (accent + dark/light theme) or in the app via
-**gear → Settings** (accent; the app shell is the extension's dark theme). Saved per device in
+The whole site (marketing pages and web app) now opens in the **white (light) look** with the green accent.
+Users can switch to dark and change the accent in **Account → Appearance** or in the app via
+**gear → Settings**. The web app supports both themes (layout in `assets/x/viora-theme.css`, light colours
+in its last block). Saved per device in
 `localStorage` (`viora_accent`, `viora_theme`). Code: `assets/x/accent.css` (colour tokens),
 `assets/x/prefs.js` + `prefs.css` (applies the choice before first paint, renders the picker).
 
@@ -49,3 +50,21 @@ it is used first. `site`/`snippet` fields are also honoured.
 The chat/auth server (`viora-auth-website.onrender.com`) is not part of this zip, so nothing server-side was changed:
 real audio transcription, server-side FFmpeg video processing, PDF page-image analysis, provider fallback/rate-limit
 handling, and which underlying model answers are decided there. `caps.js` must be kept in sync with that server.
+
+---
+## v3 upgrade notes
+
+### White by default
+Every page starts in light mode unless a visitor chose dark (`viora_theme`). The web app's three-column
+layout used to exist only for dark; it now applies to both themes, with a light palette at the end of
+`assets/x/viora-theme.css`.
+
+### Speed & reliability (web app → gear → Settings)
+Code: `assets/x/netperf.js` (+ `netperf.css`). Saved per device in `localStorage` (`viora_perf`).
+- **Wait for the server** (default 60 s): the server is on a free host that sleeps, so a cold start can take a minute; after this long the request is retried.
+- **Automatic retries** (default 2): dropped connections, timeouts and 429/502/503/504 are retried with a growing pause. The Stop button is never retried. The reply area says "trying again (2 of 3)…".
+- **Stop a silent reply** (default 30 s): a stream that goes quiet is cut and what arrived is kept, with a note.
+- **History sent** (default 30 messages): only the latest messages go with each question, so long chats stay fast and under the upload limit.
+- **Keep the server awake**: pings it every ~8 minutes while the app is open and visible.
+- **Put my message back if it could not be sent**, and **remember what I was typing** (draft).
+- One-tap presets: Fastest / Balanced / Most reliable.

@@ -1,10 +1,10 @@
 <!doctype html>
-<html lang="en" data-theme="dark" data-fixed-theme data-model="flash">
+<html lang="en" data-theme="light" data-model="flash">
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Viora</title>
-<meta name="theme-color" content="#050706">
+<meta name="theme-color" content="#f4f8f5">
 <link rel="icon" href="assets/x/icon32.png">
 <script src="assets/x/prefs.js"></script>
 <link rel="stylesheet" href="assets/x/tab.css">
@@ -14,17 +14,19 @@
 <link rel="stylesheet" href="assets/x/viora-fx.css">
 <link rel="stylesheet" href="assets/x/sources.css">
 <link rel="stylesheet" href="assets/x/attach.css">
+<link rel="stylesheet" href="assets/x/netperf.css">
+<link rel="preconnect" href="https://viora-auth-website.onrender.com" crossorigin>
 <style>
 html,body{height:100%;margin:0}
 #sh-left{position:relative}
 #umenu{top:84px;left:14px;right:14px;max-height:none}
 .hx{position:absolute;right:6px;top:50%;transform:translateY(-50%);opacity:0;color:var(--faint);padding:0 6px;font-size:16px}
 .sh-hist button{position:relative;padding-right:28px}.sh-hist button:hover .hx{opacity:1}
-#projs button.on{color:var(--accent)}
+#projs button.on{color:var(--accent)}:root[data-theme=light] #projs button.on{color:var(--accent-ink)}
 .sh-sw[aria-checked=true]{background:var(--accent)}
 @media(max-width:979px){body.sb #sh-left{display:block!important;position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:40;background:#0d100e;border-right:1px solid var(--line);padding:18px;overflow:auto}}
 @media(min-width:980px){#shell.no-left #open-full{display:grid!important}}
-#dropov{position:fixed;inset:14px;z-index:90;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:22px;background:#050706e6;font-size:20px;font-weight:600;color:var(--accent);pointer-events:none}
+#dropov{position:fixed;inset:14px;z-index:90;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:22px;background:color-mix(in srgb,var(--ink) 92%,transparent);font-size:20px;font-weight:600;color:var(--accent-ink,var(--accent));pointer-events:none}
 dialog{background:var(--ink-2);color:var(--paper);border:1px solid var(--line);border-radius:20px;padding:22px;width:min(520px,92vw)}
 dialog::backdrop{background:#000a}dialog h3{margin:0 0 4px;font:600 20px var(--sans)}dialog p{margin:0 0 14px;color:var(--muted);font-size:14px}
 dialog input[type=url],dialog input[type=text],dialog input[type=search],dialog textarea{width:100%;background:var(--raised);border:1px solid var(--line);color:var(--paper);border-radius:12px;padding:10px 12px;margin-bottom:10px;font:inherit;outline:0}
@@ -36,7 +38,7 @@ dialog textarea{min-height:100px;resize:vertical}dialog input:focus,dialog texta
 #art{position:fixed;top:14px;right:14px;bottom:14px;width:min(680px,calc(100vw - 28px));z-index:50;display:flex;flex-direction:column;background:#0d100e;border:1px solid var(--line);border-radius:22px;box-shadow:var(--shadow-lg);overflow:hidden}
 .a-h{display:flex;gap:6px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}.a-h b{margin-right:auto;text-transform:capitalize}
 .a-h button,.a-h select{border:1px solid var(--line);background:none;color:var(--muted);border-radius:8px;padding:4px 10px;cursor:pointer;font:inherit;font-size:13px}.a-h select{background:#0d100e}.a-h button[aria-selected=true]{background:var(--raised);color:var(--paper)}
-#a-code{flex:1;border:0;outline:0;resize:none;background:#050706;color:var(--paper);padding:14px;font:13.5px/1.55 ui-monospace,Menlo,Consolas,monospace;tab-size:2}#a-prev{flex:1;border:0;background:#fff}
+#a-code{flex:1;border:0;outline:0;resize:none;background:var(--ink);color:var(--paper);padding:14px;font:13.5px/1.55 ui-monospace,Menlo,Consolas,monospace;tab-size:2}#a-prev{flex:1;border:0;background:#fff}
 </style>
 </head>
 <body>
@@ -131,8 +133,10 @@ dialog textarea{min-height:100px;resize:vertical}dialog input:focus,dialog texta
     <textarea id="a-code" spellcheck="false" aria-label="Code editor"></textarea>
   </aside>
 <dialog id="sdlg">
-  <h3>Settings</h3><p>Appearance. Viora uses the extension’s green unless you choose another accent.</p>
+  <h3>Settings</h3><p>Viora opens in the white look with its green accent. Change the look here.</p>
   <div id="pf-mount"></div>
+  <h4 class="np-h">Speed &amp; reliability</h4>
+  <div id="np-mount"></div>
   <div class="dl" style="margin-top:12px"><span style="flex:1"></span><button class="btn p" id="s-x" type="button">Done</button></div>
 </dialog>
 <dialog id="pdlg">
@@ -167,6 +171,7 @@ import { ic } from './assets/x/ic.js';
 import * as Src from './assets/x/sources.js';
 import { pick as pickModel } from './assets/x/caps.js';
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK } from './assets/x/media.js';
+import * as NP from './assets/x/netperf.js';
 (() => {
 'use strict';
 const API = 'https://viora-auth-website.onrender.com';
@@ -210,7 +215,7 @@ function route(t, c) {
   if (!fileQ && /\b(latest|news|today|current|currently|price|who won|who is|who are|this week|this year|202\d|compare|research|sources|release|weather|score|stock|forecast|trending|election|near me)\b/.test(x)) return 'search';
   return 'flash';
 }
-const stat = m => m.searching ? '<span style="color:var(--muted)">Searching the web…</span>' : '<span style="color:var(--muted)">…</span>';
+const stat = m => m.wait ? `<span style="color:var(--muted)">${esc(m.wait)}</span>` : m.searching ? '<span style="color:var(--muted)">Searching the web…</span>' : '<span style="color:var(--muted)">…</span>';
 function mdx(t, srcs) { if (srcs && srcs.length) t = t.replace(/\[(\d{1,2})\]/g, (x, n) => srcs[n - 1] ? `[${n}](${srcs[n - 1].url})` : x); return renderMarkdown(t); }
 function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : stat(m); bindCodeCopy(el); Src.decorateCitations(el, m.src); }
 function msgHtml(m, i, last) {
@@ -254,7 +259,7 @@ async function send(text) {
   if (!c) { c = { id: String(Date.now()), title: text.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
   c.assistant = asst; c.updated = Date.now(); chats = [c, ...chats.filter(x => x !== c)];
   c.messages.push({ role: 'user', content: text, att: (c.page ? c.page.files : []).map(f => ({ name: f.name, kind: f.kind, src: f.kind === 'web' ? f.source : '' })) }, { role: 'assistant', content: '' });
-  $('#input').value = ''; grow(); save(); render();
+  $('#input').value = ''; try { localStorage.removeItem('viora_draft_' + S.email); } catch {} grow(); save(); render();
   const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); busy = ctl; sendState(true);
   const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 140, b = $('#b' + idx); if (b) { paintBody(b, m); if (near) th.scrollTop = th.scrollHeight; } };
   let eff = asst === 'auto' ? route(text, c) : asst;
@@ -267,13 +272,15 @@ async function send(text) {
   m.searching = useWeb; paint();
   try {
     const pp = await pagePayload(c, text);
-    const r = await fetch(API + '/api/chat', { method: 'POST', signal: ctl.signal, headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-      body: JSON.stringify({ assistant: eff === 'human' ? 'humanize' : eff, web: useWeb, context, messages: c.messages.slice(0, -1).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images }) });
+    const r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
+      body: JSON.stringify({ assistant: eff === 'human' ? 'humanize' : eff, web: useWeb, context, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images }) },
+      { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
+    m.wait = '';
     if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || (r.status === 413 ? 'The server rejected the upload as too large.' : 'Something went wrong. Please try again.')); }
     const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0;
     for (;;) {
-      const { done, value } = await rd.read(); if (done) break;
+      const { done, value, stalled } = await NP.readChunk(rd); if (stalled) { m.note = 'The connection went quiet, so this reply may be cut short. Use Regenerate to try again.'; render(); break; } if (done) break;
       buf += dec.decode(value, { stream: true }); const lines = buf.split('\n'); buf = lines.pop();
       for (const l of lines) { if (!l.startsWith('data:')) continue; const d = l.slice(5).trim(); if (!d || d === '[DONE]') continue;
         try { const j = JSON.parse(d);
@@ -284,9 +291,9 @@ async function send(text) {
     if (!m.content.trim()) m.content = 'I got an empty reply. Please try again.';
   } catch (e) {
     if (e.name === 'AbortError') { if (!m.content) m.content = '_Stopped._'; }
-    else { m.err = true; m.content = (m.content ? m.content + '\n\n' : '') + '⚠️ ' + (/fetch|network/i.test(e.message) ? 'Could not reach Viora. The server may be waking up, so try again in 30 seconds.' : e.message); }
+    else { if (!m.content && NP.get().restoreOnFail && !$('#input').value) { $('#input').value = text; grow(); } m.err = true; m.content = (m.content ? m.content + '\n\n' : '') + '⚠️ ' + (/fetch|network/i.test(e.message) ? 'Could not reach Viora. The server may be waking up, so try again in 30 seconds.' : e.message); }
   }
-  m.searching = false; busy = null; sendState(false); save(); render();
+  m.searching = false; m.wait = ''; busy = null; sendState(false); save(); render();
 }
 function grow() { const t = $('#input'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 200) + 'px'; $('#send').disabled = !busy && !t.value.trim(); }
 const newChat = () => { cur = null; hide(); render(); $('#input').focus(); closeSb(); };
@@ -468,7 +475,7 @@ $('#thread').onclick = e => {
   const ar = e.target.closest('[data-art]'); if (ar) { const mm = /```(\w*)\n?([\s\S]*?)(```|$)/.exec(chat().messages[+ar.dataset.art].content); if (mm) openArt(mm[2].replace(/\n$/, ''), mm[1] || 'text'); return; }
   if (e.target.closest('[data-regen]')) { const c = chat(); c.messages.pop(); const u = c.messages.pop(); send(u.content); }
 };
-$('#open-settings').onclick = () => { hide(); VioraPrefs.mount($('#pf-mount'), { theme: false }); $('#sdlg').showModal(); };
+$('#open-settings').onclick = () => { hide(); VioraPrefs.mount($('#pf-mount')); NP.mount($('#np-mount')); $('#sdlg').showModal(); };
 $('#s-x').onclick = () => $('#sdlg').close();
 $('#out').onclick = () => { localStorage.removeItem('viora_session'); location.href = 'index.html'; };
 /* projects */
@@ -511,7 +518,12 @@ $('#a-dl').onclick = () => { const a = document.createElement('a'); a.href = URL
 const name = S.name || S.email.split('@')[0];
 $('#nm').textContent = name; $('#av').innerHTML = S.picture ? `<img src="${esc(S.picture)}" alt="" referrerpolicy="no-referrer">` : esc(name[0].toUpperCase());
 fetch(API + '/api/verify?token=' + encodeURIComponent(S.token)).then(r => { if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); } }).catch(() => {});
-render(); $('#input').focus();
+NP.keepWarm(API + '/api/verify?token=' + encodeURIComponent(S.token));
+/* draft: what you were typing survives a reload */
+const dkeyDraft = 'viora_draft_' + S.email;
+try { const d = localStorage.getItem(dkeyDraft); if (d && NP.get().saveDraft) $('#input').value = d; } catch {}
+$('#input').addEventListener('input', () => { try { if (NP.get().saveDraft && $('#input').value) localStorage.setItem(dkeyDraft, $('#input').value); else localStorage.removeItem(dkeyDraft); } catch {} });
+render(); grow(); $('#input').focus();
 })();
 </script>
 </body>
