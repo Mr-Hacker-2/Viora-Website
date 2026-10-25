@@ -62,11 +62,10 @@ const $$ = (s, r = document) => [...r.querySelectorAll(s)];
 /* ================= theme ================= */
 const root = document.documentElement;
 const savedTheme = (() => { try { return localStorage.getItem('viora_theme'); } catch { return null; } })();
-root.dataset.theme = savedTheme || 'dark';
+if (window.VioraPrefs) VioraPrefs.apply(); else root.dataset.theme = savedTheme || 'dark';
 function toggleTheme() {
   const next = root.dataset.theme === 'dark' ? 'light' : 'dark';
-  root.dataset.theme = next;
-  try { localStorage.setItem('viora_theme', next); } catch {}
+  if (window.VioraPrefs) VioraPrefs.setTheme(next); else { root.dataset.theme = next; try { localStorage.setItem('viora_theme', next); } catch {} }
 }
 
 /* ================= toast ================= */
