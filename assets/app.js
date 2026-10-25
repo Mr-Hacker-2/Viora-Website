@@ -6,7 +6,7 @@
 const VIORA = {
   installUrl: 'help.html#install',      // put your Chrome Web Store link here
   supportEmail: 'support@example.com',  // put your real support address here
-  authApi: '',                          // '' = demo mode (accounts stay in this browser). Set to your server URL to use real auth.
+  authApi: 'https://viora-auth-website.onrender.com', // your Google sign-in server (Render)
   year: new Date().getFullYear()
 };
 window.VIORA = VIORA;
@@ -77,62 +77,26 @@ function toast(msg) {
   clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 3200);
 }
 
-/* ================= session / auth ================= */
+/* ================= session / auth (Google, via the Viora auth server) ================= */
 const LS = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
   del(k) { try { localStorage.removeItem(k); } catch {} }
 };
 const session = () => LS.get('viora_session', null);
-const hex = b => [...new Uint8Array(b)].map(x => x.toString(16).padStart(2, '0')).join('');
-async function hashPw(pw, saltHex) {
-  const salt = saltHex ? new Uint8Array(saltHex.match(/../g).map(h => parseInt(h, 16))) : crypto.getRandomValues(new Uint8Array(16));
-  const key = await crypto.subtle.importKey('raw', new TextEncoder().encode(pw), 'PBKDF2', false, ['deriveBits']);
-  const bits = await crypto.subtle.deriveBits({ name: 'PBKDF2', salt, iterations: 150000, hash: 'SHA-256' }, key, 256);
-  return { salt: hex(salt), hash: hex(bits) };
-}
-const validEmail = e => /^[^\s@]+@[^\s@]+\.[^\s@]{2,}$/.test(e);
-
 const Auth = {
-  async signUp({ name, email, password }) {
-    email = email.trim().toLowerCase();
-    if (VIORA.authApi) return Auth._remote('/auth/signup', { name, email, password });
-    const users = LS.get('viora_users', {});
-    if (users[email]) throw new Error('That email already has an account. Sign in instead.');
-    const { salt, hash } = await hashPw(password);
-    users[email] = { name: name.trim() || email.split('@')[0], salt, hash, created: Date.now() };
-    LS.set('viora_users', users);
-    return Auth._start({ email, name: users[email].name, provider: 'email' });
-  },
-  async signIn({ email, password }) {
-    email = email.trim().toLowerCase();
-    if (VIORA.authApi) return Auth._remote('/auth/login', { email, password });
-    const u = LS.get('viora_users', {})[email];
-    if (!u) throw new Error('No account found for that email.');
-    const { hash } = await hashPw(password, u.salt);
-    if (hash !== u.hash) throw new Error('Wrong email or password.');
-    return Auth._start({ email, name: u.name, provider: 'email' });
-  },
-  async _remote(path, body) {
+  googleUrl() { return VIORA.authApi + '/auth/google?site=1'; },
+  /** Ask the server to confirm the token, and trust ITS answer, not the URL. */
+  async finish(token) {
     let r;
-    try { r = await fetch(VIORA.authApi + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) }); }
-    catch { throw new Error('Could not reach the sign-in server. Try again in a moment.'); }
-    const data = await r.json().catch(() => ({}));
-    if (!r.ok) throw new Error(data.error || 'Something went wrong. Please try again.');
-    return Auth._start({ email: data.email || body.email, name: data.name || body.name || '', picture: data.picture || '', token: data.token, provider: 'email' });
+    try { r = await fetch(VIORA.authApi + '/api/verify?token=' + encodeURIComponent(token)); }
+    catch { throw new Error('Could not reach the sign-in server. It may be waking up, so try again in 30 seconds.'); }
+    if (!r.ok) throw new Error('That sign-in could not be verified. Please try again.');
+    const d = await r.json();
+    const s = { email: d.email, name: d.name || '', picture: d.picture || '', token, provider: 'google', at: Date.now() };
+    LS.set('viora_session', s); return s;
   },
-  _start(s) { LS.set('viora_session', { ...s, at: Date.now() }); return s; },
-  signOut() { LS.del('viora_session'); },
-  deleteLocal() { const s = session(); if (!s) return; const u = LS.get('viora_users', {}); delete u[s.email]; LS.set('viora_users', u); LS.del('viora_session'); },
-  /** The extension opens /login?ext=<id>; after sign-in we hand the token back to it. */
-  handBackToExtension(s) {
-    const ext = new URLSearchParams(location.search).get('ext');
-    if (!ext || !s.token) return false;
-    const q = new URLSearchParams({ token: s.token, email: s.email, name: s.name || '', picture: s.picture || '' });
-    location.href = `https://${ext}.chromiumapp.org/?${q}`;
-    return true;
-  },
-  googleUrl() { return (VIORA.authApi || '') + '/auth/google' + location.search; }
+  signOut() { LS.del('viora_session'); }
 };
 window.VioraAuth = Auth; window.vtoast = toast; window.vicon = ico;
 
@@ -185,41 +149,18 @@ $$('.rv').forEach(el => io ? io.observe(el) : el.classList.add('in'));
 
 /* ================= page: login ================= */
 if (page === 'login') {
-  if (s && !new URLSearchParams(location.search).get('ext')) location.replace('account.html');
-  const form = $('#auth-form'), err = $('#auth-err'), ok = $('#auth-ok');
-  const tabs = $$('.seg button'); let mode = 'in';
-  const strength = pw => { let n = 0; if (pw.length >= 8) n++; if (/[A-Z]/.test(pw) && /[a-z]/.test(pw)) n++; if (/\d/.test(pw)) n++; if (/[^A-Za-z0-9]/.test(pw) || pw.length >= 14) n++; return pw ? Math.max(1, n) : 0; };
-  const show = (box, msg) => { err.classList.remove('show'); ok.classList.remove('show'); if (msg) { box.textContent = msg; box.classList.add('show'); } };
-  function setMode(m) {
-    mode = m; show(err, '');
-    tabs.forEach(t => t.setAttribute('aria-selected', t.dataset.mode === m));
-    $$('[data-only]').forEach(el => el.hidden = el.dataset.only !== m);
-    $('#h-title').textContent = m === 'in' ? 'Welcome back' : 'Create your account';
-    $('#h-sub').textContent = m === 'in' ? 'Log in to sync your chats, agents and settings.' : 'Free to join. Back up your chats and settings across devices.';
-    $('#submit').firstChild.textContent = m === 'in' ? 'Log in' : 'Create account';
-    $('#password').autocomplete = m === 'in' ? 'current-password' : 'new-password';
-    history.replaceState(null, '', location.pathname + location.search + (m === 'up' ? '#signup' : ''));
-  }
-  tabs.forEach(t => t.onclick = () => setMode(t.dataset.mode));
-  setMode(location.hash === '#signup' ? 'up' : 'in');
-  $('#peek').onclick = e => { const p = $('#password'), v = p.type === 'password'; p.type = v ? 'text' : 'password'; e.currentTarget.innerHTML = ico(v ? 'eyeoff' : 'eye'); e.currentTarget.setAttribute('aria-label', v ? 'Hide password' : 'Show password'); };
-  $('#password').addEventListener('input', e => { $('#meter').dataset.s = mode === 'up' ? strength(e.target.value) : 0; });
-  $('#google').onclick = () => { if (!VIORA.authApi) { show(err, 'Google sign-in works inside the Viora extension: open Settings → Account → Continue with Google. On the website, use email for now.'); return; } location.href = Auth.googleUrl(); };
-  $('#forgot').onclick = e => { e.preventDefault(); const em = $('#email').value.trim(); if (!validEmail(em)) { show(err, 'Type your email above first, then press “Forgot password”.'); $('#email').focus(); return; } show(ok, VIORA.authApi ? 'If that email has an account, a reset link is on its way.' : 'Password reset needs the server connected. In demo mode, create a new account with a different email.'); };
-  form.addEventListener('submit', async e => {
-    e.preventDefault(); show(err, '');
-    const email = $('#email').value.trim(), password = $('#password').value, name = $('#name').value.trim();
-    $$('.inp input').forEach(i => i.classList.remove('bad'));
-    if (!validEmail(email)) { $('#email').classList.add('bad'); return show(err, 'Enter a valid email address.'); }
-    if (mode === 'up' && password.length < 8) { $('#password').classList.add('bad'); return show(err, 'Use at least 8 characters for your password.'); }
-    if (!password) { $('#password').classList.add('bad'); return show(err, 'Enter your password.'); }
-    const btn = $('#submit'); btn.disabled = true; btn.querySelector('.lbl').textContent = 'One moment…';
-    try {
-      const res = await (mode === 'up' ? Auth.signUp({ name, email, password }) : Auth.signIn({ email, password }));
-      if (!Auth.handBackToExtension(res)) location.href = 'account.html';
-    } catch (ex) { show(err, ex.message); btn.disabled = false; btn.querySelector('.lbl').textContent = mode === 'in' ? 'Log in' : 'Create account'; }
-  });
-  if (VIORA.authApi) $('#demo-note')?.remove();
+  const err = $('#auth-err'), btn = $('#google');
+  const fail = msg => { err.textContent = msg; err.classList.add('show'); btn.disabled = false; };
+  const hp = new URLSearchParams(location.hash.slice(1));
+  history.replaceState(null, '', location.pathname);
+  (async () => {
+    if (hp.get('error')) return fail(hp.get('error') === 'access_denied' ? 'Google sign-in was cancelled, or this Google account is not allowed yet.' : 'Google sign-in failed (' + hp.get('error') + '). Please try again.');
+    if (hp.get('token')) {
+      btn.disabled = true; btn.lastChild.textContent = 'Signing you in…';
+      try { await Auth.finish(hp.get('token')); location.replace('account.html'); } catch (ex) { btn.lastChild.textContent = 'Continue with Google'; fail(ex.message); }
+    } else if (s) location.replace('account.html');
+  })();
+  btn.onclick = () => { btn.disabled = true; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(); };
 }
 
 /* ================= page: account ================= */
@@ -227,14 +168,15 @@ if (page === 'account') {
   if (!s) location.replace('login.html');
   else {
     const name = s.name || s.email.split('@')[0];
-    const av = $('#avatar'); av.innerHTML = s.picture ? `<img src="${s.picture.replace(/"/g, '')}" alt="">` : '';
+    const av = $('#avatar'); av.innerHTML = s.picture ? `<img src="${s.picture.replace(/"/g, '')}" alt="" referrerpolicy="no-referrer">` : '';
     if (!s.picture) av.textContent = name[0].toUpperCase();
     $('#a-name').textContent = name; $('#a-email').textContent = s.email;
     $('#kv-email').textContent = s.email; $('#kv-name').textContent = name;
-    $('#kv-prov').textContent = s.provider === 'google' ? 'Google' : 'Email & password';
+    $('#kv-prov').textContent = 'Google';
     $('#kv-since').textContent = new Date(s.at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
     $('#signout').onclick = () => { Auth.signOut(); location.href = 'index.html'; };
-    $('#delete').onclick = () => { if (confirm('Delete this account from this browser? This cannot be undone.')) { Auth.deleteLocal(); location.href = 'index.html'; } };
+    // If the server no longer accepts this session, sign out instead of showing stale details.
+    fetch(VIORA.authApi + '/api/verify?token=' + encodeURIComponent(s.token || '')).then(r => { if (r.status === 401) { Auth.signOut(); location.replace('login.html'); } }).catch(() => {});
   }
 }
 
