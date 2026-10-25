@@ -1,0 +1,322 @@
+/* ============================================================
+   Viora 7.23.0 — layout polish + effects.
+   Loaded after sidepanel.css / tab.css, so it only adds on top.
+   Dark mode uses :root[data-theme="dark"] (never the OS setting).
+   Every animation is switched off by prefers-reduced-motion at the end.
+   ============================================================ */
+
+:root {
+  --fx-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --fx-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+  --fx-glass: color-mix(in srgb, var(--ink) 74%, transparent);
+  --fx-edge: color-mix(in srgb, var(--accent) 18%, var(--line));
+}
+
+/* ---------- ambient glow behind everything (follows the mode's hue) ---------- */
+body::before {
+  content: "";
+  position: fixed;
+  inset: -20% -10% auto -10%;
+  height: 60%;
+  z-index: -1;
+  pointer-events: none;
+  background:
+    radial-gradient(40% 60% at 20% 20%, color-mix(in srgb, var(--accent) 16%, transparent), transparent 70%),
+    radial-gradient(36% 50% at 85% 10%, color-mix(in srgb, var(--sky, #2f8fe8) 12%, transparent), transparent 70%);
+  filter: blur(18px);
+  animation: fx-drift 18s ease-in-out infinite alternate;
+  transition: background 600ms ease;
+}
+
+@keyframes fx-drift {
+  from { transform: translate3d(0, 0, 0) scale(1); }
+  to { transform: translate3d(3%, 6%, 0) scale(1.08); }
+}
+
+/* ---------- header: frosted glass, shadow only once the chat scrolls ---------- */
+.bar {
+  position: relative;
+  z-index: 15;
+  padding: 10px 12px 8px 12px;
+  background: var(--fx-glass);
+  -webkit-backdrop-filter: saturate(160%) blur(14px);
+  backdrop-filter: saturate(160%) blur(14px);
+  border-bottom: 1px solid transparent;
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+body.fx-scrolled .bar {
+  border-bottom-color: var(--fx-edge);
+  box-shadow: 0 6px 18px -12px rgba(30, 40, 90, 0.35);
+}
+
+.wordmark {
+  background: linear-gradient(100deg, var(--paper) 30%, var(--accent) 120%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  transition: filter 300ms ease;
+}
+.wordmark:hover { filter: saturate(1.4); }
+.wordmark::after {
+  width: 26px;
+  border-radius: 2px;
+  background: linear-gradient(90deg, var(--accent), color-mix(in srgb, var(--accent) 20%, transparent));
+}
+.bar:hover .wordmark::after { width: 100%; }
+
+.icon-btn {
+  position: relative;
+  border-radius: 9px;
+  transition: background-color 160ms ease, color 160ms ease, transform 220ms var(--fx-spring);
+}
+.icon-btn:hover { transform: translateY(-1px); }
+.icon-btn:active { transform: scale(0.9); }
+
+.model-pill {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 18%, var(--ink-2)), color-mix(in srgb, var(--accent) 6%, var(--ink-2)));
+  border-color: color-mix(in srgb, var(--accent) 26%, var(--line));
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5) inset, 0 3px 10px -6px color-mix(in srgb, var(--accent) 70%, transparent);
+  transition: border-color 160ms ease, color 160ms ease, background 300ms ease, transform 220ms var(--fx-spring);
+}
+.model-pill:hover { transform: translateY(-1px); }
+.model-pill:active { transform: scale(0.96); }
+.pill-icon { animation: fx-breathe 3.6s ease-in-out infinite; }
+@keyframes fx-breathe { 0%, 100% { transform: scale(1); } 50% { transform: scale(1.14); } }
+
+/* ---------- thread: comfortable reading column, soft fades at the edges ---------- */
+.thread {
+  /* a centred reading column on wide screens, without touching the messages' own alignment */
+  padding: 12px max(12px, calc((100% - 760px) / 2)) 10px;
+}
+
+/* messages arrive with a gentle rise */
+.msg { animation: fx-rise 420ms var(--fx-ease) backwards; }
+.msg.user { animation-name: fx-rise-right; }
+@keyframes fx-rise { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
+@keyframes fx-rise-right { from { opacity: 0; transform: translate(14px, 8px) scale(0.97); } to { opacity: 1; transform: none; } }
+
+.msg.user {
+  background: linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, var(--ink-2)), color-mix(in srgb, var(--accent) 9%, var(--ink-2)));
+  border: 1px solid color-mix(in srgb, var(--accent) 16%, transparent);
+  border-radius: 20px 20px 6px 20px;
+  box-shadow: 0 6px 16px -10px color-mix(in srgb, var(--accent) 60%, transparent);
+}
+
+/* the assistant gets a small avatar medallion and a thin accent rail */
+.msg.assistant { position: relative; padding-left: 12px; }
+.msg.assistant::before {
+  content: "";
+  position: absolute;
+  left: 0;
+  top: 26px;
+  bottom: 4px;
+  width: 2px;
+  border-radius: 2px;
+  background: linear-gradient(to bottom, color-mix(in srgb, var(--accent) 55%, transparent), transparent);
+  opacity: 0.55;
+  transform-origin: top;
+  animation: fx-rail 700ms var(--fx-ease) backwards;
+}
+@keyframes fx-rail { from { transform: scaleY(0); } to { transform: scaleY(1); } }
+.msg.assistant > .who {
+  width: 22px;
+  height: 22px;
+  padding: 4px;
+  margin-left: -2px;
+  border-radius: 8px;
+  background: color-mix(in srgb, var(--accent) 14%, var(--ink-2));
+  box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent), 0 4px 10px -5px color-mix(in srgb, var(--accent) 70%, transparent);
+}
+
+/* while an answer is being written: the rail pulses and the avatar glows */
+.msg.assistant.streaming::before { opacity: 1; background: linear-gradient(to bottom, var(--accent), transparent); animation: fx-rail-pulse 1.4s ease-in-out infinite; }
+.msg.assistant.streaming > .who { animation: fx-glow 1.6s ease-in-out infinite; }
+@keyframes fx-rail-pulse { 0%, 100% { opacity: 0.45; } 50% { opacity: 1; } }
+@keyframes fx-glow {
+  0%, 100% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 22%, transparent), 0 0 0 0 color-mix(in srgb, var(--accent) 45%, transparent); }
+  50% { box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent) 40%, transparent), 0 0 0 7px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+
+/* the three bouncing dots become a shimmering gradient trio */
+.typing-dots i { background: linear-gradient(135deg, var(--accent), color-mix(in srgb, var(--accent) 40%, var(--sky, #2f8fe8))); box-shadow: 0 2px 6px -1px color-mix(in srgb, var(--accent) 60%, transparent); }
+
+/* ---------- code, tables, quotes ---------- */
+figure.code { border-radius: 14px; box-shadow: var(--shadow); transition: box-shadow 200ms ease, transform 200ms ease; }
+figure.code:hover { box-shadow: var(--shadow-lg); }
+.body blockquote { border-left: 3px solid color-mix(in srgb, var(--accent) 60%, transparent); background: color-mix(in srgb, var(--accent) 6%, transparent); border-radius: 0 10px 10px 0; }
+
+/* ---------- message actions ---------- */
+.msg-act { transition: background-color 140ms ease, color 140ms ease, transform 200ms var(--fx-spring); }
+.msg-act:hover { transform: translateY(-1px) scale(1.08); }
+.msg-act:active { transform: scale(0.88); }
+.msg-act.on { animation: fx-pop 380ms var(--fx-spring); }
+@keyframes fx-pop { 0% { transform: scale(0.6); } 60% { transform: scale(1.3); } 100% { transform: scale(1); } }
+
+/* ---------- welcome screen ---------- */
+.welcome-logo {
+  position: relative;
+  animation: fx-float 5s ease-in-out infinite;
+  transition: filter 300ms ease;
+}
+.welcome-logo::before, .welcome-logo::after {
+  content: "";
+  position: absolute;
+  inset: -14px;
+  border-radius: 50%;
+  border: 1px solid color-mix(in srgb, var(--accent) 35%, transparent);
+  animation: fx-ring 3.6s ease-out infinite;
+  pointer-events: none;
+}
+.welcome-logo::after { animation-delay: 1.8s; }
+.welcome-logo:hover { filter: drop-shadow(0 10px 22px color-mix(in srgb, var(--accent) 55%, transparent)); }
+@keyframes fx-float { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(-7px); } }
+@keyframes fx-ring { 0% { transform: scale(0.8); opacity: 0.8; } 100% { transform: scale(1.7); opacity: 0; } }
+
+.welcome-line {
+  background: linear-gradient(100deg, var(--paper) 40%, var(--accent) 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  animation: fx-rise 700ms var(--fx-ease) backwards;
+}
+
+/* suggestions: cards that stagger in and lift on hover */
+.suggestions { width: 100%; }
+.suggestion {
+  position: relative;
+  overflow: hidden;
+  border: 1px solid color-mix(in srgb, var(--accent) 14%, transparent);
+  animation: fx-rise 520ms var(--fx-ease) backwards;
+  transition: box-shadow 200ms ease, transform 260ms var(--fx-spring), border-color 200ms ease;
+}
+.suggestion:nth-child(1) { animation-delay: 120ms; }
+.suggestion:nth-child(2) { animation-delay: 210ms; }
+.suggestion:nth-child(3) { animation-delay: 300ms; }
+.suggestion:nth-child(4) { animation-delay: 390ms; }
+.suggestion::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(105deg, transparent 35%, color-mix(in srgb, var(--accent) 22%, transparent) 50%, transparent 65%);
+  transform: translateX(-120%);
+  transition: transform 700ms var(--fx-ease);
+  pointer-events: none;
+}
+.suggestion:hover { border-color: color-mix(in srgb, var(--accent) 45%, transparent); transform: translateY(-2px); }
+.suggestion:hover::after { transform: translateX(120%); }
+.suggestion:active { transform: scale(0.97); }
+
+/* ---------- composer: floating card with a living border ---------- */
+.composer { position: relative; }
+.composer-inner {
+  position: relative;
+  border-radius: 24px;
+  border: 1px solid transparent;
+  background:
+    linear-gradient(var(--ink-2), var(--ink-2)) padding-box,
+    linear-gradient(135deg, color-mix(in srgb, var(--accent) 20%, var(--line)), color-mix(in srgb, var(--accent) 6%, var(--line))) border-box;
+  transition: box-shadow 260ms ease, transform 260ms var(--fx-ease);
+}
+.composer-inner:focus-within {
+  background:
+    linear-gradient(var(--ink-2), var(--ink-2)) padding-box,
+    conic-gradient(from var(--fx-angle, 0deg), var(--accent), var(--sky, #2f8fe8), var(--mint, #1fa97f), var(--rose, #e8527f), var(--accent)) border-box;
+  box-shadow: 0 10px 34px -12px color-mix(in srgb, var(--accent) 60%, transparent), var(--shadow-lg);
+  animation: fx-spin 6s linear infinite;
+}
+@property --fx-angle { syntax: "<angle>"; initial-value: 0deg; inherits: false; }
+@keyframes fx-spin { to { --fx-angle: 360deg; } }
+
+.send { transition: transform 220ms var(--fx-spring), background-color 160ms ease, box-shadow 220ms ease; box-shadow: 0 6px 14px -6px color-mix(in srgb, var(--accent) 80%, transparent); }
+.send:not(:disabled):hover { transform: scale(1.1) rotate(-6deg); }
+.send:not(:disabled):active { transform: scale(0.88); }
+.send:not(:disabled) { animation: fx-ready 2.8s ease-in-out infinite; }
+@keyframes fx-ready {
+  0%, 100% { box-shadow: 0 6px 14px -6px color-mix(in srgb, var(--accent) 80%, transparent), 0 0 0 0 color-mix(in srgb, var(--accent) 35%, transparent); }
+  50% { box-shadow: 0 6px 14px -6px color-mix(in srgb, var(--accent) 80%, transparent), 0 0 0 6px color-mix(in srgb, var(--accent) 0%, transparent); }
+}
+.send.stop { animation: none; }
+
+/* ---------- menus and sheets ---------- */
+.sheet {
+  -webkit-backdrop-filter: blur(16px) saturate(150%);
+  backdrop-filter: blur(16px) saturate(150%);
+  background: color-mix(in srgb, var(--ink-2) 90%, transparent);
+  animation: fx-sheet 220ms var(--fx-ease);
+  transform-origin: top center;
+}
+/* the "+" menu opens upward, so it keeps its own rise */
+.sheet-up { animation: sheet-rise 170ms var(--fx-ease); transform-origin: bottom left; }
+@keyframes fx-sheet { from { opacity: 0; transform: translateY(-8px) scale(0.97); } to { opacity: 1; transform: none; } }
+.model-row, .sheet-action, .thread-item { transition: background-color 140ms ease, transform 200ms var(--fx-ease); }
+.model-row:hover, .sheet-action:hover { transform: translateX(3px); }
+
+.sidebar { animation: fx-slide 300ms var(--fx-ease); }
+@keyframes fx-slide { from { transform: translateX(-24px); opacity: 0; } to { transform: none; opacity: 1; } }
+.sidebar-scrim { animation: fx-fade 240ms ease; -webkit-backdrop-filter: blur(3px); backdrop-filter: blur(3px); }
+@keyframes fx-fade { from { opacity: 0; } to { opacity: 1; } }
+
+.toast { animation: fx-toast 360ms var(--fx-spring); }
+@keyframes fx-toast { from { opacity: 0; transform: translateY(14px) scale(0.92); } to { opacity: 1; transform: none; } }
+
+/* ---------- tap ripple (added by viora-fx.js) ---------- */
+.fx-ripple {
+  position: absolute;
+  border-radius: 50%;
+  pointer-events: none;
+  background: color-mix(in srgb, var(--accent) 38%, transparent);
+  transform: scale(0);
+  animation: fx-ripple 560ms ease-out forwards;
+}
+@keyframes fx-ripple { to { transform: scale(1); opacity: 0; } }
+
+/* ---------- jump-to-latest button (added by viora-fx.js) ---------- */
+.fx-jump {
+  position: absolute;
+  left: 50%;
+  bottom: 118px;
+  z-index: 12;
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  padding: 0;
+  border: 1px solid var(--fx-edge);
+  border-radius: 50%;
+  background: var(--ink-2);
+  color: var(--accent);
+  box-shadow: var(--shadow-lg);
+  cursor: pointer;
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 10px) scale(0.8);
+  transition: opacity 200ms ease, transform 260ms var(--fx-spring);
+}
+.fx-jump svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.8; stroke-linecap: round; stroke-linejoin: round; }
+.fx-jump.show { opacity: 1; pointer-events: auto; transform: translate(-50%, 0) scale(1); }
+.fx-jump:hover { transform: translate(-50%, -2px) scale(1.08); }
+
+/* ---------- status line: a soft pulse while Viora is working ---------- */
+.status:not([hidden]) { border-top-color: transparent; animation: fx-pulse 1.8s ease-in-out infinite; }
+@keyframes fx-pulse { 0%, 100% { opacity: 0.55; } 50% { opacity: 1; } }
+
+html[data-model="flash"] .pill-icon { filter: drop-shadow(0 0 4px color-mix(in srgb, var(--accent) 70%, transparent)); }
+
+/* ---------- scrollbars ---------- */
+.thread::-webkit-scrollbar-thumb { background: color-mix(in srgb, var(--accent) 28%, var(--line)); }
+.thread::-webkit-scrollbar-thumb:hover { background: color-mix(in srgb, var(--accent) 55%, var(--line)); }
+
+/* ---------- dark mode extras ---------- */
+:root[data-theme="dark"] { --fx-glass: color-mix(in srgb, var(--ink) 70%, transparent); }
+:root[data-theme="dark"] body::before { opacity: 0.9; }
+:root[data-theme="dark"] .model-pill { box-shadow: 0 1px 0 rgba(255, 255, 255, 0.06) inset, 0 3px 12px -6px color-mix(in srgb, var(--accent) 80%, transparent); }
+:root[data-theme="dark"] body.fx-scrolled .bar { box-shadow: 0 8px 22px -12px rgba(0, 0, 0, 0.7); }
+
+/* ---------- respect reduced motion ---------- */
+@media (prefers-reduced-motion: reduce) {
+  body::before, .pill-icon, .msg, .msg.assistant::before, .msg.assistant > .who, .welcome-logo, .welcome-logo::before,
+  .welcome-logo::after, .welcome-line, .suggestion, .composer-inner:focus-within, .send:not(:disabled), .sheet,
+  .sidebar, .sidebar-scrim, .toast, .status:not([hidden]), .msg-act.on { animation: none !important; }
+  .suggestion::after, .fx-ripple { display: none; }
+  .thread { scroll-behavior: auto; }
+}
