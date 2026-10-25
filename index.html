@@ -4,12 +4,13 @@
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><link rel="icon" type="image/png" href="assets/favicon-32.png"><script src="assets/x/prefs.js"></script>
 <link rel="stylesheet" href="assets/x/accent.css">
 <link rel="stylesheet" href="assets/x/prefs.css">
-<link rel="stylesheet" href="assets/style.css"><script>try{document.documentElement.dataset.theme=localStorage.getItem("viora_theme")||"light"}catch(e){}</script>
-<title>Viora — One free AI panel for your whole browser</title>
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/v5.css"><script>try{document.documentElement.dataset.theme=localStorage.getItem("viora_theme")||"light"}catch(e){}</script>
+<title>Viora — The AI your browser was missing</title>
 <meta name="description" content="Viora puts five AI assistants in your browser: chat, deep web research, math &amp; code, page automation and a Humanizer. Free, no API key.">
-<meta property="og:title" content="Viora — One free AI panel for your whole browser">
-<meta property="og:description" content="Chat, research with sources, solve math &amp; code, automate pages and humanize text. Free, no API key.">
-<meta name="theme-color" content="#f6f8fe"><meta name="twitter:card" content="summary"><meta property="og:type" content="website"><meta property="og:image" content="assets/icon-128.png">
+<meta property="og:title" content="Viora — The AI your browser was missing">
+<meta property="og:description" content="Five specialist AI assistants in one free browser panel. Chat, research with sources, solve math &amp; code, automate pages and humanize text.">
+<meta name="theme-color" content="#fbfaff"><meta name="twitter:card" content="summary"><meta property="og:type" content="website"><meta property="og:image" content="assets/icon-128.png">
 </head>
 <body data-page="home">
 <noscript><style>.rv{opacity:1!important;transform:none!important}</style></noscript>
@@ -17,104 +18,162 @@
 <main>
 
 <section class="hero">
-  <div class="wrap">
-    <img class="hero-logo rv" src="assets/mark.png" alt="" width="78" height="78">
-    <h1 class="rv">Welcome, what do you want me to do?</h1>
-    <p class="lede rv">Viora is the free AI that lives in your browser. Chat, research the live web, solve math and code, automate pages and rewrite text in your voice.</p>
-    <div class="demo rv" id="demo">
-      <div class="thread" id="thread" aria-live="polite">
-        <div class="msg me" id="m-q"></div>
-        <div class="msg ai"><img src="assets/mark.png" alt="" width="26" height="26"><div id="m-a"></div></div>
-      </div>
-      <div class="composer">
-        <div class="c-input" id="c-input"></div>
-        <div class="c-bar">
-          <div class="chips" role="tablist" aria-label="Choose an assistant">
-            <button class="chip-a" role="tab" data-k="flash" style="--c:var(--hue-flash)" aria-selected="true"><span data-i="zap"></span>Flash</button>
-            <button class="chip-a" role="tab" data-k="search" style="--c:var(--hue-search)"><span data-i="search"></span>Deep Search</button>
-            <button class="chip-a" role="tab" data-k="code" style="--c:var(--hue-math)"><span data-i="code"></span>Math &amp; Code</button>
-            <button class="chip-a" role="tab" data-k="auto" style="--c:var(--hue-automate)"><span data-i="pointer"></span>Automate</button>
-            <button class="chip-a" role="tab" data-k="human" style="--c:var(--hue-humanize)"><span data-i="pen"></span>Humanizer</button>
+  <div class="wrap hero-grid">
+    <div class="hero-copy">
+      <a class="hero-badge rv" href="#assistants"><span class="badge-dot"><span data-i="spark"></span></span>Five specialists. One free panel.<span class="hero-badge-arrow" data-i="arrow"></span></a>
+      <h1 class="rv">The AI your browser was <span class="grad-text">missing.</span></h1>
+      <p class="lede rv">Viora puts five specialist assistants in one calm panel — chat, live research, math &amp; code, page automation and human writing. Free, no API key, ready in a click.</p>
+      <div class="cta-row rv"><a class="btn btn-primary btn-lg" href="#" data-install><span data-i="download"></span>Add to Chrome — it's free</a><a class="btn btn-ghost btn-lg" href="#assistants">Explore assistants <span data-i="arrow"></span></a></div>
+      <ul class="hero-proof rv">
+        <li><span data-i="check"></span>No API key</li>
+        <li><span data-i="shield"></span>Private by default</li>
+        <li><span data-i="clock"></span>Ready in 30 seconds</li>
+      </ul>
+    </div>
+
+    <div class="hero-stage rv" id="demo">
+      <div class="browser">
+        <div class="browser-top" aria-hidden="true">
+          <div class="browser-dots"><i></i><i></i><i></i></div>
+          <div class="browser-address"><span data-i="lock"></span>viora.app</div>
+          <div class="browser-spacer"></div>
+        </div>
+        <div class="browser-app">
+          <div class="app-top">
+            <div class="app-brand"><img src="assets/mark.png" alt="" width="24" height="24"><span>Viora</span></div>
+            <div class="app-pill"><span id="demo-model-ico" data-i="search"></span><span id="demo-model-name">Deep Search</span><span data-i="chev"></span></div>
+            <span class="app-new" aria-hidden="true"><span data-i="spark"></span></span>
           </div>
-          <a class="send" data-install href="#" aria-label="Add Viora to Chrome"><span data-i="arrow" style="transform:rotate(-90deg);display:flex"></span></a>
+          <div class="thread" id="thread" aria-live="polite">
+            <div class="msg me" id="m-q"></div>
+            <div class="msg ai">
+              <img src="assets/mark.png" alt="" width="24" height="24">
+              <div class="ai-body">
+                <div class="ai-head"><b>Viora</b><span class="ai-tag" id="m-tag">Deep Search</span></div>
+                <div id="m-a"></div>
+                <div class="demo-sources" id="m-src"></div>
+              </div>
+            </div>
+          </div>
+          <div class="composer">
+            <div class="c-input" id="c-input"></div>
+            <div class="c-bar">
+              <div class="chips" role="tablist" aria-label="Choose an assistant">
+                <button class="chip-a" role="tab" data-k="flash" style="--c:var(--hue-flash)" aria-selected="false"><span data-i="zap"></span>Flash</button>
+                <button class="chip-a" role="tab" data-k="search" style="--c:var(--hue-search)" aria-selected="true"><span data-i="search"></span>Deep Search</button>
+                <button class="chip-a" role="tab" data-k="code" style="--c:var(--hue-math)" aria-selected="false"><span data-i="code"></span>Math &amp; Code</button>
+                <button class="chip-a" role="tab" data-k="auto" style="--c:var(--hue-automate)" aria-selected="false"><span data-i="pointer"></span>Automate</button>
+                <button class="chip-a" role="tab" data-k="human" style="--c:var(--hue-humanize)" aria-selected="false"><span data-i="pen"></span>Humanizer</button>
+              </div>
+              <a class="send" data-install href="#" aria-label="Add Viora to Chrome"><span data-i="arrow" style="transform:rotate(-90deg);display:flex"></span></a>
+            </div>
+          </div>
         </div>
       </div>
-      <p class="fine" style="margin-top:14px">Pick an assistant to see how it answers. Free, no API key. Open it anywhere with <kbd class="kbd">Ctrl</kbd> <kbd class="kbd">Shift</kbd> <kbd class="kbd">Y</kbd></p>
+      <div class="float-card float-a" aria-hidden="true"><span class="float-ico"><span data-i="globe"></span></span><div class="float-copy"><b>Live web</b><span>6 sources read</span></div></div>
+      <div class="float-card float-b" aria-hidden="true"><span class="float-ico"><span data-i="shield"></span></span><div class="float-copy"><b>Private by default</b><span>Stays on your device</span></div></div>
+      <p class="demo-note">Click an assistant to see how it answers</p>
     </div>
-    <div class="cta-row rv"><a class="btn btn-primary btn-lg" href="#" data-install><span data-i="download"></span>Add to Chrome, it's free</a><a class="btn btn-ghost btn-lg" href="#assistants">Meet the assistants</a></div>
+  </div>
+  <div class="wrap">
     <div class="stats rv">
-      <div class="stat"><b class="grad-text">5</b><span>built-in assistants</span></div>
-      <div class="stat"><b class="grad-text">0</b><span>API keys to find</span></div>
-      <div class="stat"><b class="grad-text">1</b><span>shortcut opens it anywhere</span></div>
-      <div class="stat"><b class="grad-text">Free</b><span>to install and use</span></div>
+      <div class="stat"><span class="stat-ico"><span data-i="spark"></span></span><div><b>5</b><span>built-in assistants</span></div></div>
+      <div class="stat"><span class="stat-ico"><span data-i="key"></span></span><div><b>0</b><span>API keys to find</span></div></div>
+      <div class="stat"><span class="stat-ico"><span data-i="clock"></span></span><div><b>1</b><span>shortcut opens it anywhere</span></div></div>
+      <div class="stat"><span class="stat-ico"><span data-i="download"></span></span><div><b>Free</b><span>to install and use</span></div></div>
     </div>
   </div>
 </section>
 
 <section class="block" id="assistants">
   <div class="wrap">
-    <div class="sec-head rv"><span class="eyebrow">The five</span><h2>Pick the right brain for the job</h2><p>Each assistant has its own personality, its own model and its own accent color. Switch in one tap.</p></div>
+    <div class="sec-head rv"><span class="eyebrow">The five</span><h2>Pick the right brain for the job.</h2><p>Each assistant has its own strengths, personality and accent color. Switch in one tap — no settings to dig through.</p></div>
     <div class="assist">
-      <article class="a-card rv" style="--c:var(--hue-flash)"><div class="a-ico"><span data-i="zap"></span></div><h3>Viora Flash</h3><p>Quick, friendly and good at almost everything. Your default for everyday questions.</p>
-        <ul><li><span data-i="check"></span>Picks a stronger model for harder questions</li><li><span data-i="check"></span>Hands jobs to your own agents</li></ul></article>
-      <article class="a-card rv" style="--c:var(--hue-search)"><div class="a-ico"><span data-i="search"></span></div><h3>Deep Search</h3><p>Reads the live web, compares sources and writes a report that cites what it found.</p>
-        <ul><li><span data-i="check"></span>Shows publication dates for each source</li><li><span data-i="check"></span>Flags where sources disagree</li></ul></article>
-      <article class="a-card rv" style="--c:var(--hue-math)"><div class="a-ico"><span data-i="code"></span></div><h3>Math &amp; Code</h3><p>Shows its working, writes proper fractions and gives complete, runnable code.</p>
-        <ul><li><span data-i="check"></span>Step-by-step maths</li><li><span data-i="check"></span>Debugging with a fix, not a guess</li></ul></article>
-      <article class="a-card rv" style="--c:var(--hue-automate)"><div class="a-ico"><span data-i="pointer"></span></div><h3>Automate</h3><p>Looks at the page you're on, then clicks, types and navigates to get the task done. Pause, resume or cancel any time.</p>
-        <ul><li><span data-i="check"></span>Asks before anything risky</li><li><span data-i="check"></span>Picks up where it left off if interrupted</li></ul></article>
-      <article class="a-card rv" style="--c:var(--hue-humanize)"><div class="a-ico"><span data-i="pen"></span></div><h3>Humanizer</h3><p>Paste text that sounds like AI and get it back in a natural human voice, matched to your own writing style.</p>
-        <ul><li><span data-i="check"></span>Keeps your facts, numbers and links</li><li><span data-i="check"></span>Learns how you write</li></ul></article>
+      <article class="a-card rv" style="--c:var(--hue-flash)">
+        <div class="a-top"><span class="a-kicker">01 · Everyday</span><span class="a-arrow" data-i="arrow"></span></div>
+        <div class="a-ico"><span data-i="zap"></span></div><h3>Viora Flash</h3><p>Quick, friendly and good at almost everything. Your default for everyday questions.</p>
+        <ul><li><span data-i="check"></span>Picks a stronger model for harder questions</li><li><span data-i="check"></span>Hands jobs to your own agents</li></ul>
+      </article>
+      <article class="a-card rv" style="--c:var(--hue-search)">
+        <div class="a-top"><span class="a-kicker">02 · Research</span><span class="a-arrow" data-i="arrow"></span></div>
+        <div class="a-ico"><span data-i="search"></span></div><h3>Deep Search</h3><p>Reads the live web, compares sources and writes a report that cites what it found.</p>
+        <ul><li><span data-i="check"></span>Shows publication dates for each source</li><li><span data-i="check"></span>Flags where sources disagree</li></ul>
+      </article>
+      <article class="a-card rv" style="--c:var(--hue-math)">
+        <div class="a-top"><span class="a-kicker">03 · Precision</span><span class="a-arrow" data-i="arrow"></span></div>
+        <div class="a-ico"><span data-i="code"></span></div><h3>Math &amp; Code</h3><p>Shows its working, writes proper fractions and gives complete, runnable code.</p>
+        <ul><li><span data-i="check"></span>Step-by-step maths</li><li><span data-i="check"></span>Debugging with a fix, not a guess</li></ul>
+      </article>
+      <article class="a-card rv" style="--c:var(--hue-automate)">
+        <div class="a-top"><span class="a-kicker">04 · Action</span><span class="a-arrow" data-i="arrow"></span></div>
+        <div class="a-ico"><span data-i="pointer"></span></div><h3>Automate</h3><p>Looks at the page you're on, then clicks, types and navigates to get the task done. Pause, resume or cancel any time.</p>
+        <ul><li><span data-i="check"></span>Asks before anything risky</li><li><span data-i="check"></span>Picks up where it left off if interrupted</li></ul>
+      </article>
+      <article class="a-card rv" style="--c:var(--hue-humanize)">
+        <div class="a-top"><span class="a-kicker">05 · Writing</span><span class="a-arrow" data-i="arrow"></span></div>
+        <div class="a-ico"><span data-i="pen"></span></div><h3>Humanizer</h3><p>Paste text that sounds like AI and get it back in a natural human voice, matched to your own writing style.</p>
+        <ul><li><span data-i="check"></span>Keeps your facts, numbers and links</li><li><span data-i="check"></span>Learns how you write</li></ul>
+      </article>
     </div>
   </div>
 </section>
 
 <section class="block" id="try">
   <div class="wrap">
-    <div class="sec-head rv"><h2>Things people ask Viora</h2><p>Start with one of these, or ask your own.</p></div>
-    <div class="feat try">
-      <div class="f-card rv" style="--c:var(--hue-flash)"><span data-i="zap"></span><h3>Summarize this page</h3><p>Get the key points of any article you're reading, in a few lines.</p></div>
-      <div class="f-card rv" style="--c:var(--hue-search)"><span data-i="search"></span><h3>Compare two laptops, with sources</h3><p>Deep Search reads reviews and spec pages, then cites what it used.</p></div>
-      <div class="f-card rv" style="--c:var(--hue-math)"><span data-i="code"></span><h3>Why does this code crash?</h3><p>Paste the error and get a fix with a short explanation.</p></div>
-      <div class="f-card rv" style="--c:var(--hue-automate)"><span data-i="pointer"></span><h3>Fill in this form for me</h3><p>Automate types your details and stops before anything is submitted.</p></div>
-      <div class="f-card rv" style="--c:var(--hue-humanize)"><span data-i="pen"></span><h3>Make this email sound like me</h3><p>Humanizer rewrites stiff AI text in your own voice.</p></div>
-      <div class="f-card rv" style="--c:var(--hue-flash)"><span data-i="book"></span><h3>Study from my PDFs</h3><p>Add notes and papers to a notebook, then ask questions about only those.</p></div>
+    <div class="sec-head rv"><span class="eyebrow">Prompt ideas</span><h2>What will you ask first?</h2><p>Six everyday jobs Viora handles without opening another tab.</p></div>
+    <div class="prompts">
+      <article class="prompt rv" style="--c:var(--hue-flash)"><div class="p-top"><span class="p-cat">Flash</span><span class="p-arrow" data-i="arrow"></span></div><h3>Summarize this page</h3><p>Get the key points of any article you're reading, in a few lines.</p></article>
+      <article class="prompt rv" style="--c:var(--hue-search)"><div class="p-top"><span class="p-cat">Deep Search</span><span class="p-arrow" data-i="arrow"></span></div><h3>Compare two laptops, with sources</h3><p>Viora reads reviews and spec pages, then cites what it used.</p></article>
+      <article class="prompt rv" style="--c:var(--hue-math)"><div class="p-top"><span class="p-cat">Math &amp; Code</span><span class="p-arrow" data-i="arrow"></span></div><h3>Why does this code crash?</h3><p>Paste the error and get a fix with a short explanation.</p></article>
+      <article class="prompt rv" style="--c:var(--hue-automate)"><div class="p-top"><span class="p-cat">Automate</span><span class="p-arrow" data-i="arrow"></span></div><h3>Fill in this form for me</h3><p>Automate types your details and stops before anything is submitted.</p></article>
+      <article class="prompt rv" style="--c:var(--hue-humanize)"><div class="p-top"><span class="p-cat">Humanizer</span><span class="p-arrow" data-i="arrow"></span></div><h3>Make this email sound like me</h3><p>Humanizer rewrites stiff AI text in your own voice.</p></article>
+      <article class="prompt rv" style="--c:var(--hue-flash)"><div class="p-top"><span class="p-cat">Notebooks</span><span class="p-arrow" data-i="arrow"></span></div><h3>Study from my PDFs</h3><p>Add notes and papers to a notebook, then ask questions about only those.</p></article>
     </div>
   </div>
 </section>
 
 <section class="block" id="features">
   <div class="wrap">
-    <div class="sec-head rv"><span class="eyebrow">Features</span><h2>Built to keep up with you</h2><p>The small things that make an AI feel like part of your browser instead of another tab.</p></div>
-    <div class="feat">
-      <div class="f-card rv"><span data-i="globe"></span><h3>Always on the web</h3><p>Answers that need fresh facts search the web first. Casual chat never shows sources it didn't use.</p></div>
-      <div class="f-card rv"><span data-i="at"></span><h3>Agents you summon with @</h3><p>Create specialists with their own instructions and tools, then call them from any chat.</p></div>
-      <div class="f-card rv"><span data-i="layers"></span><h3>Keeps working when you close it</h3><p>Pictures, reports and long replies finish in the background and notify you when they're ready.</p></div>
-      <div class="f-card rv"><span data-i="book"></span><h3>Notebooks</h3><p>Gather files, PDFs and links, chat with only the sources you pick, and let Viora write pages from them.</p></div>
-      <div class="f-card rv"><span data-i="file"></span><h3>PDF editing</h3><p>Fix text, redact, highlight, add page numbers or reorder pages, then download the edited file.</p></div>
-      <div class="f-card rv"><span data-i="db"></span><h3>Memory that learns</h3><p>Remembers lasting facts and what past chats were about. See it, delete it, or switch it off.</p></div>
-      <div class="f-card rv"><span data-i="cloud"></span><h3>Cloud backup</h3><p>Sign in and your chats, agents and settings sync across devices automatically.</p></div>
-      <div class="f-card rv"><span data-i="mic"></span><h3>Voice in, voice out</h3><p>Dictate with a live recording bar, and have any answer read aloud to you.</p></div>
+    <div class="sec-head rv"><span class="eyebrow">Features</span><h2>Built to keep up with you.</h2><p>The small things that make an AI feel like part of your browser — not another tab.</p></div>
+    <div class="bento">
+      <article class="f-card f-web rv">
+        <div class="f-copy"><span class="feature-ico"><span data-i="globe"></span></span><h3>Always on the web</h3><p>Answers that need fresh facts search the web first. Casual chat never shows sources it didn't use.</p></div>
+        <div class="mini-sources" aria-hidden="true">
+          <div class="mini-source"><span class="mini-fav">G</span><div><b>Chrome Releases</b><span>chromereleases.googleblog.com</span></div><span class="mini-check" data-i="check"></span></div>
+          <div class="mini-source"><span class="mini-fav">V</span><div><b>The Verge</b><span>theverge.com</span></div><span class="mini-check" data-i="check"></span></div>
+          <div class="mini-source"><span class="mini-fav">M</span><div><b>MDN Web Docs</b><span>developer.mozilla.org</span></div><span class="mini-check" data-i="check"></span></div>
+        </div>
+      </article>
+      <article class="f-card rv"><span class="feature-ico"><span data-i="at"></span></span><h3>Agents you summon with @</h3><p>Create specialists with their own instructions and tools, then call them from any chat.</p></article>
+      <article class="f-card rv"><span class="feature-ico"><span data-i="layers"></span></span><h3>Keeps working when you close it</h3><p>Pictures, reports and long replies finish in the background and notify you when they're ready.</p></article>
+      <article class="f-card f-notebooks rv">
+        <div class="f-copy"><span class="feature-ico"><span data-i="book"></span></span><h3>Notebooks</h3><p>Gather files, PDFs and links, chat with only the sources you pick, and let Viora write pages from them.</p></div>
+        <div class="files-visual" aria-hidden="true"><span class="file-pill"><span data-i="file"></span>Research.pdf</span><span class="file-pill"><span data-i="file"></span>notes.md</span><span class="file-pill"><span data-i="book"></span>brief.docx</span></div>
+      </article>
+      <article class="f-card rv"><span class="feature-ico"><span data-i="file"></span></span><h3>PDF editing</h3><p>Fix text, redact, highlight, add page numbers or reorder pages, then download the edited file.</p></article>
+      <article class="f-card rv"><span class="feature-ico"><span data-i="db"></span></span><h3>Memory that learns</h3><p>Remembers lasting facts and what past chats were about. See it, delete it, or switch it off.</p></article>
+      <article class="f-card rv"><span class="feature-ico"><span data-i="cloud"></span></span><h3>Cloud backup</h3><p>Sign in and your chats, agents and settings sync across devices automatically.</p></article>
+      <article class="f-card rv"><span class="feature-ico"><span data-i="mic"></span></span><h3>Voice in, voice out</h3><p>Dictate with a live recording bar, and have any answer read aloud to you.</p></article>
     </div>
   </div>
 </section>
 
 <section class="block" id="how">
   <div class="wrap">
-    <div class="sec-head rv"><span class="eyebrow">How it works</span><h2>From install to answer in under a minute</h2></div>
+    <div class="sec-head rv"><span class="eyebrow">How it works</span><h2>From install to answer in under a minute.</h2><p>No setup, no keys, no new tab to remember. Just your browser, with a brain.</p></div>
     <div class="steps">
-      <div class="step rv"><h3>Add it to your browser</h3><p>Install the extension. There's nothing to configure and no key to paste.</p></div>
-      <div class="step rv"><h3>Open the panel</h3><p>Click the Viora icon or press <span class="kbd">Ctrl</span> <span class="kbd">Shift</span> <span class="kbd">Y</span>. It slides in beside whatever you're reading.</p></div>
-      <div class="step rv"><h3>Ask, search, automate</h3><p>Choose an assistant, type or talk, and let it work. Sign in later if you want backup.</p></div>
+      <article class="step rv"><div class="step-top"><span class="step-num">01</span><span class="step-icon"><span data-i="download"></span></span></div><h3>Add it to your browser</h3><p>Install the extension. There's nothing to configure and no key to paste.</p></article>
+      <article class="step rv"><div class="step-top"><span class="step-num">02</span><span class="step-icon"><span data-i="spark"></span></span></div><h3>Open the panel</h3><p>Click the Viora icon or press <span class="kbd">Ctrl</span> <span class="kbd">Shift</span> <span class="kbd">Y</span>. It slides in beside whatever you're reading.</p></article>
+      <article class="step rv"><div class="step-top"><span class="step-num">03</span><span class="step-icon"><span data-i="arrow"></span></span></div><h3>Ask, search, automate</h3><p>Choose an assistant, type or talk, and let it work. Sign in later if you want backup.</p></article>
     </div>
   </div>
 </section>
 
-<section class="block">
-  <div class="wrap split">
+<section class="block" id="safety">
+  <div class="wrap split split-safety">
     <div class="rv">
       <span class="eyebrow">You stay in control</span>
-      <h2>Powerful, but never reckless</h2>
+      <h2>Powerful, but never reckless.</h2>
       <p>Automate can click and type, so it's built to ask first and to prove that things actually worked.</p>
       <ul class="checks">
         <li><span data-i="check"></span><span><b>Risky clicks need your OK.</b> Buying, sending, deleting or logging out always asks first.</span></li>
@@ -123,18 +182,25 @@
         <li><span data-i="check"></span><span><b>Linux is opt-in.</b> Shell commands stay off until you switch them on.</span></li>
       </ul>
     </div>
-    <div class="panel rv">
-      <div class="row"><span data-i="shield"></span><div><b>Stored on your device</b><span>Chats, memory and agents live in your browser by default.</span></div></div>
-      <div class="row"><span data-i="lock"></span><div><b>No passwords to leak</b><span>Accounts use Google sign-in, so we never see your password.</span></div></div>
-      <div class="row"><span data-i="db"></span><div><b>You can see what it remembers</b><span>Review, delete or turn off memory in Settings.</span></div></div>
-      <div class="row"><span data-i="pointer"></span><div><b>Pause, resume or cancel</b><span>Every automated task has its own run bar.</span></div></div>
+    <div class="safety-stage rv">
+      <div class="run-card">
+        <div class="run-head"><span class="run-dot"></span><b>Automation run</b><span class="run-pill">Paused for review</span></div>
+        <div class="run-task">Book a table for two <span>·</span> The Ivy</div>
+        <div class="run-steps">
+          <div class="run-step done"><span class="run-ico"><span data-i="check"></span></span><div><b>Opened the booking page</b><small>Verified</small></div></div>
+          <div class="run-step done"><span class="run-ico"><span data-i="check"></span></span><div><b>Filled date, time and party size</b><small>Verified</small></div></div>
+          <div class="run-step waiting"><span class="run-ico"><span data-i="clock"></span></span><div><b>Submit reservation</b><small>Waiting for your OK</small></div></div>
+        </div>
+        <div class="run-actions"><span class="run-btn primary">Approve</span><span class="run-btn">Cancel</span></div>
+      </div>
+      <div class="trust-row"><span class="trust-pill"><span data-i="lock"></span>On-device by default</span><span class="trust-pill"><span data-i="shield"></span>No hidden commands</span><span class="trust-pill"><span data-i="x"></span>Cancel any time</span></div>
     </div>
   </div>
 </section>
 
 <section class="block" id="faq">
   <div class="wrap">
-    <div class="sec-head rv"><span class="eyebrow">FAQ</span><h2>Quick answers</h2></div>
+    <div class="sec-head rv"><span class="eyebrow">FAQ</span><h2>Quick answers.</h2></div>
     <div class="faq rv">
       <details class="q"><summary>Is Viora really free?<span data-i="chev"></span></summary><div class="ans">Yes. There's no API key to find or pay for. Install it and start chatting.</div></details>
       <details class="q"><summary>Which browsers does it work in?<span data-i="chev"></span></summary><div class="ans">Chrome 116 or newer, plus other Chromium browsers that support extension side panels.</div></details>
@@ -145,27 +211,40 @@
   </div>
 </section>
 
-<section class="block" style="padding-top:20px">
+<section class="block cta-section">
   <div class="wrap"><div class="cta-band rv">
-    <h2>Give your browser a <span class="grad-text">brain</span></h2>
-    <p>Free to install. Ready in seconds. Everything you need in one panel.</p>
+    <span class="eyebrow">Free to install</span>
+    <h2>Give your browser a <span class="grad-text">brain.</span></h2>
+    <p>Five specialists, one panel, zero setup. Start with the tab you're already on.</p>
     <div class="cta-row"><a class="btn btn-primary btn-lg" data-install href="#"><span data-i="download"></span>Add to Chrome</a><a class="btn btn-ghost btn-lg" href="login.html">Create an account</a></div>
+    <small class="cta-note">No account needed · Chrome 116+ · Works with Chromium browsers</small>
   </div></div>
 </section>
 </main>
 <footer id="site-footer"></footer>
 <script src="assets/app.js"></script>
 <script>
-(()=>{const D={
-flash:["Plan a 3-day trip to Lisbon on a budget","Here's a relaxed plan. Day 1: Alfama on foot and a sunset at Miradouro da Graça. Day 2: Belém, then a cheap tasca lunch. Day 3: day trip to Sintra by train. Roughly €60 a day with a Viva Viagem card."],
-search:["What changed in the latest Chrome release?","I checked 6 sources. Chrome's newest stable build focuses on side-panel and security updates. Two sources disagree on the rollout date, so I've flagged both with their publication dates."],
-code:["Solve 3x² − 12 = 0 and show the steps","Add 12 to both sides: 3x² = 12. Divide by 3: x² = 4. Take the square root: x = 2 or x = −2. Check: 3(4) − 12 = 0 ✓"],
-auto:["Fill in this form with my details and stop before submitting","Found 7 fields on the page. Typed your name, email and address and checked each one by reading it back. I've paused before Submit. Say the word and I'll press it."],
-human:["Make this sound like me: “Leveraging synergies, we deliver value.”","“We work well together, and it shows in what we ship.” Kept your meaning, dropped the buzzwords, and matched your usual short sentences."]};
-const q=document.getElementById('m-q'),a=document.getElementById('m-a'),inp=document.getElementById('c-input');let t;
-function type(el,s,done){clearTimeout(t);el.textContent='';if(matchMedia('(prefers-reduced-motion:reduce)').matches){el.textContent=s;done&&done();return}let i=0;(function n(){el.textContent=s.slice(0,++i);if(i<s.length)t=setTimeout(n,14);else done&&done()})()}
-function pick(k){document.querySelectorAll('.chip-a').forEach(c=>c.setAttribute('aria-selected',c.dataset.k===k));const[d,r]=D[k];q.textContent=d;inp.textContent='Ask '+document.querySelector('.chip-a[data-k='+k+']').textContent.trim()+' anything…';a.textContent='';type(a,r)}
-document.querySelectorAll('.chip-a').forEach(c=>c.onclick=()=>pick(c.dataset.k));pick('flash');})();
+(()=>{
+const D={
+  flash:{name:"Flash",icon:"zap",q:"Plan a 3-day trip to Lisbon on a budget",a:"Here's a relaxed plan. Day 1: Alfama on foot and a sunset at Miradouro da Graça. Day 2: Belém, then a cheap tasca lunch. Day 3: day trip to Sintra by train. Roughly €60 a day with a Viva Viagem card.",src:[]},
+  search:{name:"Deep Search",icon:"search",q:"What's new in Chrome this month?",a:"I checked 6 sources. Chrome's newest stable build focuses on side-panel security and faster tab restore. Two sources disagree on the rollout date, so I've flagged both with their publication dates.",src:[{n:"Chrome Releases",d:"chromereleases.googleblog.com"},{n:"Chrome Developers",d:"developer.chrome.com"},{n:"The Verge",d:"theverge.com"}]},
+  code:{name:"Math & Code",icon:"code",q:"Solve 3x² − 12 = 0 and show the steps",a:"Add 12 to both sides: 3x² = 12. Divide by 3: x² = 4. Take the square root: x = 2 or x = −2. Check: 3(4) − 12 = 0 ✓",src:[]},
+  auto:{name:"Automate",icon:"pointer",q:"Fill in this form with my details and stop before submitting",a:"Found 7 fields on the page. Typed your name, email and address and checked each one by reading it back. I've paused before Submit. Say the word and I'll press it.",src:[]},
+  human:{name:"Humanizer",icon:"pen",q:"Make this sound like me: “Leveraging synergies, we deliver value.”",a:"“We work well together, and it shows in what we ship.” Kept your meaning, dropped the buzzwords, and matched your usual short sentences.",src:[]}
+};
+const q=document.getElementById('m-q'),a=document.getElementById('m-a'),inp=document.getElementById('c-input'),src=document.getElementById('m-src'),tag=document.getElementById('m-tag'),model=document.getElementById('demo-model-name'),modelIco=document.getElementById('demo-model-ico');let t;
+const ic=(n)=>window.vicon?window.vicon(n):'';
+function type(el,s,done){clearTimeout(t);el.textContent='';if(matchMedia('(prefers-reduced-motion:reduce)').matches){el.textContent=s;done&&done();return}let i=0;(function n(){el.textContent=s.slice(0,++i);if(i<s.length)t=setTimeout(n,10);else done&&done()})()}
+function pick(k,instant){
+  document.querySelectorAll('.chip-a').forEach(c=>c.setAttribute('aria-selected',c.dataset.k===k));
+  const d=D[k];
+  q.textContent=d.q;inp.textContent='Ask '+d.name+' anything…';a.textContent='';src.innerHTML='';tag.textContent=d.name;model.textContent=d.name;modelIco.innerHTML=ic(d.icon);
+  if(d.src.length){src.innerHTML='<div class="src-label">'+ic('globe')+'Searched the web</div><div class="src-list">'+d.src.map(x=>'<span class="src-chip"><span class="src-fav">'+x.n[0]+'</span><b>'+x.n+'</b></span>').join('')+'</div>'}
+  if(instant){a.textContent=d.a}else{type(a,d.a)}
+}
+document.querySelectorAll('.chip-a').forEach(c=>c.onclick=()=>pick(c.dataset.k));
+pick('search',true);
+})();
 </script>
 <script>document.querySelectorAll('[data-install]').forEach(a=>a.href=VIORA.installUrl)</script>
 </body>

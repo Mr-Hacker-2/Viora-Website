@@ -170,6 +170,8 @@ import { icon } from './assets/x/icons.js';
 import { ic } from './assets/x/ic.js';
 import * as Src from './assets/x/sources.js';
 import { pick as pickModel } from './assets/x/caps.js';
+import { classify, chain, Health, shouldFallback } from './assets/x/router.js';
+import { retrieveMemory, retrieveNotes, wrapUntrusted } from './assets/x/memory.js';
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK } from './assets/x/media.js';
 import * as NP from './assets/x/netperf.js';
 (() => {
@@ -206,15 +208,8 @@ const wide = () => matchMedia('(min-width:980px)').matches;
 const closeSb = () => document.body.classList.remove('sb');
 const hide = () => { $('#model-sheet').hidden = true; $('#attach-sheet').hidden = true; $('#umenu').hidden = true; $('#model-btn').setAttribute('aria-expanded', 'false'); $('#attach').setAttribute('aria-expanded', 'false'); };
 const SEND = $('#send').innerHTML;
-function route(t, c) {
-  const x = t.toLowerCase();
-  if (c && c.page && /\b(click|fill|sign ?up|log ?in|form|navigate|automate|button)\b/.test(x)) return 'automate';
-  if (/humani[sz]e|paraphrase|rewrite this|sound (more )?(human|natural)/.test(x)) return 'human';
-  if (/```|\b(bug|error|function|compile|python|javascript|typescript|html|css|sql|regex|code|script|solve|equation|integral|derivative|calculate|algorithm)\b/.test(x)) return 'math';
-  const fileQ = c && c.page && !/\b(search|look up|online|on the web|latest news)\b/.test(x);
-  if (!fileQ && /\b(latest|news|today|current|currently|price|who won|who is|who are|this week|this year|202\d|compare|research|sources|release|weather|score|stock|forecast|trending|election|near me)\b/.test(x)) return 'search';
-  return 'flash';
-}
+const health = new Health();
+function route(t, c) { return classify(t, { hasPage: !!(c && c.page) }).assistant; }
 const stat = m => m.wait ? `<span style="color:var(--muted)">${esc(m.wait)}</span>` : m.searching ? '<span style="color:var(--muted)">Searching the web…</span>' : '<span style="color:var(--muted)">…</span>';
 function mdx(t, srcs) { if (srcs && srcs.length) t = t.replace(/\[(\d{1,2})\]/g, (x, n) => srcs[n - 1] ? `[${n}](${srcs[n - 1].url})` : x); return renderMarkdown(t); }
 function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : stat(m); bindCodeCopy(el); Src.decorateCitations(el, m.src); }
@@ -268,13 +263,22 @@ async function send(text) {
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
   const useWeb = !!(A[eff].web && web && (asst !== 'auto' || eff === 'search')), pj = D.projects.find(x => x.id === c.pid);
-  const context = { instructions: pj ? pj.instr : '', notes: pj ? pj.notes : '', memory: D.memOn ? D.memory.filter(k => !k.pid || k.pid === c.pid).map(k => k.t).slice(0, 60) : [] };
+  const context = { instructions: pj ? pj.instr : '', notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
   m.searching = useWeb; paint();
   try {
     const pp = await pagePayload(c, text);
-    const r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-      body: JSON.stringify({ assistant: eff === 'human' ? 'humanize' : eff, web: useWeb, context, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images }) },
-      { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
+    const files = c.page ? c.page.files : [], names = Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])), tries = chain(eff, files, health);
+    let r, last;
+    for (const [n, a] of tries.entries()) {
+      const web2 = !!(A[a].web && useWeb);
+      try {
+        r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
+          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images }) },
+          { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
+      } catch (e) { if (!shouldFallback(0, e)) throw e; health.fail(a); last = e; r = null; if (n < tries.length - 1) continue; throw e; }
+      if (r.ok || !shouldFallback(r.status) || n === tries.length - 1) { if (r.ok) health.ok(a); else if (shouldFallback(r.status)) health.fail(a); if (a !== eff) { m.sw = (m.sw ? m.sw + ' ' : '') + A[eff].n + ' did not respond, so ' + A[a].n + ' answered.'; m.eff = a; } break; }
+      health.fail(a);
+    }
     m.wait = '';
     if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || (r.status === 413 ? 'The server rejected the upload as too large.' : 'Something went wrong. Please try again.')); }
@@ -319,12 +323,12 @@ async function pagePayload(c, q) {
   const words = [...new Set(q.toLowerCase().match(/[a-z0-9]{3,}/g) || [])], B = 24000, per = Math.floor(B / fs.length), out = [], images = [];
   for (const f of fs) {
     const t = await full(f); images.push(...(IM[f.id] || []));
-    if (t.length <= per) { out.push('### ' + f.name + '\n' + t); continue; }
+    if (t.length <= per) { out.push(wrapUntrusted(f.name, t)); continue; }
     const ch = []; for (let i = 0; i < t.length; i += 1500) ch.push(t.slice(i, i + 1500));
     const sc = ch.map((x, k) => ({ k, v: words.filter(w => x.toLowerCase().includes(w)).length })), pick = new Set([0]); let used = 1500;
     sc.slice(1).sort((a, b) => b.v - a.v).forEach(x => { if (x.v > 0 && used + 1500 <= per - 100) { pick.add(x.k); used += 1500; } });
     for (let k = 1; k < ch.length && used + 1500 <= per - 100; k++) if (!pick.has(k)) { pick.add(k); used += 1500; }
-    out.push('### ' + f.name + ' (excerpts from a long file, ' + Math.round(t.length / 1000) + 'k characters in total)\n' + [...pick].sort((a, b) => a - b).map(k => ch[k]).join('\n[…]\n'));
+    out.push(wrapUntrusted(f.name + ' (excerpts, ' + Math.round(t.length / 1000) + 'k characters in total)', [...pick].sort((a, b) => a - b).map(k => ch[k]).join('\n[…]\n')));
   }
   return { page: { title: c.page.title, text: out.join('\n\n'), source: c.page.source }, images: images.slice(0, 8) };
 }

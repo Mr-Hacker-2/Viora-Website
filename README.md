@@ -84,3 +84,11 @@ Same palette, type and shapes as the extension's side panel / tab:
 - **Home page**: logo + light-weight "Welcome, what do you want me to do?" greeting, assistant chips use their own hue.
 - **Fonts**: the Google Fonts (Inter / Space Grotesk) are no longer loaded; the site uses the same system font stack as the extension (faster, no third-party request).
 - The web app keeps its three-column layout (chats / chat / tools), only recoloured to match.
+
+---
+## v5 upgrade notes: public-site visual refresh
+
+- Home page rebuilt around a live product preview: split hero, interactive assistant demo with sources, stats strip, assistant and prompt galleries, feature bento, four-step install path, safety/automation panel, FAQ and dark CTA band.
+- `assets/v5.css` loads after `assets/style.css` on the public pages only (`index`, `login`, `account`, `help`, `privacy`, `terms`, `404`); `app.html` is untouched.
+- Responsive header keeps the theme control on mobile, assistant/help chip rails start at the first item, legal pages use full-width cards, and the footer is rebuilt for small screens.
+- Accessibility: WCAG AA contrast across public pages, visible focus styles and reduced-motion support; axe scans report zero A/AA violations.
