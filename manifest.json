@@ -15,9 +15,9 @@
   "theme_color": "#7957ff",
   "icons": [
     {
-      "src": "/assets/x/icon32.png",
-      "sizes": "32x32",
-      "type": "image/png",
+      "src": "/assets/pwa-icon.svg",
+      "sizes": "any",
+      "type": "image/svg+xml",
       "purpose": "any"
     }
   ]
