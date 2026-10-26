@@ -635,7 +635,16 @@
 /* Simplified sidebar: remove decorative icons and add a compact app-install link. */
 :root[data-model] #sh-left .sh-logo .sh-collapse,
 :root[data-model] #sh-left .sh-user .sh-gear {
-  display: none !important;
+  display: inline-flex !important;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  width: auto;
+  height: 28px;
+  padding: 0 7px;
+  border-radius: 7px;
+  font-size: 10px;
+  line-height: 1;
 }
 :root[data-model] #sh-left .sh-nav button::before,
 :root[data-model] #sh-left .sh-nav button::after,
@@ -677,10 +686,6 @@
   color: var(--paper);
   border-color: color-mix(in srgb,var(--accent) 35%,var(--line));
   background: color-mix(in srgb,var(--accent) 13%,var(--ink-2));
-}
-:root[data-model] .sidebar-app-download span:last-child {
-  font-size: 13px;
-  opacity: .75;
 }
 @media(max-width:700px) {
   :root[data-model] .sidebar-app-download { font-size: 11px; min-height: 32px; }
