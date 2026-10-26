@@ -124,3 +124,34 @@ export function decorateCitations(el, srcs) {
     a.target = '_blank'; a.rel = 'noopener noreferrer nofollow';
   });
 }
+
+
+/** Keep only source records with safe, usable HTTP(S) links; never repair or invent URLs. */
+export function cleanSources(srcs) {
+  if (!Array.isArray(srcs)) return [];
+  const seen = new Set(), out = [];
+  for (const item of srcs) {
+    if (!item || typeof item !== 'object' || !parseUrl(item.url)) continue;
+    const url = parseUrl(item.url).href;
+    if (seen.has(url)) continue;
+    seen.add(url);
+    out.push({ ...item, url });
+    if (out.length >= 30) break;
+  }
+  return out;
+}
+
+/** Audit numbered references against the actual source list, without judging claim truth. */
+export function auditCitations(content, srcs, research = false) {
+  const valid = cleanSources(srcs);
+  const nums = [...String(content || '').matchAll(/\[(\d{1,2})\]/g)].map(m => Number(m[1]));
+  const referenced = [...new Set(nums)];
+  const unresolved = referenced.filter(n => n < 1 || n > valid.length);
+  return {
+    sourceCount: valid.length,
+    referencedCount: referenced.length,
+    unresolved,
+    missingResearchSources: Boolean(research && !valid.length && referenced.length),
+    hasIssue: unresolved.length > 0 || Boolean(research && !valid.length && referenced.length)
+  };
+}
