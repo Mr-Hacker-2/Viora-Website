@@ -21,9 +21,14 @@ export function needs(files) {
 }
 /** Keep the user's chosen assistant when it can do the job; otherwise switch to a compatible one and say why. */
 export function pick(assistant, files, names) {
-  const req = needs(files), can = CAPS[assistant] || CAPS[FALLBACK];
-  const missing = req.filter(k => !can[k]);
-  if (!missing.length) return { assistant, switched: false };
+  const req = needs(files);
+  const known = Object.prototype.hasOwnProperty.call(CAPS, assistant);
+  const can = known ? CAPS[assistant] : null;
+  const missing = known ? req.filter(k => !can[k]) : req;
+  if (known && !missing.length) return { assistant, switched: false };
   const to = FALLBACK;
-  return { assistant: to, switched: true, from: assistant, to, why: `${names?.[assistant] || assistant} can't read ${missing.map(k => NEED[k]).join(' or ')}` };
+  const why = !known
+    ? `${names?.[assistant] || assistant || 'That assistant'} is unavailable; switching to ${names?.[to] || to}.`
+    : `${names?.[assistant] || assistant} can't read ${missing.map(k => NEED[k]).join(' or ')}`;
+  return { assistant: to, switched: assistant !== to, from: assistant, to, why };
 }
