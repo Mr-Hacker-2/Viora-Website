@@ -2,7 +2,7 @@ import test from 'node:test'; import assert from 'node:assert/strict';
 import { classify, chain, Health, shouldFallback } from '../assets/x/router.js';
 import { pick } from '../assets/x/caps.js';
 const img = [{ kind: 'image', ni: 1 }];
-test('routes code, search, math, rewriting, page actions', () => {
+test('routes code, search, math and rewriting requests', () => {
   assert.equal(classify('Why does my SQL query return duplicates?').assistant, 'math');
   assert.equal(classify("What's the latest news on SpaceX?").assistant, 'search');
   assert.equal(classify('Fact-check this Python code against the current documentation').assistant, 'search');
@@ -10,7 +10,7 @@ test('routes code, search, math, rewriting, page actions', () => {
   assert.equal(classify('Verify this claim with citations').assistant, 'search');
   assert.equal(classify('calculate 15% of 80').assistant, 'math');
   assert.equal(classify('Make this sound more natural: leverage synergies').assistant, 'human');
-  assert.equal(classify('Plan how to fill this form', { hasPage: true }).assistant, 'automate');
+  assert.equal(classify('Plan how to fill this form', { hasPage: true }).assistant, 'flash');
 });
 test('does not over-trigger on ordinary words', () => {
   assert.equal(classify('Who was the first president of the USA?').assistant, 'flash');
@@ -23,7 +23,7 @@ test('file questions stay on the file unless web is requested', () => {
 });
 test('chain never offers an assistant that cannot read the attachments', () => {
   assert.deepEqual(chain('human', img), ['flash']);
-  assert.deepEqual(chain('automate', img), ['flash']);
+  assert.deepEqual(chain('legacy', img), ['flash']);
   assert.deepEqual(chain('search', img), ['search', 'flash']);
 });
 test('chain skips unhealthy assistants but never returns empty', () => {
