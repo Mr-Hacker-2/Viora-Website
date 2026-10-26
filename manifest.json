@@ -1,0 +1,24 @@
+{
+  "name": "Viora AI",
+  "short_name": "Viora",
+  "description": "Your AI workspace for chat, web research, files, and projects.",
+  "id": "/app.html",
+  "start_url": "/app.html",
+  "scope": "/",
+  "display": "standalone",
+  "display_override": [
+    "standalone",
+    "minimal-ui"
+  ],
+  "orientation": "any",
+  "background_color": "#17141f",
+  "theme_color": "#7957ff",
+  "icons": [
+    {
+      "src": "/assets/x/icon32.png",
+      "sizes": "32x32",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}
