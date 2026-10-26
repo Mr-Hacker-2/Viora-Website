@@ -331,12 +331,18 @@ async function send(text) {
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
   const casualGreeting = /^(hi|hello|hey|hiya|howdy|thanks|thank you|thx|bye|good morning|good afternoon|good evening)[!.?,\s]*$/i.test(text.trim());
-  const useWeb = !!(A[eff].web && web && !casualGreeting), pj = D.projects.find(x => x.id === c.pid);
+  const hasVisualAttachment = !!(c.page && c.page.files.some(f => (f.kind === 'image' || f.kind === 'video') && (f.ni || 0) > 0));
+  // Don't launch a generic web search for visual questions such as "What is this?"
+  // The search query would only be that short phrase and its empty-results notice distracts from image analysis.
+  const visualIdentification = hasVisualAttachment && /^(what(?:'s| is) this|what(?:'s| is) in (?:this|the) (?:image|picture|photo)|describe this|identify this|what am i looking at|can you see this)[?.!\s]*$/i.test(text.trim());
+  const useWeb = !!(A[eff].web && web && !casualGreeting && !visualIdentification), pj = D.projects.find(x => x.id === c.pid);
   const context = { instructions: withPersona(eff, tone, pj ? pj.instr : ''), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
   m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
   try {
     const pp = await pagePayload(c, text);
-    m.stage = useWeb ? 'Connecting and preparing web research…' : 'Connecting to Viora…'; paint();
+    const expectsVisualData = !!(c.page && c.page.files.some(f => (f.kind === 'image' || f.kind === 'video') && (f.ni || 0) > 0));
+    if (expectsVisualData && !pp.images.length) throw new Error('I can see that a picture or video is attached, but its image data did not load. Please remove it and upload it again, then retry.');
+    m.stage = useWeb ? 'Connecting and preparing web research…' : expectsVisualData ? 'Sending your image to Viora vision…' : 'Connecting to Viora…'; paint();
     const files = c.page ? c.page.files : [], names = Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])), tries = chain(eff, files, health);
     let r, last;
     for (const [n, a] of tries.entries()) {
@@ -365,6 +371,7 @@ async function send(text) {
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); });
     }
     if (!m.content.trim()) m.content = 'I got an empty reply. Please try again.';
+    if (visualIdentification && !useWeb) m.note = 'Image analysis mode: the reply should be based on the attached picture, not a generic web search.';
     // The frontend can request web search, but only the chat backend can actually perform it.
     // Make a missing search result explicit instead of letting a model imply it browsed.
     if (useWeb && !Array.isArray(m.src)) {
