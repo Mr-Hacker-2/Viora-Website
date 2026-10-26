@@ -371,7 +371,6 @@ async function send(text) {
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); });
     }
     if (!m.content.trim()) m.content = 'I got an empty reply. Please try again.';
-    if (visualIdentification && !useWeb) m.note = 'Image analysis mode: the reply should be based on the attached picture, not a generic web search.';
     // The frontend can request web search, but only the chat backend can actually perform it.
     // Make a missing search result explicit instead of letting a model imply it browsed.
     if (useWeb && !Array.isArray(m.src)) {
