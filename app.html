@@ -13,6 +13,7 @@
 <link rel="stylesheet" href="assets/x/viora-theme.css">
 <link rel="stylesheet" href="assets/x/fixes.css">
 <link rel="stylesheet" href="assets/x/app-polish.css">
+<link rel="stylesheet" href="assets/x/studio-polish.css">
 <link rel="stylesheet" href="assets/x/viora-fx.css">
 <link rel="stylesheet" href="assets/x/sources.css">
 <link rel="stylesheet" href="assets/x/attach.css">
@@ -115,7 +116,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
 </aside>
 <div id="sh-center">
   <header class="bar">
-    <div class="sh-title"><h1>Chat with Viora AI</h1><p>An interactive tool for web searches, sourcing, research, drafting, debugging, and beyond</p></div>
+    <div class="sh-title"><h1>Chat with Viora AI</h1><p>Research, create, debug, and explore with a capable AI workspace</p></div>
     <div class="bar-id">
       <h1 class="wordmark">Viora AI</h1>
       <button id="model-btn" class="model-pill" type="button" aria-expanded="false" aria-controls="model-sheet"><span class="pill-icon" id="pill-icon"></span><span class="pill-name" id="pill-name"></span><svg class="pill-caret" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg></button>
@@ -153,18 +154,18 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
   </form>
 </div>
 <aside id="sh-right">
-  <h2>AI Module</h2>
+  <h2>Workspace</h2>
   <select id="sh-model" class="sh-model" aria-label="Assistant"></select>
   <div class="sh-tabs"><button type="button" class="on" data-tab="tools">TOOLS</button><button type="button" data-tab="files">FILES</button></div>
   <div id="sh-tools">
-    <p class="sh-desc">Viora searches the web, reads your files, images and videos, and remembers what you tell it.</p>
+    <p class="sh-desc">Your AI workspace for research, files, images, videos, projects, and memory.</p>
     <h3>Your Projects <span class="sh-new">New</span></h3>
     <div id="projs" class="sh-agents"></div>
     <h4>Tools</h4>
     <div id="sh-modes">
       <div class="sh-mode"><div><b>Web search</b><small>Looks things up and cites sources</small></div><button type="button" class="sh-sw" data-m="web" role="switch" aria-checked="false" aria-label="Web search"></button></div>
       <div class="sh-mode"><div><b>Humanizer</b><small>Make AI text sound human</small></div><button type="button" class="sh-sw" data-m="human" role="switch" aria-checked="false" aria-label="Humanizer"></button></div>
-      <div class="sh-mode"><div><b>Deep Search</b><small>Careful, sourced answers</small></div><button type="button" class="sh-sw" data-m="search" role="switch" aria-checked="false" aria-label="Deep Search"></button></div>
+      <div class="sh-mode"><div><b>Pro Search</b><small>Multi-source research with citations</small></div><button type="button" class="sh-sw" data-m="search" role="switch" aria-checked="false" aria-label="Deep Search"></button></div>
       <div class="sh-mode"><div><b>Automate</b><small>Plans steps from a page and a goal</small></div><button type="button" class="sh-sw" data-m="automate" role="switch" aria-checked="false" aria-label="Automate"></button></div>
     </div>
   </div>
@@ -238,7 +239,7 @@ $$('[data-ic]').forEach(e => e.insertAdjacentHTML('afterbegin', ic(e.dataset.ic)
 const A = {
   auto:    { n: 'Viora Auto', ic: 'flash', b: 'Picks the best assistant for each message', web: 1, ph: 'Ask me anything', s: ['What happened in tech news today?', 'Fix this Python: for i in range(5) print(i)', 'Plan a 3-day trip to Lisbon', 'Solve 3x² − 12 = 0'] },
   flash:   { n: 'Viora Flash', ic: 'flash', b: 'Fast answers for everyday questions', web: 1, ph: 'Ask me anything', s: ['Explain how vaccines work', 'Write a polite deadline-extension email', 'What happened in tech news today?', 'Plan a 3-day trip to Lisbon'] },
-  search:  { n: 'Deep Search', ic: 'search', b: 'Searches the web and cites every claim', web: 1, ph: 'What should I look up?', s: ['Latest research on intermittent fasting', 'Compare the newest flagship phones', 'Summarize the news on AI regulation', 'Who won the most recent Formula 1 race?'] },
+  search:  { n: 'Pro Search', ic: 'search', b: 'Research across live web sources with citations', web: 1, ph: 'Ask a research question…', s: ['Compare recent research on renewable energy', 'Find official documentation for a JavaScript API', 'Summarize the latest AI regulation news', 'Compare two viewpoints using reliable sources'] },
   math:    { n: 'Math & Code', ic: 'math', b: 'Step-by-step maths and working code', web: 1, ph: 'Give me a problem or some code', s: ['Solve 3x² − 12 = 0 with steps', 'Why does for(i=0;i<5;i--){} never end?', 'Write a Python palindrome checker', 'Explain Big-O notation simply'] },
   automate:{ n: 'Automate', ic: 'automate', b: 'Plans browser steps from a page and a goal', ph: 'Attach a page, then describe the goal', s: ['Plan how to sign up on this page', 'Which form fields are required here?', 'Plan how to find the contact details'] },
   human:   { n: 'Humanizer', ic: 'humanize', b: 'Turns stiff text into natural writing', ph: 'Paste the text to humanize', s: ['Leveraging synergies, we deliver value-driven outcomes.', 'It is important to note that time management is crucial.', 'I am writing to express my sincere interest in the position.'] }
