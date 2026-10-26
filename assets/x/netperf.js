@@ -59,7 +59,7 @@ function sleep(ms, signal) {
     if (signal) signal.addEventListener('abort', onAbort, { once: true });
   });
 }
-const RETRY_STATUS = [429, 502, 503, 504];
+const RETRY_STATUS = [408, 425, 429, 500, 502, 503, 504];
 
 /* fetch() with a first-byte timeout and automatic retries.
    `signal` is the person's Stop button: it is never retried. onWait(text) reports each pause. */
