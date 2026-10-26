@@ -305,3 +305,161 @@
     transition: none;
   }
 }
+
+/* Final icon pass: crisp strokes, consistent optical sizing, and real breathing room. */
+:root[data-model] svg.ico,
+:root[data-model] svg.glyph{
+  display:block;
+  width:22px !important;
+  height:22px !important;
+  min-width:22px;
+  min-height:22px;
+  flex:0 0 22px;
+  stroke-width:1.85;
+  stroke-linecap:round;
+  stroke-linejoin:round;
+  shape-rendering:geometricPrecision;
+}
+:root[data-model] .sh-nav button,
+:root[data-model] .sh-agents button,
+:root[data-model] #projs button,
+:root[data-model] .sh-hist button{
+  display:flex;
+  align-items:center;
+  text-align:left;
+}
+:root[data-model] .sh-nav button .ico,
+:root[data-model] .sh-agents button .ico,
+:root[data-model] #projs button .ico{
+  margin-right:2px;
+}
+:root[data-model] .bar-actions .icon-btn,
+:root[data-model] button.icon-btn,
+:root[data-model] #sh-gear,
+:root[data-model] #open-full{
+  display:inline-grid;
+  place-items:center;
+}
+:root[data-model] .model-row .row-icon{
+  display:grid;
+  place-items:center;
+  width:42px;
+  height:42px;
+  flex:0 0 42px;
+  border-radius:13px;
+  background:color-mix(in srgb,var(--accent) 10%,var(--ink-2));
+  color:var(--accent);
+}
+:root[data-model] .model-row .row-icon .ico,
+:root[data-model] .model-row .row-icon svg{
+  width:23px !important;
+  height:23px !important;
+  min-width:23px;
+  flex-basis:23px;
+}
+:root[data-model] .sh-mode > .ico,
+:root[data-model] .sh-mode > svg{
+  width:24px !important;
+  height:24px !important;
+  min-width:24px;
+  flex:0 0 24px;
+}
+:root[data-model] #sdlg{
+  width:min(620px,calc(100vw - 28px));
+  max-width:calc(100vw - 28px);
+  max-height:min(86dvh,900px);
+  overflow:auto;
+  box-sizing:border-box;
+  padding:clamp(20px,4vw,30px);
+}
+:root[data-model] #sdlg h3{
+  margin:0 0 6px;
+  font-size:25px;
+  letter-spacing:-.04em;
+}
+:root[data-model] #sdlg > p{
+  margin:0 0 14px;
+  max-width:58ch;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.65;
+}
+:root[data-model] #sdlg .settings-section{
+  margin-top:18px;
+  padding-top:4px;
+  border-top:1px solid var(--line);
+}
+:root[data-model] #sdlg .settings-section h4{
+  margin:15px 0 4px;
+  font-size:12px;
+  font-weight:750;
+  letter-spacing:.09em;
+  text-transform:uppercase;
+  color:var(--muted);
+}
+:root[data-model] #sdlg .settings-option{
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:18px;
+  min-height:64px;
+  padding:11px 0;
+  border-bottom:1px solid color-mix(in srgb,var(--line) 75%,transparent);
+  cursor:pointer;
+}
+:root[data-model] #sdlg .settings-option > span{
+  min-width:0;
+  display:block;
+}
+:root[data-model] #sdlg .settings-option b{
+  display:block;
+  color:var(--paper);
+  font-size:14px;
+  font-weight:650;
+  line-height:1.45;
+}
+:root[data-model] #sdlg .settings-option small{
+  display:block;
+  margin-top:3px;
+  color:var(--muted);
+  font-size:12px;
+  line-height:1.5;
+}
+:root[data-model] #sdlg .settings-option input[type=checkbox]{
+  width:19px;
+  height:19px;
+  flex:0 0 auto;
+  accent-color:var(--accent);
+  cursor:pointer;
+}
+:root[data-model] #sdlg .settings-option select{
+  min-width:112px;
+  max-width:44%;
+  min-height:40px;
+  padding:8px 30px 8px 10px;
+  border:1px solid var(--line);
+  border-radius:11px;
+  background:var(--ink-2);
+  color:var(--paper);
+  font:inherit;
+  font-size:13px;
+}
+:root[data-model][data-chat-size="small"] .msg.assistant .body{font-size:14px}
+:root[data-model][data-chat-size="standard"] .msg.assistant .body{font-size:15.5px}
+:root[data-model][data-chat-size="large"] .msg.assistant .body{font-size:18px;line-height:1.82}
+:root[data-model].viora-compact-chat .msg{margin-block:10px}
+:root[data-model].viora-compact-chat .thread{gap:10px}
+:root[data-model].viora-reduce-motion *,
+:root[data-model].viora-reduce-motion *::before,
+:root[data-model].viora-reduce-motion *::after{
+  animation-duration:.01ms !important;
+  animation-iteration-count:1 !important;
+  scroll-behavior:auto !important;
+  transition-duration:.01ms !important;
+}
+@media(max-width:560px){
+  :root[data-model] #sdlg{padding:20px 17px}
+  :root[data-model] #sdlg .settings-option{gap:12px;min-height:60px}
+  :root[data-model] #sdlg .settings-option small{max-width:34ch}
+  :root[data-model] .model-row .row-icon{width:38px;height:38px;flex-basis:38px}
+}
