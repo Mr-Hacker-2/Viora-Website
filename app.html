@@ -6,6 +6,10 @@
 <title>Viora</title>
 <meta name="theme-color" content="#f6f8fe">
 <link rel="icon" href="assets/x/icon32.png">
+<link rel="manifest" href="manifest.json">
+<link rel="apple-touch-icon" href="assets/x/icon32.png">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="assets/x/prefs.js"></script>
 <link rel="stylesheet" href="assets/x/tab.css">
 <link rel="stylesheet" href="assets/x/accent.css">
@@ -91,6 +95,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
 }
 
 </style>
+<script src="assets/x/pwa.js" defer></script>
 </head>
 <body>
 <div id="shell">
@@ -99,7 +104,8 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
   <div class="sh-user"><span class="sh-av" id="av"></span><span class="sh-uname" id="nm"></span><button type="button" id="sh-gear" class="sh-gear" title="Account" aria-label="Account" data-ic="gear"></button></div>
   <div id="umenu" class="sheet" hidden>
     <a class="sheet-action" href="index.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Viora home</span></span></a>
-    <a class="sheet-action" href="install.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Get the extension</span></span></a>
+    <a class="sheet-action" href="mobile.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Install Viora on phone</span><span class="sheet-sub">Add the website to your Home Screen</span></span></a>
+    <a class="sheet-action" href="install.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Get the browser extension</span></span></a>
     <button type="button" class="sheet-action" id="open-settings"><span class="sheet-copy"><span class="sheet-title">Settings</span></span></button>
     <button type="button" class="sheet-action" id="out"><span class="sheet-copy"><span class="sheet-title">Sign out</span></span></button>
   </div>
@@ -112,7 +118,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
   </nav>
   <h6>CHAT HISTORY</h6>
   <div id="sh-hist" class="sh-hist"></div>
-  <div class="sh-invite"><b>Get the extension</b><small>Use Viora on any page in Chrome</small><button type="button" id="sh-invite">Install Viora</button></div>
+  <div class="sh-invite"><b>Viora on your phone</b><small>Install this website like an app. No browser extension needed.</small><button type="button" id="sh-invite">Set up phone app</button></div>
 </aside>
 <div id="sh-center">
   <header class="bar">
@@ -122,6 +128,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
       <button id="model-btn" class="model-pill" type="button" aria-expanded="false" aria-controls="model-sheet"><span class="pill-icon" id="pill-icon"></span><span class="pill-name" id="pill-name"></span><svg class="pill-caret" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg></button>
     </div>
     <div class="bar-actions">
+      <button id="pwa-install" class="icon-btn pwa-install" type="button" title="Install Viora app" aria-label="Install Viora app" hidden>＋</button>
       <button id="new-thread" class="icon-btn" type="button" title="New conversation" aria-label="New conversation"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>
       <button id="open-full" class="icon-btn" type="button" title="Menu" aria-label="Menu" data-ic="panel"></button>
     </div>
@@ -539,7 +546,7 @@ $('#model-list').onclick = e => { const b = e.target.closest('[data-model]'); if
 $('#sh-model').onchange = e => setAsst(e.target.value);
 $('#sh-modes').onclick = e => { const sw = e.target.closest('.sh-sw'); if (!sw) return; const k = sw.dataset.m; if (k === 'web') { web = !web; ls.set('viora_web', web); render(); } else setAsst(asst === k ? 'auto' : k); };
 $('.sh-tabs').onclick = e => { const b = e.target.closest('button[data-tab]'); if (!b) return; $$('.sh-tabs button').forEach(x => x.classList.toggle('on', x === b)); $('#sh-tools').hidden = b.dataset.tab !== 'tools'; $('#sh-files').hidden = b.dataset.tab !== 'files'; };
-$('#sh-invite').onclick = () => { window.open('install.html', '_blank', 'noopener,noreferrer'); };
+$('#sh-invite').onclick = () => { window.location.href = 'mobile.html'; };
 $('#page-chip-remove').onclick = () => { curP = null; cur = null; render(); };
 $('#sh-hist').onclick = e => {
   const d = e.target.closest('[data-del]'); if (d) { e.stopPropagation(); chats = chats.filter(c => c.id !== d.dataset.del); if (cur === d.dataset.del) cur = null; save(); render(); return; }
