@@ -5,6 +5,9 @@ const img = [{ kind: 'image', ni: 1 }];
 test('routes code, search, math, rewriting, page actions', () => {
   assert.equal(classify('Why does my SQL query return duplicates?').assistant, 'math');
   assert.equal(classify("What's the latest news on SpaceX?").assistant, 'search');
+  assert.equal(classify('Fact-check this Python code against the current documentation').assistant, 'search');
+  assert.equal(classify('Find peer-reviewed studies and cite the sources').assistant, 'search');
+  assert.equal(classify('Verify this claim with citations').assistant, 'search');
   assert.equal(classify('calculate 15% of 80').assistant, 'math');
   assert.equal(classify('Make this sound more natural: leverage synergies').assistant, 'human');
   assert.equal(classify('Plan how to fill this form', { hasPage: true }).assistant, 'automate');
