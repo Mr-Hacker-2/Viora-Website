@@ -1,0 +1,68 @@
+/* Viora Studio polish — focused, premium research workspace */
+:root[data-model]{
+  --studio-accent:var(--accent);
+  --studio-glow:color-mix(in srgb,var(--accent) 18%,transparent);
+}
+:root[data-model] #sh-center{isolation:isolate}
+:root[data-model] .bar{position:relative;z-index:2}
+:root[data-model] .sh-title h1{font-size:clamp(20px,2vw,27px);font-weight:700}
+:root[data-model] .sh-title p{max-width:62ch;line-height:1.5}
+:root[data-model] #thread{overscroll-behavior:contain}
+:root[data-model] .welcome{width:min(100%,900px);margin:auto;padding:clamp(26px,6vh,72px) clamp(14px,3vw,34px) 30px}
+:root[data-model] .welcome-main{text-align:center;margin:0 auto 26px}
+:root[data-model] .logo-stage{display:grid;place-items:center;margin-bottom:18px}
+:root[data-model] .welcome-logo{display:grid;place-items:center;width:82px;height:82px;border-radius:26px;background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 18%,var(--ink-2)),var(--ink-2));border:1px solid color-mix(in srgb,var(--accent) 22%,var(--line));box-shadow:0 14px 42px var(--studio-glow),inset 0 1px #ffffff9c}
+:root[data-model] .welcome-logo img{width:50px;height:50px;object-fit:contain}
+:root[data-model] .welcome-line{font-size:clamp(22px,3.2vw,34px);font-weight:720;line-height:1.2;letter-spacing:-.045em;margin:0;color:var(--paper)}
+:root[data-model] .welcome-main:after{content:"Ask a question, attach files, or start with a research prompt";display:block;margin:11px auto 0;color:var(--muted);font-size:14px;line-height:1.5}
+:root[data-model] .suggestions{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:10px;width:min(100%,760px);margin:0 auto}
+:root[data-model] .suggestion{position:relative;text-align:left;min-height:66px;padding:15px 42px 15px 16px;border:1px solid color-mix(in srgb,var(--line) 82%,var(--accent));border-radius:17px;background:color-mix(in srgb,var(--ink-2) 92%,var(--accent));color:var(--paper);font:500 14px/1.5 var(--sans);box-shadow:0 4px 16px #313a5a08;transition:transform .16s,border-color .16s,box-shadow .16s}
+:root[data-model] .suggestion:after{content:"↗";position:absolute;right:16px;top:50%;transform:translateY(-50%);font-size:17px;color:var(--faint)}
+:root[data-model] .suggestion:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 55%,var(--line));box-shadow:0 10px 26px var(--studio-glow)}
+:root[data-model] .model-pill{padding:9px 13px;gap:9px}
+:root[data-model] #model-sheet{border:1px solid var(--line);box-shadow:var(--shadow-lg);backdrop-filter:blur(18px)}
+:root[data-model] .model-row{border-radius:13px;padding:11px}
+:root[data-model] .model-row[aria-selected=true]{background:color-mix(in srgb,var(--accent) 12%,var(--ink-2))}
+:root[data-model] #sh-right{scrollbar-width:thin;scrollbar-color:var(--line) transparent}
+:root[data-model] #sh-right .sh-desc{line-height:1.6}
+:root[data-model] #sh-right .sh-mode{padding:10px 0;border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent);margin-top:4px}
+:root[data-model] #sh-right .sh-mode:last-child{border-bottom:0}
+:root[data-model] #sh-right .sh-mode b{font-size:14px;font-weight:650}
+:root[data-model] #sh-right .sh-mode small{display:block;max-width:190px;line-height:1.45;margin-top:3px}
+:root[data-model] #sh-right .sh-sw{box-shadow:inset 0 0 0 1px #00000008}
+:root[data-model] .composer{z-index:3}
+:root[data-model] .composer-inner{backdrop-filter:blur(18px)}
+:root[data-model] .composer-inner:focus-within{box-shadow:0 12px 38px var(--studio-glow),0 0 0 3px color-mix(in srgb,var(--accent) 9%,transparent)}
+:root[data-model] .composer-row{align-items:center}
+:root[data-model] .send{display:grid;place-items:center}
+:root[data-model] .msg.assistant .body h1,:root[data-model] .msg.assistant .body h2,:root[data-model] .msg.assistant .body h3{scroll-margin-top:20px}
+:root[data-model] .msg.assistant .body blockquote{margin:1em 0;padding:10px 15px;border-left:3px solid var(--accent);background:color-mix(in srgb,var(--accent) 6%,var(--ink-2));border-radius:0 12px 12px 0;color:var(--muted)}
+:root[data-model] .msg.assistant .body hr{border:0;border-top:1px solid var(--line);margin:1.5em 0}
+:root[data-model] .msg.assistant .body th{background:color-mix(in srgb,var(--accent) 8%,var(--ink-2));font-weight:650}
+:root[data-model] .msg.assistant .body th,:root[data-model] .msg.assistant .body td{padding:9px 12px;border:1px solid var(--line);text-align:left}
+:root[data-model] .msg.assistant .body tr:nth-child(even){background:color-mix(in srgb,var(--ink-2) 65%,var(--ink))}
+:root[data-model] .src-block>summary{font-weight:650;color:var(--paper)}
+:root[data-model] .src-grid{gap:10px}
+:root[data-model] .src-card{border-radius:15px;padding:13px;background:color-mix(in srgb,var(--ink-2) 94%,var(--accent))}
+:root[data-model] .src-title{line-height:1.45}
+:root[data-model] .msg-actions{padding-top:8px}
+:root[data-model] .msg-act{border-radius:10px}
+:root[data-model] .switch-note{border-radius:12px;line-height:1.5}
+:root[data-model] .attach-chip{border-radius:14px}
+:root[data-model] #status{border:1px solid var(--line);border-radius:12px;box-shadow:var(--shadow)}
+@media(max-width:680px){
+  :root[data-model] .welcome{padding-top:26px}
+  :root[data-model] .welcome-logo{width:68px;height:68px;border-radius:22px}
+  :root[data-model] .welcome-logo img{width:42px;height:42px}
+  :root[data-model] .suggestions{grid-template-columns:minmax(0,1fr);gap:8px}
+  :root[data-model] .suggestion{min-height:54px;padding:12px 38px 12px 14px}
+  :root[data-model] .msg.assistant .body{font-size:15px;line-height:1.72}
+}
+@media(min-width:980px){
+  :root[data-model] .welcome{padding-top:clamp(34px,8vh,86px)}
+  :root[data-model] #sh-left,:root[data-model] #sh-right{backdrop-filter:blur(18px)}
+  :root[data-model] #sh-center{min-height:0}
+}
+@media(prefers-reduced-motion:reduce){
+  :root[data-model] .suggestion{transition:none}
+}
