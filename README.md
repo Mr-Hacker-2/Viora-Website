@@ -92,3 +92,13 @@ Same palette, type and shapes as the extension's side panel / tab:
 - `assets/v5.css` loads after `assets/style.css` on the public pages only (`index`, `login`, `account`, `help`, `privacy`, `terms`, `404`); `app.html` is untouched.
 - Responsive header keeps the theme control on mobile, assistant/help chip rails start at the first item, legal pages use full-width cards, and the footer is rebuilt for small screens.
 - Accessibility: WCAG AA contrast across public pages, visible focus styles and reduced-motion support; axe scans report zero A/AA violations.
+---
+## v6 upgrade notes: research, files, memory and downloads
+
+- **Auto routing** (`assets/x/router.js`) now prioritizes explicit research and fact-checking requests and recognizes citations, verification, evidence, studies and references. The routing evaluation cases and unit tests include these patterns.
+- **Answer quality guidance** (`assets/x/persona.js`) now asks Deep Search to prefer primary sources, cross-check important claims, respect dates, cite only sources actually returned by the search system, and disclose when usable search results are unavailable. Coding and file-analysis guidance also emphasizes uncertainty and honest capability limits.
+- **Scanned PDFs** (`app.html`) now try OCR on up to the first eight pages when no selectable text is present. OCR may contain mistakes and is not a substitute for a full document vision pipeline.
+- **User-controlled memory**: a bookmark/note action on an AI reply saves the related question to the existing per-device Memory list. Memory remains opt-in, editable and deletable; it is stored in this browser/device and does not automatically sync across devices.
+- **Reliability** (`assets/x/netperf.js`) retries transient 408, 425, 429 and common 5xx responses as well as network failures. Stop requests are still not retried; the existing regenerate/retry action remains available.
+- **Phone-to-PC source download**: `download-site.html` links to the repository ZIP and explains how to transfer it from a phone and extract it on Windows. This downloads source code; it does not install the website as an offline application.
+- **Backend boundary**: this repository chooses Viora assistant modes. The underlying provider/model selection, search provider, returned sources and server-side fallback are controlled by the separate chat server. These front-end changes cannot guarantee provider-level routing or make the server's web results more reliable without changes to that server.
