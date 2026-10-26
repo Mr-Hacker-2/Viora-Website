@@ -22,8 +22,7 @@
 <link rel="stylesheet" href="assets/x/sources.css">
 <link rel="stylesheet" href="assets/x/attach.css">
 <link rel="stylesheet" href="assets/x/netperf.css">
-<link rel="stylesheet" href="assets/x/icon-spacing.css">
-<script src="assets/x/settings-layout.js" defer></script>
+<link rel="stylesheet" href="assets/x/pro-ui.css">
 <link rel="preconnect" href="https://viora-auth-website.onrender.com" crossorigin>
 <style>
 html,body{height:100%;margin:0}
@@ -102,8 +101,8 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
 <body>
 <div id="shell">
 <aside id="sh-left">
-  <div class="sh-logo"><img src="assets/x/icon32.png" alt="" width="26" height="26"><span>Viora AI</span><button type="button" class="sh-collapse" id="sh-collapse" title="Hide sidebar" aria-label="Hide sidebar">Hide</button></div>
-  <div class="sh-user"><span class="sh-av" id="av"></span><span class="sh-uname" id="nm"></span><button type="button" id="sh-gear" class="sh-gear" title="Account" aria-label="Account">Account</button></div>
+  <div class="sh-logo"><img src="assets/x/icon32.png" alt="" width="26" height="26"><span>Viora AI</span><button type="button" class="sh-collapse" id="sh-collapse" title="Hide sidebar" aria-label="Hide sidebar" data-ic="panel"></button></div>
+  <div class="sh-user"><span class="sh-av" id="av"></span><span class="sh-uname" id="nm"></span><button type="button" id="sh-gear" class="sh-gear" title="Account" aria-label="Account" data-ic="gear"></button></div>
   <div id="umenu" class="sheet" hidden>
     <a class="sheet-action" href="index.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Viora home</span></span></a>
     <a class="sheet-action" href="mobile.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Install Viora on phone</span><span class="sheet-sub">Add the website to your Home Screen</span></span></a>
@@ -114,13 +113,13 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
   <input id="sh-search" class="sh-search" type="search" placeholder="Search for chats…" autocomplete="off" spellcheck="false">
   <h6>FEATURES</h6>
   <nav class="sh-nav">
-    <button type="button" class="on" id="nav-chat"> AI Chat</button>
-    <button type="button" id="mem"> Memory</button>
-    <button type="button" id="exp"> Export my data</button>
+    <button type="button" class="on" id="nav-chat" data-ic="chat"> AI Chat</button>
+    <button type="button" id="mem" data-ic="note"> Memory</button>
+    <button type="button" id="exp" data-ic="download"> Export my data</button>
   </nav>
   <h6>CHAT HISTORY</h6>
   <div id="sh-hist" class="sh-hist"></div>
-  <a class="sidebar-app-download" href="mobile.html" title="Install Viora as an app">Download Viora app</a>
+  <div class="sh-invite"><b>Viora on your phone</b><small>Install this website like an app. No browser extension needed.</small><button type="button" id="sh-invite">Set up phone app</button></div>
 </aside>
 <div id="sh-center">
   <header class="bar">
@@ -198,14 +197,6 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
    <label class="np-row" style="display:flex;gap:10px;align-items:center;margin:6px 0 14px"><span style="flex:1">Emotions &amp; emojis<small style="display:block;color:var(--faint)">How expressive Viora is when it answers. Rewrite tools stay plain.</small></span><select id="tone-sel" aria-label="Reply personality"></select></label>
    <h4 class="np-h">Speed &amp; reliability</h4>
   <div id="np-mount"></div>
-  <section class="settings-section" aria-labelledby="chat-pref-title">
-    <h4 id="chat-pref-title">Chat preferences</h4>
-    <label class="settings-option"><span><b>Enter sends message</b><small>Turn this off to use Enter for a new line.</small></span><input type="checkbox" id="pref-enter-send"></label>
-    <label class="settings-option"><span><b>Response text size</b><small>Choose a comfortable reading size.</small></span><select id="pref-text-size" aria-label="Response text size"><option value="small">Small</option><option value="standard">Standard</option><option value="large">Large</option></select></label>
-    <label class="settings-option"><span><b>Compact chat</b><small>Reduce extra space between messages.</small></span><input type="checkbox" id="pref-compact"></label>
-    <label class="settings-option"><span><b>Reduce motion</b><small>Minimize interface animations.</small></span><input type="checkbox" id="pref-reduce-motion"></label>
-    <button class="pf-reset" id="pref-reset" type="button">Reset chat preferences</button>
-  </section>
   <div class="dl" style="margin-top:12px"><span style="flex:1"></span><button class="btn p" id="s-x" type="button">Done</button></div>
 </dialog>
 <dialog id="pdlg">
@@ -544,7 +535,7 @@ document.addEventListener('click', e => {
   if (document.body.classList.contains('sb') && !e.target.closest('#sh-left, #open-full')) closeSb();
 });
 $('#composer').onsubmit = e => { e.preventDefault(); busy ? busy.abort() : send($('#input').value); };
-$('#input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && ls.get('viora_pref_enter_send', true)) { e.preventDefault(); busy || send(e.target.value); } });
+$('#input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); busy || send(e.target.value); } });
 $('#input').addEventListener('input', grow);
 addEventListener('keydown', e => { if (e.key === 'Escape') { busy?.abort(); hide(); } if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); newChat(); } });
 $('#new-thread').onclick = $('#nav-chat').onclick = newChat;
@@ -574,29 +565,7 @@ $('#thread').onclick = e => {
 };
 $('#tone-sel').innerHTML = Object.entries(LEVELS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
 $('#tone-sel').onchange = e => { tone = normLevel(e.target.value); ls.set('viora_tone', tone); };
-function applyChatPrefs() {
-  const size = ls.get('viora_pref_text_size', 'standard');
-  document.documentElement.dataset.chatSize = ['small','standard','large'].includes(size) ? size : 'standard';
-  document.documentElement.classList.toggle('viora-compact-chat', !!ls.get('viora_pref_compact', false));
-  document.documentElement.classList.toggle('viora-reduce-motion', !!ls.get('viora_pref_reduce_motion', false));
-}
-function syncChatPrefs() {
-  $('#pref-enter-send').checked = ls.get('viora_pref_enter_send', true);
-  $('#pref-text-size').value = ls.get('viora_pref_text_size', 'standard');
-  $('#pref-compact').checked = !!ls.get('viora_pref_compact', false);
-  $('#pref-reduce-motion').checked = !!ls.get('viora_pref_reduce_motion', false);
-}
-$('#pref-enter-send').onchange = e => ls.set('viora_pref_enter_send', e.target.checked);
-$('#pref-text-size').onchange = e => { ls.set('viora_pref_text_size', e.target.value); applyChatPrefs(); };
-$('#pref-compact').onchange = e => { ls.set('viora_pref_compact', e.target.checked); applyChatPrefs(); };
-$('#pref-reduce-motion').onchange = e => { ls.set('viora_pref_reduce_motion', e.target.checked); applyChatPrefs(); };
-$('#pref-reset').onclick = () => {
-  ls.set('viora_pref_enter_send', true); ls.set('viora_pref_text_size', 'standard');
-  ls.set('viora_pref_compact', false); ls.set('viora_pref_reduce_motion', false);
-  syncChatPrefs(); applyChatPrefs();
-};
-applyChatPrefs();
-$('#open-settings').onclick = () => { $('#tone-sel').value = tone; syncChatPrefs(); hide(); VioraPrefs.mount($('#pf-mount')); NP.mount($('#np-mount')); $('#sdlg').showModal(); };
+$('#open-settings').onclick = () => { $('#tone-sel').value = tone; hide(); VioraPrefs.mount($('#pf-mount')); NP.mount($('#np-mount')); $('#sdlg').showModal(); };
 $('#s-x').onclick = () => $('#sdlg').close();
 $('#out').onclick = () => { localStorage.removeItem('viora_session'); location.href = 'index.html'; };
 /* projects */
