@@ -12,6 +12,7 @@
 <link rel="stylesheet" href="assets/x/prefs.css">
 <link rel="stylesheet" href="assets/x/viora-theme.css">
 <link rel="stylesheet" href="assets/x/fixes.css">
+<link rel="stylesheet" href="assets/x/app-polish.css">
 <link rel="stylesheet" href="assets/x/viora-fx.css">
 <link rel="stylesheet" href="assets/x/sources.css">
 <link rel="stylesheet" href="assets/x/attach.css">
@@ -49,7 +50,7 @@ dialog textarea{min-height:100px;resize:vertical}dialog input:focus,dialog texta
   <div class="sh-user"><span class="sh-av" id="av"></span><span class="sh-uname" id="nm"></span><button type="button" id="sh-gear" class="sh-gear" title="Account" aria-label="Account" data-ic="gear"></button></div>
   <div id="umenu" class="sheet" hidden>
     <a class="sheet-action" href="index.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Viora home</span></span></a>
-    <a class="sheet-action" href="help.html#install" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Get the extension</span></span></a>
+    <a class="sheet-action" href="install.html" target="_blank" rel="noopener noreferrer" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Get the extension</span></span></a>
     <button type="button" class="sheet-action" id="open-settings"><span class="sheet-copy"><span class="sheet-title">Settings</span></span></button>
     <button type="button" class="sheet-action" id="out"><span class="sheet-copy"><span class="sheet-title">Sign out</span></span></button>
   </div>
@@ -471,7 +472,7 @@ $('#model-list').onclick = e => { const b = e.target.closest('[data-model]'); if
 $('#sh-model').onchange = e => setAsst(e.target.value);
 $('#sh-modes').onclick = e => { const sw = e.target.closest('.sh-sw'); if (!sw) return; const k = sw.dataset.m; if (k === 'web') { web = !web; ls.set('viora_web', web); render(); } else setAsst(asst === k ? 'auto' : k); };
 $('.sh-tabs').onclick = e => { const b = e.target.closest('button[data-tab]'); if (!b) return; $$('.sh-tabs button').forEach(x => x.classList.toggle('on', x === b)); $('#sh-tools').hidden = b.dataset.tab !== 'tools'; $('#sh-files').hidden = b.dataset.tab !== 'files'; };
-$('#sh-invite').onclick = () => { location.href = 'help.html#install'; };
+$('#sh-invite').onclick = () => { window.open('install.html', '_blank', 'noopener,noreferrer'); };
 $('#page-chip-remove').onclick = () => { curP = null; cur = null; render(); };
 $('#sh-hist').onclick = e => {
   const d = e.target.closest('[data-del]'); if (d) { e.stopPropagation(); chats = chats.filter(c => c.id !== d.dataset.del); if (cur === d.dataset.del) cur = null; save(); render(); return; }
