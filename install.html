@@ -1,0 +1,156 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fbfaff">
+<title>Install Viora — Chrome &amp; Edge</title>
+<meta name="description" content="Download Viora 7.24.4 and follow the step-by-step guide to install it in Chrome or Microsoft Edge. Learn what each Viora AI assistant does.">
+<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<script src="assets/x/prefs.js"></script>
+<link rel="stylesheet" href="assets/x/accent.css">
+<link rel="stylesheet" href="assets/x/prefs.css">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/v5.css">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("viora_theme")||"light"}catch(e){}</script>
+<style>
+.install-hero{padding:76px 0 42px;text-align:center;position:relative}
+.install-hero .eyebrow{display:inline-flex;align-items:center;gap:8px}
+.install-hero h1{font-size:clamp(2.5rem,6vw,4.8rem);line-height:1.02;letter-spacing:-.055em;margin:20px auto;max-width:900px}
+.install-hero p{max-width:700px;margin:0 auto 24px;color:var(--muted,#6c687b);font-size:1.08rem;line-height:1.75}
+.install-hero .cta-row{justify-content:center;flex-wrap:wrap}
+.install-layout{display:grid;grid-template-columns:minmax(0,1.5fr) minmax(260px,.8fr);gap:22px;align-items:start}
+.install-panel,.side-panel,.assistant-panel{border:1px solid var(--line,#e5e1ef);background:var(--card,rgba(255,255,255,.8));border-radius:24px;padding:clamp(20px,3vw,30px);box-shadow:0 18px 50px rgba(55,35,90,.07)}
+.install-panel h2,.side-panel h2,.assistant-panel h2{margin-top:0;letter-spacing:-.03em}
+.install-tabs{display:flex;gap:8px;flex-wrap:wrap;margin:18px 0 22px}
+.install-tabs button{border:1px solid var(--line,#e5e1ef);border-radius:999px;padding:10px 17px;background:transparent;color:inherit;font:inherit;font-weight:700;cursor:pointer}
+.install-tabs button[aria-selected=true]{background:var(--accent,#7655dc);color:white;border-color:transparent}
+.install-steps{counter-reset:step;display:grid;gap:14px}
+.install-step{display:grid;grid-template-columns:40px 1fr;gap:13px;align-items:start;padding:16px;border-radius:16px;background:var(--surface,rgba(125,100,190,.06))}
+.install-step:before{counter-increment:step;content:counter(step);display:grid;place-items:center;width:34px;height:34px;border-radius:12px;background:rgba(124,92,220,.13);font-weight:800;color:var(--accent,#7655dc)}
+.install-step h3{margin:1px 0 5px;font-size:1rem}
+.install-step p{margin:0;line-height:1.65;color:var(--muted,#6c687b)}
+kbd{font:600 .85em ui-monospace,SFMono-Regular,Consolas,monospace;padding:3px 6px;border:1px solid var(--line,#ddd);border-radius:6px;background:var(--surface,#f5f2fb)}
+.note{padding:14px 16px;border-radius:14px;background:rgba(124,92,220,.09);line-height:1.65;margin-top:18px}
+.side-panel{position:sticky;top:100px}
+.side-panel ul{padding-left:20px;line-height:1.8}
+.assistant-grid{display:grid;grid-template-columns:repeat( auto-fit,minmax(220px,1fr));gap:16px;margin-top:24px}
+.assistant-panel{padding:22px}
+.assistant-panel .num{font-size:.78rem;font-weight:800;letter-spacing:.08em;color:var(--accent,#7655dc)}
+.assistant-panel h3{margin:10px 0 7px}
+.assistant-panel p{line-height:1.7;color:var(--muted,#6c687b);margin:0}
+.troubleshooting{max-width:900px;margin:0 auto}
+.troubleshooting details{border-bottom:1px solid var(--line,#e5e1ef);padding:16px 0}
+.troubleshooting summary{cursor:pointer;font-weight:750}
+.troubleshooting details p{line-height:1.7;color:var(--muted,#6c687b)}
+.small-muted{font-size:.9rem;color:var(--muted,#6c687b);line-height:1.65}
+@media(max-width:800px){.install-layout{grid-template-columns:1fr}.side-panel{position:static}.install-hero{padding-top:50px}}
+</style>
+</head>
+<body data-page="install">
+<header id="site-header"></header>
+<main>
+<section class="install-hero">
+ <div class="wrap">
+  <span class="eyebrow">✦ Viora 7.24.4 · Browser AI</span>
+  <h1>Meet your browser’s <span class="grad-text">new brain.</span></h1>
+  <p>Five specialist AI assistants in one browser panel. Download Viora, extract the folder, and load it into Chrome or Microsoft Edge in a few minutes.</p>
+  <div class="cta-row">
+   <a class="btn btn-primary btn-lg" href="https://raw.githubusercontent.com/Mr-Hacker-2/Viora-extension-/main/viora-extension-7_24_4.zip" download><span data-i="download"></span> Download Viora 7.24.4</a>
+   <a class="btn btn-ghost btn-lg" href="#install-steps">Installation steps <span data-i="arrow"></span></a>
+  </div>
+  <p class="small-muted" style="margin-top:14px">ZIP download · Chrome 116+ · Microsoft Edge · Windows, macOS and Linux</p>
+ </div>
+</section>
+<section class="block" id="install-steps">
+ <div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Setup guide</span><h2>Get Viora running.</h2><p>First extract the ZIP. Then load the extracted extension folder in your browser.</p></div>
+  <div class="install-layout">
+   <div class="install-panel">
+    <h2>Choose your browser</h2>
+    <div class="install-tabs" role="tablist" aria-label="Browser installation instructions">
+     <button type="button" role="tab" id="chrome-tab" aria-selected="true" aria-controls="chrome-steps">Google Chrome</button>
+     <button type="button" role="tab" id="edge-tab" aria-selected="false" aria-controls="edge-steps">Microsoft Edge</button>
+    </div>
+    <div id="chrome-steps" role="tabpanel" aria-labelledby="chrome-tab">
+     <div class="install-steps">
+      <article class="install-step"><div><h3>Download the ZIP</h3><p>Click <b>Download Viora 7.24.4</b> above. Your browser will save <code>viora-extension-7_24_4.zip</code>, usually in Downloads.</p></div></article>
+      <article class="install-step"><div><h3>Extract the ZIP file</h3><p>In Windows File Explorer, right-click the ZIP and choose <b>Extract All…</b>, then click <b>Extract</b>. On macOS, double-click the ZIP. On Linux, use your archive manager’s Extract option.</p></div></article>
+      <article class="install-step"><div><h3>Open Chrome Extensions</h3><p>Enter <code>chrome://extensions/</code> in Chrome’s address bar and press Enter.</p></div></article>
+      <article class="install-step"><div><h3>Turn on Developer mode</h3><p>Enable the <b>Developer mode</b> switch near the top-right of the Extensions page.</p></div></article>
+      <article class="install-step"><div><h3>Load the unpacked folder</h3><p>Click <b>Load unpacked</b> and select the extracted <code>viora-extension-7_24_4</code> folder — the folder that directly contains <code>manifest.json</code>. Do <b>not</b> select the ZIP itself or its parent Downloads folder.</p></div></article>
+      <article class="install-step"><div><h3>Pin Viora</h3><p>Click Chrome’s puzzle-piece Extensions icon, find Viora, and click the pin icon. Select the Viora icon whenever you want to open the side panel. Shortcut: <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Y</kbd>.</p></div></article>
+     </div>
+    </div>
+    <div id="edge-steps" role="tabpanel" aria-labelledby="edge-tab" hidden>
+     <div class="install-steps">
+      <article class="install-step"><div><h3>Download and extract</h3><p>Download the ZIP above. In File Explorer, right-click it, choose <b>Extract All…</b>, then click <b>Extract</b>.</p></div></article>
+      <article class="install-step"><div><h3>Open Edge Extensions</h3><p>Enter <code>edge://extensions/</code> in Edge’s address bar and press Enter.</p></div></article>
+      <article class="install-step"><div><h3>Enable Developer mode</h3><p>Turn on <b>Developer mode</b> using the switch on the Extensions page.</p></div></article>
+      <article class="install-step"><div><h3>Load the unpacked folder</h3><p>Click <b>Load unpacked</b> and select the extracted <code>viora-extension-7_24_4</code> folder that directly contains <code>manifest.json</code>. Do not choose the ZIP file.</p></div></article>
+      <article class="install-step"><div><h3>Pin and open Viora</h3><p>Open Edge’s Extensions menu and pin Viora to the toolbar. Click its icon to open it. The keyboard shortcut is <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Y</kbd>.</p></div></article>
+     </div>
+    </div>
+    <div class="note"><b>Important:</b> Select the extracted folder containing <code>manifest.json</code>. If you open that folder and only see another folder, go one level deeper and select the folder that contains the manifest file.</div>
+   </div>
+   <aside class="side-panel">
+    <h2>Before you start</h2>
+    <ul>
+     <li>Use Chrome 116+ or a compatible Chromium-based browser.</li>
+     <li>Keep the extension folder somewhere you will not accidentally delete it.</li>
+     <li>Use the unpacked-folder method for this ZIP; it is not installed by opening the ZIP.</li>
+     <li>If a browser is managed by a school or workplace, its administrator may restrict extensions.</li>
+    </ul>
+    <a class="btn btn-primary" style="width:100%;justify-content:center" href="https://raw.githubusercontent.com/Mr-Hacker-2/Viora-extension-/main/viora-extension-7_24_4.zip" download><span data-i="download"></span> Download extension ZIP</a>
+   </aside>
+  </div>
+ </div>
+</section>
+<section class="block">
+ <div class="wrap">
+  <div class="sec-head"><span class="eyebrow">Inside Viora</span><h2>How the AI works.</h2><p>Viora is a browser extension that routes your request to a specialist workflow, then displays the response in its side panel. The exact response quality and available capabilities depend on the model and services reachable from your device.</p></div>
+  <div class="assistant-grid">
+   <article class="assistant-panel"><span class="num">01 · EVERYDAY</span><h3>Viora Flash</h3><p>General-purpose chat for everyday questions. It can choose a model path suited to the request and use conversation context to produce a response.</p></article>
+   <article class="assistant-panel"><span class="num">02 · RESEARCH</span><h3>Deep Search</h3><p>Uses the web-search and citation workflow to gather source material and present a research-style answer with references when available.</p></article>
+   <article class="assistant-panel"><span class="num">03 · PRECISION</span><h3>Math &amp; Code</h3><p>Focuses on explaining calculations, working through maths problems, writing code, and helping diagnose programming errors.</p></article>
+   <article class="assistant-panel"><span class="num">04 · ACTION</span><h3>Automate</h3><p>Can inspect page context and perform browser actions such as clicking, typing, and navigating. Optional Linux/native-messaging capabilities require separate opt-in and setup.</p></article>
+   <article class="assistant-panel"><span class="num">05 · WRITING</span><h3>Humanizer</h3><p>Rewrites text to sound more natural while aiming to preserve the original meaning, facts, and writing intent.</p></article>
+   <article class="assistant-panel"><span class="num">06 · FILES</span><h3>Images, documents &amp; video</h3><p>The extension includes attachment handling for images and documents and can sample frames from supported video files. What can be analysed depends on the chosen assistant and the model’s actual input support; video audio is not analysed by the frame-sampling path.</p></article>
+  </div>
+  <div class="note"><b>How a response is generated:</b> you enter a prompt (and optionally page context or an attachment), Viora prepares the request for the selected assistant, contacts its configured AI/web services, then renders the reply. Internet access and provider availability are required for cloud-model responses. AI can make mistakes, so verify important answers and review actions before confirming them.</div>
+ </div>
+</section>
+<section class="block">
+ <div class="wrap troubleshooting">
+  <div class="sec-head"><span class="eyebrow">Troubleshooting</span><h2>Something not working?</h2></div>
+  <details><summary>Chrome or Edge says “manifest file is missing”</summary><p>You selected the wrong folder. Extract the ZIP, open the extracted folder, and select the folder that directly contains <code>manifest.json</code>. Do not select the ZIP or the outer folder.</p></details>
+  <details><summary>“Load unpacked” is missing</summary><p>Open the browser’s extensions page and enable Developer mode. If the browser is managed by an organization, its administrator may have disabled developer extensions.</p></details>
+  <details><summary>Viora does not appear on the toolbar</summary><p>Open the Extensions menu, find Viora, and pin it. Then click its icon. You can also use <kbd>Ctrl</kbd> + <kbd>Shift</kbd> + <kbd>Y</kbd>.</p></details>
+  <details><summary>The AI cannot connect or returns an error</summary><p>Check your internet connection and whether your network blocks the AI provider. Try again later if the service is unavailable. A browser extension cannot override school, workplace, or network administrator restrictions.</p></details>
+  <details><summary>I moved or deleted the extracted folder</summary><p>Keep the extracted extension folder in a permanent location. If you move or delete it, the browser may disable the extension; restore the folder and load it again from the extensions page.</p></details>
+  <p class="small-muted" style="margin-top:24px">Viora is installed as an unpacked extension in this guide. Browser menus may change slightly between versions.</p>
+  <div class="cta-row" style="justify-content:center;margin-top:22px"><a class="btn btn-primary btn-lg" href="https://raw.githubusercontent.com/Mr-Hacker-2/Viora-extension-/main/viora-extension-7_24_4.zip" download><span data-i="download"></span>Download Viora</a><a class="btn btn-ghost btn-lg" href="index.html">Back to Viora</a></div>
+ </div>
+</section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/app.js"></script>
+<script>
+(() => {
+ const chromeTab=document.getElementById('chrome-tab');
+ const edgeTab=document.getElementById('edge-tab');
+ const chromePanel=document.getElementById('chrome-steps');
+ const edgePanel=document.getElementById('edge-steps');
+ function select(which){
+  const isChrome=which==='chrome';
+  chromeTab.setAttribute('aria-selected',String(isChrome));
+  edgeTab.setAttribute('aria-selected',String(!isChrome));
+  chromePanel.hidden=!isChrome;
+  edgePanel.hidden=isChrome;
+ }
+ chromeTab.addEventListener('click',()=>select('chrome'));
+ edgeTab.addEventListener('click',()=>select('edge'));
+})();
+</script>
+</body>
+</html>
