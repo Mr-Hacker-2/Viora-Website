@@ -151,7 +151,7 @@ dialog textarea{min-height:100px;resize:vertical}dialog input:focus,dialog texta
   <div class="dl"><button class="btn" id="p-del" type="button" hidden>Delete</button><span style="flex:1"></span><button class="btn" id="p-x" type="button">Cancel</button><button class="btn p" id="p-ok" type="button">Save</button></div>
 </dialog>
 <dialog id="mdlg">
-  <h3>Memory</h3><p>Facts Viora uses in your chats. Only what you add here is remembered. Edit or delete anything.</p>
+  <h3>Memory</h3><p>Your saved context for future chats. Use the bookmark on an AI reply to save its question, or add facts manually. Memory stays on this device; edit or delete anything, and turn it off whenever you like.</p>
   <label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:14px"><input type="checkbox" id="m-on"> Use memory in chats</label>
   <input type="search" id="m-q" placeholder="Search memory">
   <div id="mlist"></div>
@@ -223,7 +223,7 @@ function msgHtml(m, i, last) {
   const srcs = Src.sourcesBlock(m.src || []);
   const note = [m.mode ? 'Auto chose ' + A[m.mode].n : '', m.note || ''].filter(Boolean).join(' · ');
   const sw = m.sw ? `<div class="switch-note" role="status">${esc(m.sw)}</div>` : '';
-  return `<div class="msg assistant${last && busy ? ' streaming' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : stat(m)}</div>${srcs}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}</div></div>`;
+  return `<div class="msg assistant${last && busy ? ' streaming' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : stat(m)}</div>${srcs}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}<button class="msg-act" data-remember="${i}" title="Save the question and context to Memory" aria-label="Save context to Memory">${ic('note')}</button></div></div>`;
 }
 function render() {
   const a = A[asst], c = chat(), has = c && c.messages.length, files = c && c.page ? c.page.files : [];
@@ -480,7 +480,7 @@ $('#sh-hist').onclick = e => {
 };
 $('#thread').onclick = e => {
   const sg = e.target.closest('.suggestion'); if (sg) { send(sg.textContent); return; }
-  const cp = e.target.closest('[data-copy]'); if (cp) { navigator.clipboard?.writeText(chat().messages[+cp.dataset.copy].content); cp.innerHTML = ic('check'); setTimeout(() => { cp.innerHTML = ic('copy'); }, 1200); return; }
+  const cp = e.target.closest('[data-copy]'); if (cp) { navigator.clipboard?.writeText(chat().messages[+cp.dataset.copy].content); cp.innerHTML = ic('check'); setTimeout(() => { cp.innerHTML = ic('copy'); }, 1200); return; } const rm = e.target.closest('[data-remember]'); if (rm) { if (!D.memOn) { toast('Turn on Memory in the Memory panel before saving context.'); return; } const c = chat(), at = +rm.dataset.remember; let u = null; for (let j = at - 1; j >= 0; j--) if (c.messages[j].role === 'user') { u = c.messages[j]; break; } if (!u || !u.content.trim()) { toast('There is no question to save for this reply.'); return; } const t = ('Context: ' + u.content.trim()).slice(0, 300); if (D.memory.some(x => x.t.toLowerCase() === t.toLowerCase() && (x.pid || null) === (c.pid || null))) { toast('That context is already saved in Memory.'); return; } D.memory.unshift({ id: 'm' + Date.now(), t, pid: c.pid || null }); saveD(); toast(c.pid ? 'Saved to this project’s Memory.' : 'Saved to Memory for future chats.'); return; }
   const ar = e.target.closest('[data-art]'); if (ar) { const mm = /```(\w*)\n?([\s\S]*?)(```|$)/.exec(chat().messages[+ar.dataset.art].content); if (mm) openArt(mm[2].replace(/\n$/, ''), mm[1] || 'text'); return; }
   if (e.target.closest('[data-regen]')) { const c = chat(); c.messages.pop(); const u = c.messages.pop(); send(u.content); }
 };
