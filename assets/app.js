@@ -134,7 +134,7 @@ if (footer) {
     <div class="f-grid">
       <div class="f-brand"><a class="brand" href="index.html"><img src="assets/mark.png" alt="" width="30" height="30">Viora</a>
         <p>One free AI panel in your browser: chat, research, code, automate and write.</p></div>
-      <div><h4>Product</h4><a href="index.html#assistants">Assistants</a><a href="index.html#features">Features</a><a href="${VIORA.installUrl}" target="_blank" rel="noopener noreferrer">Install</a></div>
+      <div><h4>Product</h4><a href="index.html#assistants">Assistants</a><a href="index.html#features">Features</a><a href="${VIORA.installUrl}" target="_blank" rel="noopener noreferrer">Install</a><a href="download-site.html">Download website ZIP</a></div>
       <div><h4>Support</h4><a href="help.html">Help center</a><a href="help.html#troubleshooting">Troubleshooting</a><a href="mailto:${VIORA.supportEmail}">Contact us</a></div>
       <div><h4>Account &amp; legal</h4><a href="login.html">Log in</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div>
     </div>
