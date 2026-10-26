@@ -4,7 +4,6 @@
 import { CAPS, FALLBACK, needs } from './caps.js';
 
 const R = {
-  act: /\b(click|fill( in| out)?|sign ?up|log ?in|form|navigate|automate|button)\b/,
   human: /humani[sz]e|paraphrase|rewrite this|sound (more )?(human|natural)|make this (sound )?(more )?natural/,
   fence: /```|traceback|stack ?trace|\b(type|syntax|name|reference|value)error\b|undefined is not|segmentation fault|\bexception\b/,
   lang: /\b(python|javascript|typescript|java|c\+\+|c#|rust|golang|sql|regex|html|css|bash|react|node\.?js|json|api)\b/,
@@ -17,7 +16,6 @@ const R = {
 /** Decide which assistant fits a message. Returns { assistant, reason }. */
 export function classify(text, { hasPage = false } = {}) {
   const x = String(text || '').toLowerCase();
-  if (hasPage && R.act.test(x)) return { assistant: 'automate', reason: 'page + action words' };
   if (R.human.test(x)) return { assistant: 'human', reason: 'rewriting request' };
   if (R.explicitWeb.test(x)) return { assistant: 'search', reason: 'explicit research request' };
   if (R.fence.test(x) || R.codeIntent.test(x) || (R.lang.test(x) && /\b(write|fix|why|how (do|to|can)|error|query|snippet)\b/.test(x))) return { assistant: 'math', reason: 'code signals' };
@@ -35,7 +33,7 @@ export class Health {
   healthy(a) { const e = this.s[a]; return !e || e.until <= this.now(); }
 }
 
-const PREFER = { auto: ['flash'], flash: ['flash'], search: ['search', 'flash'], math: ['math', 'flash'], automate: ['automate', 'flash'], human: ['human', 'flash'] };
+const PREFER = { auto: ['flash'], flash: ['flash'], search: ['search', 'flash'], math: ['math', 'flash'], human: ['human', 'flash'] };
 
 /** Ordered assistants to try. Only assistants whose declared capabilities cover the attachments are included.
     Unhealthy ones are skipped unless nothing else is left. Never returns an empty list. */
