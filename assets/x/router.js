@@ -19,6 +19,7 @@ export function classify(text, { hasPage = false } = {}) {
   const x = String(text || '').toLowerCase();
   if (hasPage && R.act.test(x)) return { assistant: 'automate', reason: 'page + action words' };
   if (R.human.test(x)) return { assistant: 'human', reason: 'rewriting request' };
+  if (R.explicitWeb.test(x)) return { assistant: 'search', reason: 'explicit research request' };
   if (R.fence.test(x) || R.codeIntent.test(x) || (R.lang.test(x) && /\b(write|fix|why|how (do|to|can)|error|query|snippet)\b/.test(x))) return { assistant: 'math', reason: 'code signals' };
   if (R.math.test(x)) return { assistant: 'math', reason: 'math signals' };
   const aboutFile = hasPage && !R.explicitWeb.test(x);
