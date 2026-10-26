@@ -274,7 +274,7 @@ async function send(text) {
   const pk = pickModel(eff, c.page ? c.page.files : [], Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
-  const useWeb = !!(A[eff].web && web && (asst !== 'auto' || eff === 'search')), pj = D.projects.find(x => x.id === c.pid);
+  const useWeb = !!(A[eff].web && web), pj = D.projects.find(x => x.id === c.pid);
   const context = { instructions: withPersona(eff, tone, pj ? pj.instr : ''), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
   m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
   try {
