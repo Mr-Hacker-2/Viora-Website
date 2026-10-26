@@ -1,0 +1,307 @@
+/* Viora visual refinement — larger, consistent icons and calmer spacing. Loaded last on purpose. */
+:root[data-model] {
+  --v-icon-size: 22px;
+  --v-icon-stroke: 1.9;
+  --v-control-size: 44px;
+  --v-control-radius: 14px;
+  --v-space-1: 8px;
+  --v-space-2: 12px;
+  --v-space-3: 16px;
+}
+:root[data-model] .ico {
+  display: block;
+  width: var(--v-icon-size) !important;
+  height: var(--v-icon-size) !important;
+  min-width: var(--v-icon-size);
+  flex: 0 0 var(--v-icon-size);
+  vertical-align: middle;
+  stroke-width: var(--v-icon-stroke);
+  overflow: visible;
+}
+:root[data-model] .sh-logo > img {
+  width: 32px !important;
+  height: 32px !important;
+  border-radius: 10px;
+  flex: 0 0 32px;
+}
+:root[data-model] .sh-logo {
+  min-height: 46px;
+  gap: 12px;
+  padding: 4px 2px 10px;
+  font-size: 20px;
+}
+:root[data-model] .sh-collapse,
+:root[data-model] .sh-gear,
+:root[data-model] #nb-close {
+  width: var(--v-control-size);
+  height: var(--v-control-size);
+  min-width: var(--v-control-size);
+  border-radius: 14px;
+  padding: 0;
+  color: var(--muted);
+  background: transparent;
+  transition: background .16s ease, color .16s ease, transform .16s ease;
+}
+:root[data-model] .sh-collapse:hover,
+:root[data-model] .sh-gear:hover,
+:root[data-model] #nb-close:hover {
+  color: var(--accent-ink, var(--accent));
+  background: color-mix(in srgb, var(--accent) 10%, var(--ink-2));
+}
+:root[data-model] .sh-collapse .ico,
+:root[data-model] .sh-gear .ico,
+:root[data-model] #nb-close .ico {
+  width: 22px !important;
+  height: 22px !important;
+}
+:root[data-model] .sh-user {
+  min-height: 52px;
+  gap: 12px;
+  margin: 18px 0 20px;
+}
+:root[data-model] .sh-av {
+  width: 40px;
+  height: 40px;
+  min-width: 40px;
+  font-size: 15px;
+}
+:root[data-model] .sh-search {
+  min-height: 46px;
+  font-size: 14px;
+  padding: 12px 16px;
+}
+:root[data-model] #sh-left h6 {
+  margin-top: 28px;
+  margin-bottom: 12px;
+  font-size: 11px;
+  letter-spacing: .12em;
+}
+:root[data-model] .sh-nav,
+:root[data-model] .sh-hist,
+:root[data-model] #projs,
+:root[data-model] .sh-agents {
+  gap: 6px;
+}
+:root[data-model] .sh-nav button,
+:root[data-model] .sh-hist button,
+:root[data-model] #projs button,
+:root[data-model] .sh-agents button {
+  min-height: 46px;
+  gap: 13px;
+  padding: 11px 14px;
+  border-radius: 14px;
+  font-size: 15px;
+  line-height: 1.35;
+}
+:root[data-model] .sh-nav .ico,
+:root[data-model] .sh-agents .ico,
+:root[data-model] #projs .ico {
+  width: 22px !important;
+  height: 22px !important;
+  min-width: 22px;
+  flex-basis: 22px;
+}
+:root[data-model] .sh-hist button {
+  padding-right: 32px;
+}
+:root[data-model] .sh-hist .hx {
+  right: 10px;
+}
+:root[data-model] .bar {
+  gap: 16px;
+}
+:root[data-model] .bar-actions {
+  gap: 8px;
+}
+:root[data-model] .bar-actions .icon-btn,
+:root[data-model] .icon-btn {
+  width: 44px;
+  height: 44px;
+  min-width: 44px;
+  border-radius: 14px;
+  padding: 0;
+}
+:root[data-model] .icon-btn svg {
+  display: block;
+  width: 22px;
+  height: 22px;
+  stroke-width: 1.9;
+}
+:root[data-model] .model-pill {
+  min-height: 40px;
+  padding: 8px 13px;
+  gap: 9px;
+  font-size: 13px;
+}
+:root[data-model] .pill-icon {
+  width: 19px;
+  height: 19px;
+}
+:root[data-model] .pill-caret {
+  width: 15px;
+  height: 15px;
+}
+:root[data-model] .model-row {
+  min-height: 58px;
+  padding: 13px 14px;
+  gap: 14px;
+}
+:root[data-model] .model-row .ico,
+:root[data-model] .model-row svg {
+  width: 22px;
+  height: 22px;
+  flex: 0 0 22px;
+}
+:root[data-model] .sheet-action {
+  min-height: 56px;
+  gap: 13px;
+  padding: 12px 14px;
+  border-radius: 13px;
+}
+:root[data-model] .sheet-action-icon,
+:root[data-model] .sheet-action .ico {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+}
+:root[data-model] .composer-row {
+  gap: 12px;
+}
+:root[data-model] .composer-left,
+:root[data-model] .composer-right {
+  gap: 10px;
+  align-items: center;
+}
+:root[data-model] .attach-btn,
+:root[data-model] .send {
+  width: 46px;
+  height: 46px;
+  min-width: 46px;
+  border-radius: 15px;
+}
+:root[data-model] .attach-btn svg,
+:root[data-model] .send svg {
+  width: 23px;
+  height: 23px;
+  stroke-width: 2;
+}
+:root[data-model] .sh-tabs button {
+  min-height: 48px;
+  padding: 13px 8px;
+  font-size: 13px;
+  letter-spacing: .035em;
+}
+:root[data-model] .sh-mode {
+  padding: 13px 0;
+  gap: 14px;
+}
+:root[data-model] .sh-mode b {
+  font-size: 14.5px;
+}
+:root[data-model] .sh-mode small {
+  font-size: 12.5px;
+  line-height: 1.55;
+}
+:root[data-model] .sh-sw {
+  width: 44px;
+  height: 26px;
+  border-radius: 99px;
+}
+:root[data-model] .sh-sw::after {
+  width: 20px;
+  height: 20px;
+  top: 3px;
+  left: 3px;
+}
+:root[data-model] .sh-sw[aria-checked="true"]::after {
+  transform: translateX(18px);
+}
+:root[data-model] button:focus-visible,
+:root[data-model] a:focus-visible {
+  outline-width: 3px;
+  outline-offset: 3px;
+}
+@media (min-width: 1200px) {
+  :root[data-model] #shell {
+    grid-template-columns: 264px minmax(0, 1fr) 280px;
+    gap: 20px;
+  }
+  :root[data-model] #sh-left,
+  :root[data-model] #sh-right {
+    padding: 24px !important;
+  }
+  :root[data-model] #sh-right h2 {
+    margin-bottom: 20px;
+    font-size: 17px;
+  }
+}
+@media (max-width: 979px) {
+  :root[data-model] .bar-actions {
+    gap: 7px;
+  }
+  :root[data-model] .bar-actions .icon-btn,
+  :root[data-model] .icon-btn {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+  }
+  :root[data-model] .bar .sh-title h1 {
+    font-size: 18px;
+  }
+  :root[data-model] .thread {
+    padding-inline: 18px;
+  }
+  :root[data-model] .composer-row {
+    gap: 10px;
+  }
+  :root[data-model] .attach-btn,
+  :root[data-model] .send {
+    width: 44px;
+    height: 44px;
+    min-width: 44px;
+  }
+  :root[data-model] #sh-left {
+    padding: calc(22px + env(safe-area-inset-top)) 20px max(22px, env(safe-area-inset-bottom)) !important;
+  }
+}
+@media (max-width: 420px) {
+  :root[data-model] .bar {
+    gap: 8px;
+    padding-inline: 10px;
+  }
+  :root[data-model] .bar-actions {
+    gap: 4px;
+  }
+  :root[data-model] .bar-actions .icon-btn,
+  :root[data-model] .icon-btn {
+    width: 40px;
+    height: 40px;
+    min-width: 40px;
+  }
+  :root[data-model] .icon-btn svg {
+    width: 21px;
+    height: 21px;
+  }
+  :root[data-model] .thread {
+    padding-inline: 12px;
+  }
+  :root[data-model] .composer {
+    padding-inline: 10px;
+  }
+  :root[data-model] .composer-row {
+    gap: 8px;
+  }
+  :root[data-model] .attach-btn,
+  :root[data-model] .send {
+    width: 42px;
+    height: 42px;
+    min-width: 42px;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-model] .sh-collapse,
+  :root[data-model] .sh-gear,
+  :root[data-model] .icon-btn {
+    transition: none;
+  }
+}
