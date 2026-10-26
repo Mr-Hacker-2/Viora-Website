@@ -299,6 +299,7 @@ function render() {
   $('#model-list').innerHTML = Object.entries(A).map(([k, v]) => `<li><button type="button" class="model-row" data-model="${k}" role="option" aria-selected="${k === asst}"><span class="row-icon">${icon(v.ic)}</span><span class="row-copy"><span class="row-name">${esc(v.n)}</span><span class="row-blurb">${esc(v.b)}</span></span><span class="row-tick">${k === asst ? ic('check') : ''}</span></button></li>`).join('');
   const pj = D.projects.find(x => x.id === curP); $('#page-chip').hidden = !pj; if (pj) $('#pbar').textContent = 'Project: ' + pj.name;
   const first = (S.name || S.email.split('@')[0]).split(' ')[0], th = $('#thread');
+  const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 120;
   th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy)).join('') : `<div id="welcome" class="welcome"><div class="welcome-main"><div class="logo-stage"><span class="welcome-logo"><img src="assets/x/mark.png" alt="" width="78" height="78" draggable="false"></span></div><p class="welcome-line">Welcome back, what do you want me to do?</p></div><div class="suggestions">${a.s.map(s => `<button type="button" class="suggestion">${esc(s)}</button>`).join('')}</div></div>`;
   bindCodeCopy(th);
   const chip = f => { const im = IM[f.id] && IM[f.id][0], web = f.kind === 'web' && Src.parseUrl(f.source);
@@ -317,7 +318,7 @@ function render() {
   $('#sh-hist').innerHTML = list.map(x => `<button type="button" data-id="${x.id}" class="${x.id === cur ? 'on' : ''}" title="${esc(x.title)}">${esc(x.title)}<span class="hx" data-del="${x.id}" aria-label="Delete chat">×</span></button>`).join('') || `<span class="sh-empty">${filter ? 'No matches.' : 'Nothing saved yet.'}</span>`;
   $('#projs').innerHTML = D.projects.map(p => `<button type="button" data-p="${p.id}" class="${p.id === curP ? 'on' : ''}">${ic('folder')} ${esc(p.name)}</button>`).join('') + (curP ? `<button type="button" class="add" data-pe="${curP}">${ic('edit')} Edit this project</button>` : '') + `<button type="button" class="add" id="np">${ic('plus')} Create project</button>`;
   $('#send').disabled = !busy && !$('#input').value.trim();
-  th.scrollTop = th.scrollHeight;
+  if (shouldStickToBottom) th.scrollTop = th.scrollHeight;
 }
 function sendState(on) { $('#send').innerHTML = on ? ic('stop') : SEND; $('#send').setAttribute('aria-label', on ? 'Stop' : 'Send'); $('#send').disabled = false; }
 async function send(text) {
