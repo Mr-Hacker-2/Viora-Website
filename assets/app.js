@@ -4,7 +4,7 @@
 
 /* ================= CONFIG — edit these ================= */
 const VIORA = {
-  installUrl: 'help.html#install',      // put your Chrome Web Store link here
+  installUrl: 'install.html',            // dedicated install guide and extension download
   supportEmail: 'support@example.com',  // put your real support address here
   authApi: 'https://viora-auth-website.onrender.com', // your Google sign-in server (Render)
   year: new Date().getFullYear()
@@ -117,7 +117,7 @@ if (header) {
     <div class="nav-right">
       <button class="icon-btn" id="theme-btn" type="button" aria-label="Toggle theme">${ico('moon', 't-moon')}${ico('sun', 't-sun')}</button>
       ${s ? `<a class="btn btn-ghost hide-sm" href="account.html">${ico('user')}Account</a>` : `<a class="btn btn-ghost hide-sm" href="login.html">Log in</a>`}
-      ${s ? `<a class="btn btn-primary" href="app.html">Open app</a>` : `<a class="btn btn-primary" href="${VIORA.installUrl}">${ico('download')}Get Viora</a>`}
+      ${s ? `<a class="btn btn-primary" href="app.html">Open app</a>` : `<a class="btn btn-primary" href="${VIORA.installUrl}" target="_blank" rel="noopener noreferrer">${ico('download')}Get Viora</a>`}
       <button class="icon-btn burger" id="burger" type="button" aria-label="Menu" aria-expanded="false">${ico('menu')}</button>
     </div>
   </div>`;
@@ -134,7 +134,7 @@ if (footer) {
     <div class="f-grid">
       <div class="f-brand"><a class="brand" href="index.html"><img src="assets/mark.png" alt="" width="30" height="30">Viora</a>
         <p>One free AI panel in your browser: chat, research, code, automate and write.</p></div>
-      <div><h4>Product</h4><a href="index.html#assistants">Assistants</a><a href="index.html#features">Features</a><a href="${VIORA.installUrl}">Install</a></div>
+      <div><h4>Product</h4><a href="index.html#assistants">Assistants</a><a href="index.html#features">Features</a><a href="${VIORA.installUrl}" target="_blank" rel="noopener noreferrer">Install</a></div>
       <div><h4>Support</h4><a href="help.html">Help center</a><a href="help.html#troubleshooting">Troubleshooting</a><a href="mailto:${VIORA.supportEmail}">Contact us</a></div>
       <div><h4>Account &amp; legal</h4><a href="login.html">Log in</a><a href="privacy.html">Privacy</a><a href="terms.html">Terms</a></div>
     </div>
