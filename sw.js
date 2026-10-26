@@ -1,0 +1,26 @@
+const CACHE = 'viora-shell-v1';
+const SHELL = ['/','/index.html','/app.html','/mobile.html','/manifest.json','/assets/x/icon32.png','/assets/x/studio-polish.css','/assets/x/app-polish.css','/assets/x/viora-theme.css','/assets/x/pwa.js'];
+self.addEventListener('install', event => {
+  event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
+});
+self.addEventListener('activate', event => {
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+});
+self.addEventListener('fetch', event => {
+  const req = event.request;
+  const url = new URL(req.url);
+  if (req.method !== 'GET' || url.origin !== self.location.origin) return;
+  // Never cache API, auth, or user-specific chat responses.
+  if (url.pathname.startsWith('/api/') || url.pathname.includes('login') || url.pathname.includes('account')) return;
+  if (req.mode === 'navigate') {
+    event.respondWith(fetch(req).then(res => {
+      if (res.ok) caches.open(CACHE).then(cache => cache.put(req, res.clone()));
+      return res;
+    }).catch(() => caches.match(req).then(hit => hit || caches.match('/mobile.html'))));
+    return;
+  }
+  event.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
+    if (res.ok && res.type === 'basic') caches.open(CACHE).then(cache => cache.put(req, res.clone()));
+    return res;
+  })));
+});
