@@ -215,7 +215,7 @@ const hide = () => { $('#model-sheet').hidden = true; $('#attach-sheet').hidden 
 const SEND = $('#send').innerHTML;
 const health = new Health();
 function route(t, c) { return classify(t, { hasPage: !!(c && c.page) }).assistant; }
-const stat = m => m.wait ? `<span style="color:var(--muted)">${esc(m.wait)}</span>` : m.searching ? '<span style="color:var(--muted)">Searching the web…</span>' : '<span style="color:var(--muted)">…</span>';
+const stat = m => m.wait ? `<span style="color:var(--muted)">${esc(m.wait)}</span>` : m.stage ? `<span style="color:var(--muted)">${esc(m.stage)}</span>` : m.searching ? '<span style="color:var(--muted)">Searching the web…</span>' : '<span style="color:var(--muted)">Preparing your answer…</span>';
 function mdx(t, srcs) { if (srcs && srcs.length) t = t.replace(/\[(\d{1,2})\]/g, (x, n) => srcs[n - 1] ? `[${n}](${srcs[n - 1].url})` : x); return renderMarkdown(t); }
 function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : stat(m); bindCodeCopy(el); Src.decorateCitations(el, m.src); }
 function msgHtml(m, i, last) {
@@ -260,7 +260,7 @@ async function send(text) {
   c.assistant = asst; c.updated = Date.now(); chats = [c, ...chats.filter(x => x !== c)];
   c.messages.push({ role: 'user', content: text, att: (c.page ? c.page.files : []).map(f => ({ name: f.name, kind: f.kind, src: f.kind === 'web' ? f.source : '' })) }, { role: 'assistant', content: '' });
   $('#input').value = ''; try { localStorage.removeItem('viora_draft_' + S.email); } catch {} grow(); save(); render();
-  const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); busy = ctl; sendState(true);
+  const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); busy = ctl; m.stage = 'Starting task…'; sendState(true);
   const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 140, b = $('#b' + idx); if (b) { paintBody(b, m); if (near) th.scrollTop = th.scrollHeight; } };
   let eff = asst === 'auto' ? route(text, c) : asst;
   /* capability check: keep the chosen assistant when it can read the attachments, otherwise switch and say why */
@@ -269,12 +269,14 @@ async function send(text) {
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
   const useWeb = !!(A[eff].web && web && (asst !== 'auto' || eff === 'search')), pj = D.projects.find(x => x.id === c.pid);
   const context = { instructions: withPersona(eff, tone, pj ? pj.instr : ''), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
-  m.searching = useWeb; paint();
+  m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
   try {
     const pp = await pagePayload(c, text);
+    m.stage = useWeb ? 'Connecting and preparing web research…' : 'Connecting to Viora…'; paint();
     const files = c.page ? c.page.files : [], names = Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])), tries = chain(eff, files, health);
     let r, last;
     for (const [n, a] of tries.entries()) {
+      m.stage = (n ? 'Retrying with ' : 'Trying ') + A[a].n + '…'; paint();
       const web2 = !!(A[a].web && useWeb);
       try {
         r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
@@ -287,6 +289,7 @@ async function send(text) {
     m.wait = '';
     if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || (r.status === 413 ? 'The server rejected the upload as too large.' : 'Something went wrong. Please try again.')); }
+    m.stage = 'Reading the response…'; paint();
     const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0;
     for (;;) {
       const { done, value, stalled } = await NP.readChunk(rd); if (stalled) { m.note = 'The connection went quiet, so this reply may be cut short. Use Regenerate to try again.'; render(); break; } if (done) break;
@@ -302,7 +305,7 @@ async function send(text) {
     if (e.name === 'AbortError') { if (!m.content) m.content = '_Stopped._'; }
     else { if (!m.content && NP.get().restoreOnFail && !$('#input').value) { $('#input').value = text; grow(); } m.err = true; m.content = (m.content ? m.content + '\n\n' : '') + '⚠️ ' + (/fetch|network/i.test(e.message) ? 'Could not reach Viora. The server may be waking up, so try again in 30 seconds.' : e.message); }
   }
-  m.searching = false; m.wait = ''; busy = null; sendState(false); save(); render();
+  m.searching = false; m.wait = ''; m.stage = ''; busy = null; sendState(false); save(); render();
 }
 function grow() { const t = $('#input'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 200) + 'px'; $('#send').disabled = !busy && !t.value.trim(); }
 const newChat = () => { cur = null; hide(); render(); $('#input').focus(); closeSb(); };
