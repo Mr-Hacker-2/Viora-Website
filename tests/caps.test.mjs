@@ -7,7 +7,7 @@ const video = [{ kind: 'video', ni: 8 }];
 const noFrames = [{ kind: 'video', ni: 0 }];
 
 test('capability registry declares all supported assistant choices', () => {
-  for (const name of ['auto', 'flash', 'search', 'math', 'automate', 'human']) {
+  for (const name of ['auto', 'flash', 'search', 'math', 'human']) {
     assert.ok(CAPS[name], `missing capabilities for ${name}`);
     assert.equal(CAPS[name].text, 1);
   }
@@ -21,10 +21,11 @@ test('needs ignores attachments without usable image/frame content', () => {
   assert.deepEqual(needs([]), []);
 });
 
-test('compatible assistant stays selected and incompatible assistant switches safely', () => {
+test('compatible assistants stay selected and unsupported choices switch safely', () => {
   assert.deepEqual(pick('search', image), { assistant: 'search', switched: false });
   assert.equal(pick('human', image).assistant, FALLBACK);
-  assert.equal(pick('automate', video).assistant, FALLBACK);
+  assert.equal(pick('legacy', video).assistant, FALLBACK);
+  assert.equal(pick('legacy', video).switched, true);
   assert.equal(pick('human', video).switched, true);
 });
 
