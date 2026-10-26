@@ -97,9 +97,13 @@ if (typeof document !== 'undefined') {
 export function cardHtml(src, n) {
   const x = parseUrl(src && src.url), title = (src && src.title) || '', snip = (src && (src.snippet || src.description)) || '';
   if (!x) return `<div class="src-card src-dead" title="This source has no valid web address"><span class="src-top">${iconHtml({})}<span class="src-site">Unavailable source</span></span><span class="src-title">${esc(title || 'Invalid link')}</span></div>`;
-  const host = x.hostname.replace(/^www\./, '').toLowerCase();
+  const displayUrl = parseUrl(src.publisherUrl) || x;
+  const host = displayUrl.hostname.replace(/^www\./, '').toLowerCase();
+  const iconSource = { ...src, url: displayUrl.href };
+  const date = src.publishedAt ? new Date(src.publishedAt) : null;
+  const dateLabel = date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   return `<a class="src-card" href="${esc(x.href)}" target="_blank" rel="noopener noreferrer nofollow" title="${esc(title || x.href)}">` +
-    `<span class="src-top">${iconHtml(src)}<span class="src-site">${esc(siteName(host, src.site))}</span><span class="src-dom">${esc(baseDomain(host))}</span>${n ? `<span class="src-n">${n}</span>` : ''}</span>` +
+    `<span class="src-top">${iconHtml(iconSource)}<span class="src-site">${esc(siteName(host, src.site))}</span><span class="src-dom">${esc(baseDomain(host))}</span>${dateLabel ? `<span class="src-dom">${esc(dateLabel)}</span>` : ''}${n ? `<span class="src-n">${n}</span>` : ''}</span>` +
     `<span class="src-title">${esc(title || host)}</span>${snip ? `<span class="src-snip">${esc(String(snip).slice(0, 180))}</span>` : ''}</a>`;
 }
 /** Compact chip (icon + domain), used for attachments and in-line lists. */
