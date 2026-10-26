@@ -41,6 +41,54 @@ dialog textarea{min-height:100px;resize:vertical}dialog input:focus,dialog texta
 .a-h{display:flex;gap:6px;align-items:center;padding:10px 12px;border-bottom:1px solid var(--line);flex-wrap:wrap}.a-h b{margin-right:auto;text-transform:capitalize}
 .a-h button,.a-h select{border:1px solid var(--line);background:none;color:var(--muted);border-radius:8px;padding:4px 10px;cursor:pointer;font:inherit;font-size:13px}.a-h select{background:var(--ink-2)}.a-h button[aria-selected=true]{background:var(--raised);color:var(--paper)}
 #a-code{flex:1;border:0;outline:0;resize:none;background:var(--ink);color:var(--paper);padding:14px;font:13.5px/1.55 ui-monospace,Menlo,Consolas,monospace;tab-size:2}#a-prev{flex:1;border:0;background:#fff}
+
+/* Responsive layout and readable AI responses */
+#shell{min-width:0;min-height:100dvh}
+#sh-center,.thread,.bar,.composer,.composer-inner{min-width:0;max-width:100%}
+.thread{overflow-x:hidden;overflow-y:auto;scrollbar-gutter:stable}
+.thread img,.thread video,.thread iframe{max-width:100%;height:auto}
+.thread pre,.thread .code pre,.thread .table-wrap{max-width:100%;overflow:auto}
+.thread table{border-collapse:collapse;min-width:0}
+.thread p,.thread li,.thread blockquote{overflow-wrap:anywhere}
+.thread a{overflow-wrap:anywhere}
+#input{max-height:32dvh;min-height:48px;overflow-y:auto;resize:none}
+#composer{padding-bottom:max(10px,env(safe-area-inset-bottom))}
+#attach-sheet,#model-sheet{max-width:calc(100vw - 24px)}
+dialog{max-height:calc(100dvh - 32px);overflow:auto}
+@media(max-width:979px){
+  #shell{grid-template-columns:minmax(0,1fr)!important}
+  #sh-center{width:100%;min-width:0}
+  #sh-right{display:none}
+  .bar{gap:8px;padding-inline:12px}
+  .bar .sh-title p{max-width:44vw;white-space:normal}
+  .bar-id .wordmark{display:none}
+  .thread{padding-inline:clamp(12px,3vw,22px)}
+  .composer{padding-inline:10px}
+  body.sb #sh-left{box-shadow:0 0 0 100vmax #0008}
+}
+@media(max-width:560px){
+  .bar{min-height:58px;flex-wrap:wrap}
+  .bar .sh-title{flex:1 1 100%;order:2}
+  .bar .sh-title h1{font-size:17px}
+  .bar .sh-title p{display:none}
+  .bar-id{order:0}
+  .bar-actions{order:1;margin-left:auto}
+  .bar-id .model-pill{max-width:58vw}
+  .bar-id .pill-name{overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+  .composer-inner{border-radius:18px}
+  #input{font-size:16px}
+  .composer-row{gap:6px;flex-wrap:wrap}
+  .composer-left{min-width:0}
+  .composer-right{margin-left:auto}
+  #art{inset:8px;width:auto}
+  .a-h{gap:5px}
+  .a-h button,.a-h select{padding:6px 8px}
+  dialog{padding:16px;width:calc(100vw - 24px)}
+}
+@media(prefers-reduced-motion:reduce){
+  *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
+}
+
 </style>
 </head>
 <body>
