@@ -308,6 +308,13 @@ async function send(text) {
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); });
     }
     if (!m.content.trim()) m.content = 'I got an empty reply. Please try again.';
+    // The frontend can request web search, but only the chat backend can actually perform it.
+    // Make a missing search result explicit instead of letting a model imply it browsed.
+    if (useWeb && !Array.isArray(m.src)) {
+      m.note = 'Web search was requested, but the server returned no source results. This answer has not been verified against live web pages. Check the chat backend web-search integration.';
+    } else if (useWeb && Array.isArray(m.src) && m.src.length === 0) {
+      m.note = 'The server returned no web sources, so this answer is not verified against live web pages.';
+    }
   } catch (e) {
     if (e.name === 'AbortError') { if (!m.content) m.content = '_Stopped._'; }
     else { if (!m.content && NP.get().restoreOnFail && !$('#input').value) { $('#input').value = text; grow(); } m.err = true; m.content = (m.content ? m.content + '\n\n' : '') + '⚠️ ' + (/fetch|network/i.test(e.message) ? 'Could not reach Viora. The server may be waking up, so try again in 30 seconds.' : e.message); }
