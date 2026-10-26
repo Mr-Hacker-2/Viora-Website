@@ -1,0 +1,54 @@
+<!doctype html>
+<html lang="en" data-theme="light">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#fbfaff">
+<title>Download Viora Website Files</title>
+<meta name="description" content="Download the Viora website source ZIP on your phone and transfer it to your computer.">
+<link rel="icon" type="image/png" href="assets/favicon-32.png">
+<script src="assets/x/prefs.js"></script>
+<link rel="stylesheet" href="assets/x/accent.css">
+<link rel="stylesheet" href="assets/style.css">
+<link rel="stylesheet" href="assets/v5.css">
+<style>
+.download-wrap{width:min(900px,calc(100% - 32px));margin:0 auto;padding:48px 0 72px}
+.dl-hero{padding:clamp(24px,5vw,48px);border:1px solid var(--line,#e7e3f5);border-radius:28px;background:linear-gradient(135deg,rgba(124,92,255,.12),rgba(70,170,255,.08));}
+.dl-hero h1{font-size:clamp(2rem,6vw,3.5rem);line-height:1.08;letter-spacing:-.045em;margin:12px 0}
+.dl-hero p,.step p{line-height:1.7;color:var(--muted,#626176)}
+.dl-label{font-size:.78rem;text-transform:uppercase;letter-spacing:.12em;font-weight:700;color:var(--accent,#7957ff)}
+.steps{display:grid;grid-template-columns:repeat(auto-fit,minmax(220px,1fr));gap:14px;margin:22px 0}
+.step{padding:20px;border:1px solid var(--line,#e7e3f5);border-radius:18px;background:var(--surface,#fff)}
+.step-num{display:grid;place-items:center;width:32px;height:32px;border-radius:10px;background:var(--accent,#7957ff);color:white;font-weight:800;margin-bottom:12px}
+.step h2{font-size:1.05rem;margin:0 0 8px}
+.codepath{display:block;overflow-wrap:anywhere;padding:12px;border-radius:10px;background:rgba(120,100,160,.1);font: .85rem ui-monospace,monospace}
+.dl-actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:22px}
+.note{padding:14px 16px;border-left:3px solid var(--accent,#7957ff);background:rgba(124,92,255,.07);border-radius:0 12px 12px 0;line-height:1.65}
+</style>
+</head>
+<body>
+<header id="site-header"></header>
+<main class="download-wrap">
+<section class="dl-hero">
+<div class="dl-label">Viora · Website source</div>
+<h1>Take the website from your phone to your PC.</h1>
+<p>Download the current Viora Website source as a ZIP. You can save it on your phone, move it to your computer, and open the files there. This is the website's source code—not a one-click installer or a guarantee that the site runs offline; the live AI still needs its configured server and internet connection.</p>
+<div class="dl-actions">
+<a class="btn btn-primary btn-lg" href="https://github.com/Mr-Hacker-2/Viora-Website/archive/refs/heads/main.zip" target="_blank" rel="noopener noreferrer">Download website ZIP</a>
+<a class="btn btn-ghost btn-lg" href="https://github.com/Mr-Hacker-2/Viora-Website" target="_blank" rel="noopener noreferrer">View on GitHub</a>
+</div>
+</section>
+<section aria-labelledby="phone-steps">
+<h2 id="phone-steps" style="margin-top:32px">From your phone to your computer</h2>
+<div class="steps">
+<article class="step"><div class="step-num">1</div><h2>Download on your phone</h2><p>Tap <b>Download website ZIP</b>. If asked, choose Download or Save. On iPhone, check Files → Downloads; on Android, check Files → Downloads.</p></article>
+<article class="step"><div class="step-num">2</div><h2>Transfer the ZIP</h2><p>Move the ZIP to your PC using a USB cable, cloud storage (such as OneDrive or Google Drive), or another file-transfer method you trust.</p></article>
+<article class="step"><div class="step-num">3</div><h2>Extract it on the PC</h2><p>In Windows File Explorer, right-click the ZIP and choose <b>Extract All…</b>. Open the extracted folder to view the website files.</p></article>
+</div>
+<div class="note"><b>Want to publish changes?</b> Editing the downloaded files on your PC does not automatically change the live website. Commit and push the changes to the <a href="https://github.com/Mr-Hacker-2/Viora-Website" target="_blank" rel="noopener noreferrer">Viora-Website GitHub repository</a>, then allow the hosting service to redeploy.</div>
+</section>
+</main>
+<footer id="site-footer"></footer>
+<script src="assets/app.js"></script>
+</body>
+</html>
