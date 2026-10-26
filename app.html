@@ -110,7 +110,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
     <button type="button" class="sheet-action" id="open-settings"><span class="sheet-copy"><span class="sheet-title">Settings</span></span></button>
     <button type="button" class="sheet-action" id="out"><span class="sheet-copy"><span class="sheet-title">Sign out</span></span></button>
   </div>
-  <input id="sh-search" class="sh-search" type="search" placeholder="Search for chats…" autocomplete="off" spellcheck="false">
+  <input id="sh-search" class="sh-search" type="search" placeholder="Search chats and messages…" autocomplete="off" spellcheck="false">
   <h6>FEATURES</h6>
   <nav class="sh-nav">
     <button type="button" class="on" id="nav-chat" data-ic="chat"> AI Chat</button>
@@ -307,7 +307,13 @@ function render() {
   const pend = p => `<span class="attach-chip ${p.err ? 'failed' : 'busy'}" title="${esc(p.name)}" role="status"><span class="attach-icon">${p.err ? '!' : '<i class="spin"></i>'}</span><span class="attach-name">${esc(p.name)}<small>${fmtSize(p.size)} · ${p.err ? `<b class="st-err">Not analysed</b> — ${esc(p.err)}` : `<b>${esc(p.msg || 'Reading…')}</b>`}</small></span><button type="button" class="page-chip-remove" data-pd="${p.id}" aria-label="${p.err ? 'Dismiss' : 'Cancel'} ${esc(p.name)}">×</button></span>`;
   $('#attach-tray').innerHTML = files.map(chip).join('') + pending.map(pend).join(''); $('#attach-tray').hidden = !files.length && !pending.length;
   $('#sh-filelist').innerHTML = files.map(f => `<div class="sh-sw-row" style="display:flex;gap:8px;align-items:center"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}<small style="display:block;color:var(--faint)">${f.kind === 'video' ? 'video, ' + (f.ni || 0) + ' frames' : f.kind === 'image' ? 'image' : f.n ? Math.round(f.n / 1000) + 'k characters, searched in full' : 'text'}</small></span><button type="button" class="sh-collapse" style="margin:0" data-rm="${f.id}" aria-label="Remove">×</button></div>`).join('') || '<span class="sh-empty">Nothing attached yet.</span>';
-  const list = chats.filter(x => (curP ? x.pid === curP : !x.pid) && x.title.toLowerCase().includes(filter));
+  const list = chats.filter(x => {
+    if (curP ? x.pid !== curP : !!x.pid) return false;
+    if (!filter) return true;
+    const titleMatch = String(x.title || '').toLowerCase().includes(filter);
+    const messageMatch = (Array.isArray(x.messages) ? x.messages : []).some(m => String(m && m.content || '').toLowerCase().includes(filter));
+    return titleMatch || messageMatch;
+  });
   $('#sh-hist').innerHTML = list.map(x => `<button type="button" data-id="${x.id}" class="${x.id === cur ? 'on' : ''}" title="${esc(x.title)}">${esc(x.title)}<span class="hx" data-del="${x.id}" aria-label="Delete chat">×</span></button>`).join('') || `<span class="sh-empty">${filter ? 'No matches.' : 'Nothing saved yet.'}</span>`;
   $('#projs').innerHTML = D.projects.map(p => `<button type="button" data-p="${p.id}" class="${p.id === curP ? 'on' : ''}">${ic('folder')} ${esc(p.name)}</button>`).join('') + (curP ? `<button type="button" class="add" data-pe="${curP}">${ic('edit')} Edit this project</button>` : '') + `<button type="button" class="add" id="np">${ic('plus')} Create project</button>`;
   $('#send').disabled = !busy && !$('#input').value.trim();
@@ -537,7 +543,13 @@ document.addEventListener('click', e => {
 $('#composer').onsubmit = e => { e.preventDefault(); busy ? busy.abort() : send($('#input').value); };
 $('#input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); busy || send(e.target.value); } });
 $('#input').addEventListener('input', grow);
-addEventListener('keydown', e => { if (e.key === 'Escape') { busy?.abort(); hide(); } if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); newChat(); } });
+addEventListener('keydown', e => {
+  if (e.key === 'Escape') { busy?.abort(); hide(); }
+  if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
+    e.preventDefault(); $('#sh-search').focus(); $('#sh-search').select();
+  }
+  if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); newChat(); }
+});
 $('#new-thread').onclick = $('#nav-chat').onclick = newChat;
 $('#open-full').onclick = () => wide() ? $('#shell').classList.remove('no-left') : document.body.classList.toggle('sb');
 $('#sh-collapse').onclick = () => wide() ? $('#shell').classList.add('no-left') : closeSb();
