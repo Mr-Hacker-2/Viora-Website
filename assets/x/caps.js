@@ -8,7 +8,6 @@ export const CAPS = {
   flash:    { text: 1, image: 1, video: 1, docs: 1, audio: 0 },
   search:   { text: 1, image: 1, video: 1, docs: 1, audio: 0 },
   math:     { text: 1, image: 1, video: 1, docs: 1, audio: 0 },
-  automate: { text: 1, image: 0, video: 0, docs: 1, audio: 0 },
   human:    { text: 1, image: 0, video: 0, docs: 1, audio: 0 }
 };
 export const FALLBACK = 'flash';
