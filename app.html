@@ -173,7 +173,6 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
       <div class="sh-mode"><div><b>Web search</b><small>Looks things up and cites sources</small></div><button type="button" class="sh-sw" data-m="web" role="switch" aria-checked="false" aria-label="Web search"></button></div>
       <div class="sh-mode"><div><b>Humanizer</b><small>Make AI text sound human</small></div><button type="button" class="sh-sw" data-m="human" role="switch" aria-checked="false" aria-label="Humanizer"></button></div>
       <div class="sh-mode"><div><b>Pro Search</b><small>Multi-source research with citations</small></div><button type="button" class="sh-sw" data-m="search" role="switch" aria-checked="false" aria-label="Deep Search"></button></div>
-      <div class="sh-mode"><div><b>Automate</b><small>Plans steps from a page and a goal</small></div><button type="button" class="sh-sw" data-m="automate" role="switch" aria-checked="false" aria-label="Automate"></button></div>
     </div>
   </div>
   <div id="sh-files" hidden>
@@ -194,7 +193,7 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
   <h3>Settings</h3><p>Viora opens in the same soft light look as the extension, with its violet accent. Change the look here.</p>
   <div id="pf-mount"></div>
   <h4 class="np-h">Reply personality</h4>
-   <label class="np-row" style="display:flex;gap:10px;align-items:center;margin:6px 0 14px"><span style="flex:1">Emotions &amp; emojis<small style="display:block;color:var(--faint)">How expressive Viora is when it answers. Rewrite and automation tools stay plain.</small></span><select id="tone-sel" aria-label="Reply personality"></select></label>
+   <label class="np-row" style="display:flex;gap:10px;align-items:center;margin:6px 0 14px"><span style="flex:1">Emotions &amp; emojis<small style="display:block;color:var(--faint)">How expressive Viora is when it answers. Rewrite tools stay plain.</small></span><select id="tone-sel" aria-label="Reply personality"></select></label>
    <h4 class="np-h">Speed &amp; reliability</h4>
   <div id="np-mount"></div>
   <div class="dl" style="margin-top:12px"><span style="flex:1"></span><button class="btn p" id="s-x" type="button">Done</button></div>
@@ -248,7 +247,6 @@ const A = {
   flash:   { n: 'Viora Flash', ic: 'flash', b: 'Fast answers for everyday questions', web: 1, ph: 'Ask me anything', s: ['Explain how vaccines work', 'Write a polite deadline-extension email', 'What happened in tech news today?', 'Plan a 3-day trip to Lisbon'] },
   search:  { n: 'Pro Search', ic: 'search', b: 'Research across live web sources with citations', web: 1, ph: 'Ask a research question…', s: ['Compare recent research on renewable energy', 'Find official documentation for a JavaScript API', 'Summarize the latest AI regulation news', 'Compare two viewpoints using reliable sources'] },
   math:    { n: 'Math & Code', ic: 'math', b: 'Step-by-step maths and working code', web: 1, ph: 'Give me a problem or some code', s: ['Solve 3x² − 12 = 0 with steps', 'Why does for(i=0;i<5;i--){} never end?', 'Write a Python palindrome checker', 'Explain Big-O notation simply'] },
-  automate:{ n: 'Automate', ic: 'automate', b: 'Plans browser steps from a page and a goal', ph: 'Attach a page, then describe the goal', s: ['Plan how to sign up on this page', 'Which form fields are required here?', 'Plan how to find the contact details'] },
   human:   { n: 'Humanizer', ic: 'humanize', b: 'Turns stiff text into natural writing', ph: 'Paste the text to humanize', s: ['Leveraging synergies, we deliver value-driven outcomes.', 'It is important to note that time management is crucial.', 'I am writing to express my sincere interest in the position.'] }
 };
 const key = 'viora_chats_' + S.email;
@@ -262,7 +260,7 @@ const save = () => { if (!ls.set(key, chats.slice(0, 80))) ls.set(key, chats.sli
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const chat = () => chats.find(c => c.id === cur);
 const host = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
-const MODEL = { auto: 'flash', flash: 'flash', search: 'search', math: 'math', automate: 'automate', human: 'humanize' };
+const MODEL = { auto: 'flash', flash: 'flash', search: 'search', math: 'math', human: 'humanize' };
 let st = 0; const setStatus = (m, ms = 3500) => { const t = $('#status'); t.textContent = m || ''; t.hidden = !m; clearTimeout(st); if (m) st = setTimeout(() => { t.hidden = true; }, ms); };
 const toast = setStatus;
 const wide = () => matchMedia('(min-width:980px)').matches;
