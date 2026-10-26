@@ -147,7 +147,7 @@
 }
 @media(min-width:980px){
   :root[data-model] #shell{
-    grid-template-columns: 252px minmax(420px,1fr) 276px;
+    grid-template-columns: 252px minmax(320px,1fr) 276px;
     gap: 14px;
   }
   :root[data-model] #sh-left,
