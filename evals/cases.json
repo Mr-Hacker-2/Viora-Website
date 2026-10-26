@@ -9,4 +9,9 @@
 ["How are you?","flash"],["Who is the author of Hamlet?","flash"],["What is the dress code at a wedding?","flash"],["Explain how vaccines work","flash"],
 ["Plan how to fill this form","automate",1],["Which button submits this page?","automate",1],
 ["Summarize this document","flash",1],["what is the latest figure in this report","flash",1],["look up the latest news about this company","search",1]
+,
+["Fact-check this Python code against current documentation","search"],
+["Find peer-reviewed studies and cite the sources","search"],
+["Verify this claim with citations","search"],
+["Look up current guidance for this SQL error","search"]
 ]
