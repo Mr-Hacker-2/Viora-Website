@@ -9,9 +9,9 @@ const R = {
   fence: /```|traceback|stack ?trace|\b(type|syntax|name|reference|value)error\b|undefined is not|segmentation fault|\bexception\b/,
   lang: /\b(python|javascript|typescript|java|c\+\+|c#|rust|golang|sql|regex|html|css|bash|react|node\.?js|json|api)\b/,
   codeIntent: /\b(bug|debug|compile|refactor|algorithm|big-o|unit tests?|my code|this code|the code|source code|write (a |an |some )?(\w+ )?(function|script|program|class|query))\b/,
-  math: /\b(solve|equation|integral|derivative|calculate|simplify|factori[sz]e|probability of)\b|\d\s*[\^*/+\-]\s*\d|\d+\s?% of\b/,
-  fresh: /\b(latest|news|today|tonight|currently|right now|this (week|month|year|weekend)|recent(ly)?|most recent|price of|who won|scores?|stocks?|weather|forecast|trending|election|near me|release date|202\d|research|sources)\b|\bwho is (the )?(current|new)\b|\bwho is the (ceo|president|prime minister|mayor|coach)\b|\bcompare\b.*\b(newest|best|reviews?|vs|versus)\b|\bnewest\b/,
-  explicitWeb: /\b(search|look up|online|on the web|latest news)\b/
+  math: /\b(solve|equation|integral|derivative|calculate|simplify|factori[sz]e|probability of|prove|evaluate|convert units?)\b|\d\s*[\^*/+\-]\s*\d|\d+\s?% of\b/,
+  fresh: /\b(latest|news|today|tonight|currently|right now|this (week|month|year|weekend)|recent(ly)?|most recent|price of|who won|scores?|stocks?|weather|forecast|trending|election|near me|release date|202\d|research|sources|citations?|fact.?check|verify|verification|evidence|studies|papers?|peer.?reviewed|references|according to|is it true|cross.?check|compare sources)\b|\bwho is (the )?(current|new)\b|\bwho is the (ceo|president|prime minister|mayor|coach)\b|\bcompare\b.*\b(newest|best|reviews?|vs|versus)\b|\bnewest\b/,
+  explicitWeb: /\b(search|look up|online|on the web|latest news|fact.?check|verify|cross.?check|find sources|with citations|research this)\b/
 };
 
 /** Decide which assistant fits a message. Returns { assistant, reason }. */
