@@ -66,3 +66,77 @@
 @media(prefers-reduced-motion:reduce){
   :root[data-model] .suggestion{transition:none}
 }
+
+
+/* Spacious layout + real phone-first Viora app */
+:root[data-model] #shell{gap:18px}
+@media(min-width:1200px){
+  :root[data-model] #shell{grid-template-columns:248px minmax(0,1fr) 260px;gap:18px}
+  :root[data-model] #shell.no-left{grid-template-columns:0 minmax(0,1fr) 260px}
+  :root[data-model] .thread{padding:26px clamp(24px,4vw,64px)}
+  :root[data-model] .msg.assistant{max-width:min(100%,920px)}
+  :root[data-model] .composer{padding-inline:clamp(20px,4vw,56px)}
+}
+:root[data-model] .welcome{padding-top:clamp(34px,7vh,64px);padding-bottom:40px}
+:root[data-model] .suggestions{gap:14px}
+:root[data-model] .suggestion{min-height:76px;padding:18px 46px 18px 20px;font-size:14.5px}
+:root[data-model] .msg.user{max-width:min(82%,820px);padding:14px 18px}
+:root[data-model] .msg.assistant .body{font-size:16px;line-height:1.8}
+:root[data-model] .composer-inner{padding:14px 16px;border-radius:22px}
+:root[data-model] #input{min-height:54px;max-height:28dvh;font-size:16px}
+:root[data-model] .composer-row{margin-top:5px}
+:root[data-model] #sh-left,:root[data-model] #sh-right{padding:22px}
+:root[data-model] .bar{padding-bottom:16px}
+:root[data-model] .pwa-install{display:grid;place-items:center;font-size:19px}
+@media(max-width:979px){
+  :root[data-model] #shell{height:100dvh!important;min-height:100dvh!important;grid-template-columns:minmax(0,1fr)!important;gap:0!important}
+  :root[data-model] #sh-center{height:100dvh;min-height:0;grid-template-rows:auto minmax(0,1fr) auto auto}
+  :root[data-model] .bar{display:flex;align-items:center;flex-wrap:nowrap;min-height:58px;padding:calc(8px + env(safe-area-inset-top)) 12px 8px;gap:8px}
+  :root[data-model] .bar .sh-title{display:block!important;order:initial;flex:1 1 auto;min-width:0}
+  :root[data-model] .bar .sh-title h1{font-size:16px;line-height:1.2;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+  :root[data-model] .bar .sh-title p{display:none}
+  :root[data-model] .bar-id{display:none}
+  :root[data-model] .bar-actions{display:flex;align-items:center;gap:6px;order:initial;margin-left:auto;flex:none}
+  :root[data-model] .bar-actions .icon-btn{width:38px;height:38px;min-width:38px}
+  :root[data-model] #open-full{display:grid!important}
+  :root[data-model] .thread{min-height:0;padding:18px 14px 24px;scroll-padding-bottom:20px}
+  :root[data-model] .welcome{width:100%;padding:clamp(24px,6vh,48px) 4px 24px}
+  :root[data-model] .welcome-line{font-size:clamp(24px,7vw,32px);line-height:1.18}
+  :root[data-model] .welcome-main{margin-bottom:22px}
+  :root[data-model] .suggestions{grid-template-columns:minmax(0,1fr);width:100%;gap:10px}
+  :root[data-model] .suggestion{min-height:58px;padding:14px 42px 14px 16px;font-size:14px}
+  :root[data-model] .msg.user{max-width:94%;padding:12px 14px}
+  :root[data-model] .msg.assistant{max-width:100%;width:100%}
+  :root[data-model] .msg.assistant .body{font-size:15.5px;line-height:1.72}
+  :root[data-model] .composer{padding:8px 10px max(10px,env(safe-area-inset-bottom));border-top:1px solid var(--line)}
+  :root[data-model] .composer-inner{padding:9px 10px;border-radius:19px}
+  :root[data-model] #input{font-size:16px;min-height:42px;max-height:22dvh}
+  :root[data-model] .composer-row{flex-wrap:nowrap;gap:8px}
+  :root[data-model] .composer-left,:root[data-model] .composer-right{flex:none}
+  :root[data-model] .composer-right{margin-left:auto}
+  :root[data-model] .attach-btn,:root[data-model] .send{width:40px;height:40px}
+  :root[data-model] #sh-left{border-radius:0 22px 22px 0!important;padding:calc(18px + env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom))!important;width:min(330px,88vw)!important;max-width:88vw;inset:0 auto 0 0!important;z-index:80!important;overflow-y:auto}
+  :root[data-model] body.sb #sh-left{display:block!important}
+  :root[data-model] body.sb #sh-center{filter:brightness(.72)}
+  :root[data-model] #model-sheet,:root[data-model] #attach-sheet,:root[data-model] #umenu{max-width:calc(100vw - 24px);z-index:100}
+  :root[data-model] #art{inset:calc(6px + env(safe-area-inset-top)) 6px calc(6px + env(safe-area-inset-bottom));width:auto;border-radius:16px}
+  :root[data-model] .a-h{padding:8px;gap:5px}
+  :root[data-model] .a-h button,:root[data-model] .a-h select{font-size:12px;padding:7px}
+  :root[data-model] dialog{width:calc(100vw - 24px);max-width:520px;max-height:calc(100dvh - 24px);padding:18px}
+  :root[data-model] .mi{flex-wrap:wrap}
+  :root[data-model] .mi input{min-width:0}
+}
+@media(max-width:380px){
+  :root[data-model] .bar{gap:5px;padding-inline:8px}
+  :root[data-model] .bar-actions .icon-btn{width:34px;height:34px;min-width:34px}
+  :root[data-model] .thread{padding-inline:10px}
+  :root[data-model] .composer{padding-inline:7px}
+  :root[data-model] .suggestion{padding-left:13px}
+}
+@media(orientation:landscape) and (max-height:520px) and (max-width:979px){
+  :root[data-model] .welcome{padding-top:12px}
+  :root[data-model] .welcome-logo{width:48px;height:48px}
+  :root[data-model] .welcome-logo img{width:30px;height:30px}
+  :root[data-model] .welcome-main{margin-bottom:12px}
+  :root[data-model] .suggestions{grid-template-columns:repeat(2,minmax(0,1fr))}
+}
