@@ -15,12 +15,12 @@
 | Tools / Auto-agent | none | "Automate" only plans steps from a page; nothing executes. Auto = routing, not planning. No pause/resume/cancel (only Stop) |
 | Evals | none | None existed |
 
-Issues found: session token is sent in a URL query (`/api/verify?token=`), which leaks into server logs; attachments/web pages were sent as plain text with no prompt-injection marking; whole project notes sent each time; chat search covers titles only; `readFile` rejects images with a stale "not supported yet" branch that `addFiles` never reaches.
+Issues found: session token is sent in a URL query (`/api/verify?token=`), which leaks into server logs; attachments/web pages were sent as plain text with no prompt-injection marking; whole project notes sent each time; chat search now matches both titles and message content (client-side; device-local only); `readFile` rejects images with a stale "not supported yet" branch that `addFiles` never reaches.
 
 ## 2. Prioritised plan
 1. (done) Router + capability-aware fallback + health. 2. (done) Retrieval instead of dumping memory/notes. 3. (done) Untrusted-content marking. 4. (done) Eval harness. 
 5. Server: audio transcription, FFmpeg/video audio, PDF page images, token-in-header auth, real provider registry with measured latency/cost. 
-6. Client: chat full-text search, pause/resume for multi-step runs (needs a server-side planner first). 7. Citation checking server-side.
+6. (done) Client: chat full-text search and Ctrl+K shortcut. 7. Server: pause/resume for multi-step runs (requires a server-side planner). 8. Citation checking server-side.
 
 ## 3. Done in stage 1
 - `assets/x/router.js` (new): `classify`, `chain`, `Health` circuit breaker, `shouldFallback`. Capabilities still come only from `caps.js`.
@@ -40,4 +40,10 @@ Accept `Authorization` header on `/api/verify`; audio transcription endpoint; se
 Static host, publish directory `.`, no build. Edit `API` in `app.html` and `authApi` in `assets/app.js`. Dev: `npm test`, `npm run eval` (Node ≥ 20). No credentials are in the repo.
 
 ## 7. Future improvements (by expected benefit)
-Server planner with verification → audio/PDF-page/video-audio support → server research verification → full-text chat search → encrypted cross-device memory → per-assistant latency/cost display.
+Server planner with verification → audio/PDF-page/video-audio support → server research verification → pause/resume planner → encrypted cross-device memory → per-assistant latency/cost display.
+
+
+## 8. Latest client improvements (2026-10-26)
+- Chat history search now checks both conversation titles and message content, while preserving project scope.
+- `Ctrl+K` / `Cmd+K` focuses and selects the chat search field; existing `Ctrl+Shift+O` / `Cmd+Shift+O` new-chat shortcut remains available.
+- These are client-side changes. They do not improve backend model intelligence or search-provider quality by themselves.
