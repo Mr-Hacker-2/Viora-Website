@@ -3,6 +3,8 @@ import { classify, chain, Health, shouldFallback } from '../assets/x/router.js';
 import { pick } from '../assets/x/caps.js';
 const img = [{ kind: 'image', ni: 1 }];
 test('routes code, search, math and rewriting requests', () => {
+  assert.equal(classify('for i in range(5): print(i)').assistant, 'math');
+  assert.equal(classify('Why does for(i=0;i<5;i--){} never end?').assistant, 'math');
   assert.equal(classify('Why does my SQL query return duplicates?').assistant, 'math');
   assert.equal(classify("What's the latest news on SpaceX?").assistant, 'search');
   assert.equal(classify('Fact-check this Python code against the current documentation').assistant, 'search');
@@ -37,6 +39,7 @@ test('chain skips unhealthy assistants but never returns empty', () => {
 test('a success closes the breaker', () => { const h = new Health(); h.fail('math'); h.fail('math'); h.ok('math'); h.fail('math'); assert.ok(h.healthy('math')); });
 test('fallback only for server trouble, never for user abort or client errors', () => {
   assert.equal(shouldFallback(503), true); assert.equal(shouldFallback(429), true);
+  assert.equal(shouldFallback(408), true); assert.equal(shouldFallback(425), true);
   assert.equal(shouldFallback(400), false); assert.equal(shouldFallback(401), false);
   assert.equal(shouldFallback(0, new DOMException('x', 'AbortError')), false);
   assert.equal(shouldFallback(0, new Error('network')), true);

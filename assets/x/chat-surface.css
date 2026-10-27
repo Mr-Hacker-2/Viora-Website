@@ -129,6 +129,14 @@
   height: 17px;
 }
 
+.response-metrics {
+  margin: 8px 0 0 34px;
+  color: var(--faint);
+  font-size: 11px;
+  line-height: 1.45;
+  font-variant-numeric: tabular-nums;
+}
+
 :root[data-theme][data-model] .suggestion-text {
   min-width: 0;
   overflow-wrap: anywhere;

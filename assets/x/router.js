@@ -6,6 +6,8 @@ import { CAPS, FALLBACK, needs } from './caps.js';
 const R = {
   human: /humani[sz]e|paraphrase|rewrite this|sound (more )?(human|natural)|make this (sound )?(more )?natural/,
   fence: /```|traceback|stack ?trace|\b(type|syntax|name|reference|value)error\b|undefined is not|segmentation fault|\bexception\b/,
+  snippet: /^\s*(?:for\s+\w+\s+in\b|(?:def|class|function)\s+\w+|(?:const|let|var)\s+\w+\s*=|(?:print|console\.log)\s*\()/m,
+  loopSyntax: /\bfor\s*\([^)]*;[^)]*;[^)]*\)\s*\{?/,
   lang: /\b(python|javascript|typescript|java|c\+\+|c#|rust|golang|sql|regex|html|css|bash|react|node\.?js|json|api)\b/,
   codeIntent: /\b(bug|debug|compile|refactor|algorithm|big-o|unit tests?|my code|this code|the code|source code|write (a |an |some )?(\w+ )?(function|script|program|class|query))\b/,
   math: /\b(solve|equation|integral|derivative|calculate|simplify|factori[sz]e|probability of|prove|evaluate|convert units?)\b|\d\s*[\^*/+\-]\s*\d|\d+\s?% of\b/,
@@ -18,7 +20,7 @@ export function classify(text, { hasPage = false } = {}) {
   const x = String(text || '').toLowerCase();
   if (R.human.test(x)) return { assistant: 'human', reason: 'rewriting request' };
   if (R.explicitWeb.test(x)) return { assistant: 'search', reason: 'explicit research request' };
-  if (R.fence.test(x) || R.codeIntent.test(x) || (R.lang.test(x) && /\b(write|fix|why|how (do|to|can)|error|query|snippet)\b/.test(x))) return { assistant: 'math', reason: 'code signals' };
+  if (R.fence.test(x) || R.snippet.test(x) || R.loopSyntax.test(x) || R.codeIntent.test(x) || (R.lang.test(x) && /\b(write|fix|why|how (do|to|can)|error|query|snippet)\b/.test(x))) return { assistant: 'math', reason: 'code signals' };
   if (R.math.test(x)) return { assistant: 'math', reason: 'math signals' };
   const aboutFile = hasPage && !R.explicitWeb.test(x);
   if (!aboutFile && R.fresh.test(x)) return { assistant: 'search', reason: 'needs current information' };
@@ -47,4 +49,4 @@ export function chain(assistant, files, health) {
 }
 
 /** Errors worth trying another assistant for (server trouble), as opposed to user errors. */
-export const shouldFallback = (status, err) => err ? err.name !== 'AbortError' : status === 429 || status >= 500;
+export const shouldFallback = (status, err) => err ? err.name !== 'AbortError' : [408, 425, 429].includes(status) || status >= 500;

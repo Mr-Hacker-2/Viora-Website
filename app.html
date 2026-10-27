@@ -460,8 +460,11 @@ function msgHtml(m, i, last) {
       ? '<div class="switch-note" role="status">This research-style reply included numbered citations, but no valid source links were provided. The citations could not be checked.</div>'
       : '');
   const note = [m.mode ? 'Auto chose ' + A[m.mode].n : '', m.note || ''].filter(Boolean).join(' · ');
+  const timingParts = m.timing ? [['Response', m.timing.responseMs], ['Sources', m.timing.sourcesMs], ['First text', m.timing.firstTokenMs], ['Total', m.timing.totalMs]]
+    .filter(([, ms]) => Number.isFinite(ms)).map(([label, ms]) => `${label} ${(ms / 1000).toFixed(1)}s`) : [];
+  const timing = timingParts.length ? `<div class="response-metrics" title="Browser-measured timing; backend stage timings are unavailable.">${esc(timingParts.join(' · '))}</div>` : '';
   const sw = m.sw ? `<div class="switch-note" role="status">${esc(m.sw)}</div>` : '';
-  return `<div class="msg assistant${last && busy ? ' streaming' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${evidenceNote}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : stat(m)}</div>${srcs}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}<button class="msg-act" data-remember="${i}" title="Save the question and context to Memory" aria-label="Save context to Memory">${ic('note')}</button></div></div>`;
+  return `<div class="msg assistant${last && busy ? ' streaming' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${evidenceNote}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : stat(m)}</div>${srcs}${timing}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}<button class="msg-act" data-remember="${i}" title="Save the question and context to Memory" aria-label="Save context to Memory">${ic('note')}</button></div></div>`;
 }
 function render() {
   const a = A[asst], c = chat(), has = c && c.messages.length, files = c && c.page ? c.page.files : [];
@@ -511,7 +514,7 @@ async function send(text) {
   c.assistant = asst; c.updated = Date.now(); chats = [c, ...chats.filter(x => x !== c)];
   c.messages.push({ role: 'user', content: text, att: (c.page ? c.page.files : []).map(f => ({ name: f.name, kind: f.kind, src: f.kind === 'web' ? f.source : '' })) }, { role: 'assistant', content: '' });
   $('#input').value = ''; try { localStorage.removeItem('viora_draft_' + S.email); } catch {} grow(); save(); render();
-  const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); busy = ctl; m.stage = 'Starting task…'; sendState(true);
+  const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); let timingStart = 0; busy = ctl; m.stage = 'Starting task…'; sendState(true);
   const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 140, b = $('#b' + idx); if (b) { paintBody(b, m); if (near) th.scrollTop = th.scrollHeight; } };
   let eff = asst === 'auto' ? route(text, c) : asst;
   /* capability check: keep the chosen assistant when it can read the attachments, otherwise switch and say why */
@@ -531,6 +534,7 @@ async function send(text) {
     const expectsVisualData = !!(c.page && c.page.files.some(f => (f.kind === 'image' || f.kind === 'video') && (f.ni || 0) > 0));
     if (expectsVisualData && !pp.images.length) throw new Error('I can see that a picture or video is attached, but its image data did not load. Please remove it and upload it again, then retry.');
     m.stage = useWeb ? 'Connecting and preparing web research…' : expectsVisualData ? 'Sending your image to Viora vision…' : 'Connecting to Viora…'; paint();
+    timingStart = performance.now(); m.timing = { responseMs: null, sourcesMs: null, firstTokenMs: null, totalMs: null };
     const files = c.page ? c.page.files : [], names = Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])), tries = chain(eff, files, health);
     let r, last;
     for (const [n, a] of tries.entries()) {
@@ -540,36 +544,45 @@ async function send(text) {
         r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
           body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '') }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images }) },
           { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
+        if (m.timing.responseMs == null) m.timing.responseMs = Math.round(performance.now() - timingStart);
       } catch (e) { if (!shouldFallback(0, e)) throw e; health.fail(a); last = e; r = null; if (n < tries.length - 1) continue; throw e; }
       if (r.ok || !shouldFallback(r.status) || n === tries.length - 1) { if (r.ok) health.ok(a); else if (shouldFallback(r.status)) health.fail(a); if (a !== eff) { m.sw = (m.sw ? m.sw + ' ' : '') + A[eff].n + ' did not respond, so ' + A[a].n + ' answered.'; m.eff = a; } break; }
       health.fail(a);
     }
     m.wait = '';
     if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
-    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(e.error || (r.status === 413 ? 'The server rejected the upload as too large.' : 'Something went wrong. Please try again.')); }
+    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(NP.describeHttpFailure(r.status, e.error || '')); }
     m.stage = 'Reading the response…'; paint();
     const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0;
+    const handleLine = l => {
+      if (!l.startsWith('data:')) return;
+      const d = l.slice(5).trim(); if (!d || d === '[DONE]') return;
+      try {
+        const j = JSON.parse(d);
+        if (j.viora_sources) { m.searching = false; m.stage = 'Checking source links…'; m.src = j.viora_sources; if (m.timing.sourcesMs == null) m.timing.sourcesMs = Math.round(performance.now() - timingStart); if (!m.src.length) m.note = 'Web search returned no source links. Treat live claims as unverified.'; render(); }
+        else { const t = j.choices?.[0]?.delta?.content; if (t) { if (m.timing.firstTokenMs == null) m.timing.firstTokenMs = Math.round(performance.now() - timingStart); m.content += t; } }
+      } catch {}
+    };
     for (;;) {
       const { done, value, stalled } = await NP.readChunk(rd); if (stalled) { m.note = 'The connection went quiet, so this reply may be cut short. Use Regenerate to try again.'; render(); break; } if (done) break;
-      buf += dec.decode(value, { stream: true }); const lines = buf.split('\n'); buf = lines.pop();
-      for (const l of lines) { if (!l.startsWith('data:')) continue; const d = l.slice(5).trim(); if (!d || d === '[DONE]') continue;
-        try { const j = JSON.parse(d);
-          if (j.viora_sources) { m.searching = false; m.src = j.viora_sources; if (!m.src.length) m.note = 'Web search found nothing, so this answer is from what I already know.'; render(); }
-          else { const t = j.choices?.[0]?.delta?.content; if (t) m.content += t; } } catch {} }
+      const split = NP.splitStreamLines(buf + dec.decode(value, { stream: true })); buf = split.rest;
+      split.lines.forEach(handleLine);
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); });
     }
+    NP.splitStreamLines(buf + dec.decode(), true).lines.forEach(handleLine);
     if (!m.content.trim()) m.content = 'I got an empty reply. Please try again.';
     // The frontend can request web search, but only the chat backend can actually perform it.
     // Make a missing search result explicit instead of letting a model imply it browsed.
     if (useWeb && !Array.isArray(m.src)) {
-      m.note = 'Web search was requested, but the server returned no source results. This answer has not been verified against live web pages. Check the chat backend web-search integration.';
+      m.note = 'Web search was requested, but the reply did not include source links. Treat live claims as unverified.';
     } else if (useWeb && Array.isArray(m.src) && m.src.length === 0) {
-      m.note = 'The server returned no web sources, so this answer is not verified against live web pages.';
+      m.note = 'Web search returned no source links. Treat live claims as unverified.';
     }
   } catch (e) {
     if (e.name === 'AbortError') { if (!m.content) m.content = '_Stopped._'; }
     else { if (!m.content && NP.get().restoreOnFail && !$('#input').value) { $('#input').value = text; grow(); } m.err = true; m.content = (m.content ? m.content + '\n\n' : '') + '⚠️ ' + (/fetch|network/i.test(e.message) ? 'Could not reach Viora. The server may be waking up, so try again in 30 seconds.' : e.message); }
   }
+  if (timingStart && m.timing) m.timing.totalMs = Math.round(performance.now() - timingStart);
   m.searching = false; m.wait = ''; m.stage = ''; busy = null; sendState(false); save(); render();
 }
 function grow() { const t = $('#input'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 200) + 'px'; $('#send').disabled = !busy && !t.value.trim(); }

@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULTS, normalize, matchPreset, trimHistory } from '../assets/x/netperf.js';
+import { DEFAULTS, normalize, matchPreset, trimHistory, describeHttpFailure, splitStreamLines } from '../assets/x/netperf.js';
 
 test('normalize clamps numeric settings and rejects invalid values', () => {
   assert.equal(normalize({ retries: 99 }).retries, 6);
@@ -32,4 +32,18 @@ test('trimHistory keeps the newest messages and starts on a user message', () =>
 test('preset matching recognizes the shipped presets', () => {
   assert.equal(matchPreset(DEFAULTS), 'balanced');
   assert.equal(matchPreset({ ...DEFAULTS, retries: 0 }), '');
+});
+
+test('HTTP failures explain rate limits, timeouts, server errors, and upload limits', () => {
+  assert.match(describeHttpFailure(429), /rate-limited/i);
+  assert.match(describeHttpFailure(408), /timed out/i);
+  assert.match(describeHttpFailure(503, 'provider unavailable'), /temporarily unavailable.*provider unavailable/i);
+  assert.match(describeHttpFailure(413), /upload is too large/i);
+  assert.equal(describeHttpFailure(400, 'Invalid request'), 'Invalid request');
+});
+
+test('stream line splitting preserves chunk boundaries and flushes a final unterminated event', () => {
+  const first = splitStreamLines('data: first\r\ndata: final');
+  assert.deepEqual(first, { lines: ['data: first'], rest: 'data: final' });
+  assert.deepEqual(splitStreamLines(first.rest, true), { lines: ['data: final'], rest: '' });
 });

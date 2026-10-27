@@ -61,6 +61,21 @@ function sleep(ms, signal) {
 }
 const RETRY_STATUS = [408, 425, 429, 500, 502, 503, 504];
 
+export function describeHttpFailure(status, detail = '') {
+  const suffix = detail ? ` Details: ${detail}` : '';
+  if (status === 413) return `That upload is too large for the server to accept.${suffix}`;
+  if (status === 429) return `Viora is rate-limited right now. Wait a moment, then try again.${suffix}`;
+  if ([408, 425, 504].includes(status)) return `Viora timed out waiting for an AI provider.${suffix}`;
+  if (status === 502 || status === 503) return `Viora's AI service is temporarily unavailable. Try again shortly.${suffix}`;
+  if (status >= 500) return `Viora's AI service returned a server error (HTTP ${status}).${suffix}`;
+  return detail || `The request failed (HTTP ${status}). Please try again.`;
+}
+
+export function splitStreamLines(buffer, flush = false) {
+  const lines = String(buffer).split(/\r?\n/);
+  return flush ? { lines, rest: '' } : { lines: lines.slice(0, -1), rest: lines.at(-1) };
+}
+
 /* fetch() with a first-byte timeout and automatic retries.
    `signal` is the person's Stop button: it is never retried. onWait(text) reports each pause. */
 export async function request(url, init, { signal, onWait = () => {}, perf = current } = {}) {
