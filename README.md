@@ -42,14 +42,14 @@ it is used first. `site`/`snippet` fields are also honoured.
 ### Attachments (`app.html`, `assets/x/media.js`, `caps.js`, `attach.css`)
 * Content is sniffed (magic bytes), not just the extension: a renamed .exe is rejected; audio, BMP, AVI get a clear message.
 * Each attachment shows a thumbnail, size, a live status (Reading… / Extracting frame 3 of 8 / Ready) and can be cancelled or removed; failures stay visible as "Not analysed — reason".
-* Limits: 8 items, images 25 MB, video 300 MB, documents 40 MB (`LIMITS` in `media.js`). Video: up to 8 frames, one per 5 s (configurable there), each frame's **timestamp is sent with the request**. Audio in videos is **not** analysed.
+* Limits: 8 items, images 25 MB, video 300 MB, documents 40 MB (`LIMITS` in `media.js`). PDF attachments extract selectable text and include up to eight evenly sampled page images for visual analysis (charts, diagrams, screenshots, and scanned pages). When a PDF has no selectable text, OCR is attempted on the sampled pages. Short MP4 clips up to 2 minutes and 4 MB use NVIDIA Nemotron 3 Nano Omni for native video/audio understanding; larger MP4/WebM clips use up to eight timestamped frames and do not analyze audio in that fallback.
 * `caps.js` is the single capability registry; if the chosen assistant can't read images/frames the message is sent to Viora Flash and the chat shows "Switched to Viora Flash: Humanizer can't read images." Your selection is not changed.
 * Failed/interrupted answers get a Retry button that replaces the failed answer.
 
 ### Chat service boundary and research limits
 The chat/auth API runs separately from this static website in the `Viora-auth` repository. The backend now fetches up to four search-result pages through its guarded reader and supplies bounded page text and publication dates to the research model. It reports the selected provider model, search/page-fetch timing, and whether each page was retrieved.
 
-Page retrieval is not independent claim verification: the API does not prove that every cited statement is supported, and the interface explicitly reports claim support as unverified. Audio transcription, video-audio analysis, and scanned-PDF page-image analysis are also not implemented. Video uploads remain timestamped still-frame analysis only. Keep `caps.js` aligned with the actual backend capabilities.
+Page retrieval is not independent claim verification: the API does not prove that every cited statement is supported, and the interface explicitly reports claim support as unverified. Standalone audio-file transcription and full-document page-by-page vision are not implemented. PDF visual analysis samples up to eight pages; conclusions about unrendered pages may be incomplete. Keep `caps.js` aligned with the actual backend capabilities.
 
 ---
 ## v3 upgrade notes
@@ -97,7 +97,7 @@ Same palette, type and shapes as the extension's side panel / tab:
 
 - **Auto routing** (`assets/x/router.js`) now prioritizes explicit research and fact-checking requests and recognizes citations, verification, evidence, studies and references. The routing evaluation cases and unit tests include these patterns.
 - **Answer quality guidance** (`assets/x/persona.js`) now asks Deep Search to prefer primary sources, cross-check important claims, respect dates, cite only sources actually returned by the search system, and disclose when usable search results are unavailable. Coding and file-analysis guidance also emphasizes uncertainty and honest capability limits.
-- **Scanned PDFs** (`app.html`) now try OCR on up to the first eight pages when no selectable text is present. OCR may contain mistakes and is not a substitute for a full document vision pipeline.
+- **PDF understanding** (`app.html`) extracts selectable text, sends up to eight evenly sampled page images for visual analysis, and tries OCR on sampled pages when the PDF has no selectable text. OCR may contain mistakes, and sampled-page analysis may miss details on pages that were not sent.
 - **User-controlled memory**: a bookmark/note action on an AI reply saves the related question to the existing per-device Memory list. Memory remains opt-in, editable and deletable; it is stored in this browser/device and does not automatically sync across devices.
 - **Reliability** (`assets/x/netperf.js`) retries transient 408, 425, 429 and common 5xx responses as well as network failures. Stop requests are still not retried; the existing regenerate/retry action remains available.
 - **Phone-to-PC source download**: `download-site.html` links to the repository ZIP and explains how to transfer it from a phone and extract it on Windows. This downloads source code; it does not install the website as an offline application.
