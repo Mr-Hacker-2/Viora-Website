@@ -1,5 +1,5 @@
-const CACHE = 'viora-shell-v1';
-const SHELL = ['/','/index.html','/app.html','/mobile.html','/manifest.json','/assets/x/icon32.png','/assets/pwa-icon.svg','/assets/x/studio-polish.css','/assets/x/app-polish.css','/assets/x/viora-theme.css','/assets/x/pwa.js'];
+const CACHE = 'viora-shell-v2';
+const SHELL = ['/','/index.html','/app.html','/mobile.html','/manifest.json','/assets/x/icon32.png','/assets/pwa-icon.svg','/assets/x/studio-polish.css','/assets/x/app-polish.css','/assets/x/viora-theme.css','/assets/x/chat-surface.css','/assets/x/pwa.js'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });
@@ -17,6 +17,13 @@ self.addEventListener('fetch', event => {
       if (res.ok) caches.open(CACHE).then(cache => cache.put(req, res.clone()));
       return res;
     }).catch(() => caches.match(req).then(hit => hit || caches.match('/mobile.html'))));
+    return;
+  }
+  if (/\.(?:css|js)$/i.test(url.pathname)) {
+    event.respondWith(fetch(req, { cache: 'no-cache' }).then(res => {
+      if (res.ok && res.type === 'basic') caches.open(CACHE).then(cache => cache.put(req, res.clone()));
+      return res;
+    }).catch(() => caches.match(req)));
     return;
   }
   event.respondWith(caches.match(req).then(hit => hit || fetch(req).then(res => {
