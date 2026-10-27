@@ -483,7 +483,13 @@ const closeSb = () => document.body.classList.remove('sb');
 const hide = () => { $('#model-sheet').hidden = true; $('#attach-sheet').hidden = true; $('#umenu').hidden = true; $('#model-btn').setAttribute('aria-expanded', 'false'); $('#attach').setAttribute('aria-expanded', 'false'); };
 const SEND = $('#send').innerHTML;
 const health = new Health();
-function route(t, c) { return classify(t, { hasPage: !!(c && c.page) }).assistant; }
+function visualFiles(c) {
+  return c && c.page ? c.page.files.filter(f => f.kind === 'video' || f.nativeVideo || (['image', 'file'].includes(f.kind) && (f.ni || 0) > 0)) : [];
+}
+function route(t, c) {
+  const files = c && c.page ? c.page.files : [];
+  return classify(t, { hasPage: files.length > 0, hasVisual: visualFiles(c).length > 0 }).assistant;
+}
 function suggestionIcon(text) {
   if (/\b(?:video|frame|scene|visible)\b/i.test(text)) return ic('camera');
   if (/\b(?:python|code|javascript|api|palindrome|loop|big-o)\b/i.test(text)) return ic('terminal');
@@ -568,7 +574,7 @@ async function send(text) {
   const pk = pickModel(eff, c.page ? c.page.files : [], Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
-  const useWeb = shouldSearch(text, { assistant: eff, enabled: web && !!A[eff].web, hasPage: !!c.page }), pj = D.projects.find(x => x.id === c.pid);
+  const useWeb = shouldSearch(text, { assistant: eff, enabled: web && !!A[eff].web, hasPage: !!c.page, hasVisual: visualFiles(c).length > 0 }), pj = D.projects.find(x => x.id === c.pid);
   const context = { instructions: withPersona(eff, tone, pj ? pj.instr : ''), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
   m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
   try {
@@ -602,6 +608,7 @@ async function send(text) {
       try {
         const j = JSON.parse(d);
         if (j.viora_meta) { m.model = j.viora_meta.model; m.timing = { ...m.timing, modelHeaderMs: j.viora_meta.modelHeaderMs }; render(); }
+        else if (j.error) { m.providerError = String(j.error.message || j.error).slice(0, 500); }
         else if (Object.hasOwn(j, 'viora_sources')) {
           m.searching = false; m.stage = 'Checking source links…'; m.src = j.viora_sources;
           m.research = j.viora_research || null; m.timing = { ...m.timing, ...(j.viora_timings || {}) };
@@ -622,7 +629,9 @@ async function send(text) {
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); });
     }
     NP.splitStreamLines(buf + dec.decode(), true).lines.forEach(handleLine);
-    if (!m.content.trim()) m.content = 'I got an empty reply. Please try again.';
+    if (!m.content.trim() && m.providerError) throw new Error('The AI provider returned an error: ' + m.providerError);
+    if (m.providerError && m.content.trim()) m.note = 'The AI provider reported an error after starting this reply: ' + m.providerError;
+    if (!m.content.trim()) m.content = 'I got an empty reply. Please try again or choose another assistant.';
     // The frontend can request web search, but only the chat backend can actually perform it.
     // Make a missing search result explicit instead of letting a model imply it browsed.
     if (useWeb && !Array.isArray(m.src)) {
