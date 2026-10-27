@@ -261,6 +261,52 @@ button,a,input,textarea,select{outline-offset:3px}
  body:not(.sb) #shell:not(.no-left) #sh-left{display:none!important}
  #shell{grid-template-columns:minmax(0,1fr)!important}
 }
+
+/* Responsive polish pass: predictable widths, readable messages, and calmer controls. */
+:root{scrollbar-gutter:stable}
+html,body{min-width:320px;overflow-x:hidden}
+#shell{min-height:100dvh;min-width:0}
+#sh-center{min-width:0;min-height:0}
+#sh-center>.thread{width:100%;max-width:100%;min-width:0;margin-inline:auto;padding-inline:clamp(14px,3.2vw,42px)!important}
+#sh-center>.thread>*{min-width:0}
+.thread img,.thread video,.thread canvas{max-width:100%;height:auto}
+.thread pre{max-width:100%;overflow:auto;white-space:pre}
+.thread table{display:block;max-width:100%;overflow-x:auto;border-collapse:collapse}
+.thread p,.thread li,.thread blockquote{overflow-wrap:anywhere}
+.msg{min-width:0;overflow-wrap:anywhere}
+.msg.assistant,.msg.ai{max-width:min(100%,900px);margin-inline:auto}
+.msg.user{max-width:min(88%,760px);margin-left:auto;white-space:pre-wrap;overflow-wrap:anywhere}
+.composer{width:100%;min-width:0;padding-inline:clamp(10px,2.4vw,28px)!important}
+.composer-inner{width:100%;max-width:920px;margin-inline:auto;min-width:0}
+#input{min-width:0;max-height:35dvh;overflow-y:auto;overflow-wrap:anywhere}
+.bar{min-width:0;padding-inline:clamp(10px,2vw,24px)!important}
+.bar>*{min-width:0}
+#status{max-width:min(90vw,680px);overflow-wrap:anywhere}
+button,select,input,textarea{touch-action:manipulation}
+button:disabled{cursor:not-allowed;opacity:.55}
+@media(min-width:980px){
+ #shell{grid-template-columns:252px minmax(0,1fr)!important}
+ #sh-left{min-width:0}
+ #sh-center>.thread{padding-top:clamp(18px,3vh,34px)!important}
+ .composer{padding-bottom:max(16px,env(safe-area-inset-bottom))!important}
+}
+@media(max-width:979px){
+ #sh-left{max-width:min(88vw,340px)}
+ #sh-center>.thread{padding-inline:clamp(12px,4vw,22px)!important}
+ .msg.user{max-width:94%}
+}
+@media(max-width:520px){
+ .bar{gap:6px!important}
+ .model-pill{max-width:48vw;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+ .welcome-line{font-size:clamp(23px,7vw,30px)!important}
+ .welcome-main{padding-inline:6px}
+ .composer{padding-inline:8px!important}
+ .composer-inner{border-radius:18px!important}
+ .msg pre,.thread pre{padding:10px!important;font-size:12px}
+ .thread :is(th,td){padding:7px 8px}
+}
+@media(prefers-reduced-motion:reduce){html:focus-within{scroll-behavior:auto}}
+
 </style>
 <link rel="stylesheet" href="assets/x/chat-surface.css">
 
