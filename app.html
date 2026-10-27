@@ -4,7 +4,8 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
 <title>Viora AI — Your AI workspace</title>
-<meta name="theme-color" content="#f6f8fe">\n<meta name="description" content="Think, write, research, understand files and solve problems in one AI workspace with Viora.">
+<meta name="theme-color" content="#f6f8fe">
+<meta name="description" content="Think, write, research, understand files and solve problems in one AI workspace with Viora.">
 <link rel="icon" href="assets/x/icon32.png">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/x/icon32.png">
@@ -545,10 +546,10 @@ function render() {
     <div class="logo-stage"><span class="welcome-logo"><img src="assets/x/mark.png" alt="Viora" width="64" height="64" draggable="false"></span></div>
     <h2 class="welcome-line">${videos.length ? 'Let’s explore your video.' : 'What are we working on?'}</h2>
     <p class="welcome-subline">${videos.length ? 'Ask about scenes, actions, visible text, or the sequence of events.' : 'One workspace for thinking, writing, research, files, images, video, and code.'}</p>
-    <div class="welcome-capabilities" aria-label="Viora capabilities"><span>${ic('zap')} Fast answers</span><span>${ic('globe')} Web research</span><span>${ic('file')} File understanding</span></div>
+    <div class="welcome-capabilities" aria-label="Viora capabilities"><span>${ic('flash')} Fast answers</span><span>${ic('globe')} Web research</span><span>${ic('folder')} File understanding</span></div>
   </div>
   <div class="welcome-prompt-head"><span>${videos.length ? 'START WITH YOUR VIDEO' : 'JUMP RIGHT IN'}</span><span class="welcome-prompt-hint">Choose a prompt or type your own</span></div>
-  <div class="suggestions">${prompts.map((s, i) => `<button type="button" class="suggestion"><span class="suggestion-icon">${suggestionIcon(s)}</span><span class="suggestion-text">${esc(s)}</span><span class="suggestion-arrow">${ic('arrow-up-right')}</span></button>`).join('')}</div>
+  <div class="suggestions">${prompts.map((s, i) => `<button type="button" class="suggestion"><span class="suggestion-icon">${suggestionIcon(s)}</span><span class="suggestion-text">${esc(s)}</span><span class="suggestion-arrow">${ic('back')}</span></button>`).join('')}</div>
   <p class="welcome-footnote">Viora can make mistakes. Check important details and cited sources.</p>
 </section>`;
   bindCodeCopy(th);
