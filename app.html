@@ -527,7 +527,7 @@ async function send(text) {
   m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
   try {
     const pp = await pagePayload(c, text);
-    const expectsVisualData = !!(c.page && c.page.files.some(f => (f.kind === 'image' || f.kind === 'video') && ((f.ni || 0) > 0 || f.nativeVideo)));
+    const expectsVisualData = !!(c.page && c.page.files.some(f => ((f.ni || 0) > 0 && (f.kind === 'image' || f.kind === 'video' || f.kind === 'file')) || f.nativeVideo));
     if (expectsVisualData && !pp.images.length && !pp.video) throw new Error('I can see that a picture or video is attached, but its visual data did not load. Please remove it and upload it again, then retry.');
     m.stage = useWeb ? 'Connecting and preparing web research…' : pp.video ? 'Sending your video to Viora’s video-understanding model…' : expectsVisualData ? 'Sending your image to Viora vision…' : 'Connecting to Viora…'; paint();
     timingStart = performance.now(); m.timing = { responseMs: null, sourcesMs: null, firstTokenMs: null, totalMs: null };
@@ -636,7 +636,44 @@ async function readFile(f) {
   const ext = (f.name.split('.').pop() || '').toLowerCase();
   if (f.size > 15e6) throw new Error('is over 15 MB.');
   if (/^(png|jpe?g|gif|webp|bmp|svg|heic)$/.test(ext)) throw new Error('is an image. Images are not supported yet.');
-  if (ext === 'pdf') { await load(CDN + 'pdf.js/3.11.174/pdf.min.js'); pdfjsLib.GlobalWorkerOptions.workerSrc = CDN + 'pdf.js/3.11.174/pdf.worker.min.js'; const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise; let t = ''; for (let i = 1; i <= Math.min(pdf.numPages, 400) && t.length < 2e6; i++) { const pg = await (await pdf.getPage(i)).getTextContent(); t += pg.items.map(x => x.str + (x.hasEOL ? '\n' : ' ')).join('') + '\n\n'; } if (!t.trim()) { try { await load(CDN + 'tesseract.js/5.1.1/tesseract.min.js'); let ocr = ''; for (let i = 1; i <= Math.min(pdf.numPages, 8); i++) { const pg = await pdf.getPage(i), viewport = pg.getViewport({ scale: 1.25 }), canvas = document.createElement('canvas'); canvas.width = Math.ceil(viewport.width); canvas.height = Math.ceil(viewport.height); const ctx = canvas.getContext('2d'); await pg.render({ canvasContext: ctx, viewport }).promise; ocr += '\n[OCR page ' + i + ']\n' + (await Tesseract.recognize(canvas, 'eng')).data.text + '\n'; canvas.width = canvas.height = 1; if (ocr.length >= 200000) break; } if (ocr.trim()) return '[Scanned PDF: OCR text extracted from up to the first 8 pages; OCR may contain mistakes.]\n' + ocr.slice(0, 200000); } catch {} throw new Error('has no selectable text. OCR could not recover readable text from the first pages; try a clearer scan or paste the text.'); } return t; }
+  if (ext === 'pdf') {
+    await load(CDN + 'pdf.js/3.11.174/pdf.min.js');
+    pdfjsLib.GlobalWorkerOptions.workerSrc = CDN + 'pdf.js/3.11.174/pdf.worker.min.js';
+    const pdf = await pdfjsLib.getDocument({ data: await f.arrayBuffer() }).promise;
+    let text = '';
+    for (let i = 1; i <= Math.min(pdf.numPages, 400) && text.length < 2e6; i++) {
+      const page = await pdf.getPage(i), content = await page.getTextContent();
+      text += '\n[PDF page ' + i + ']\n' + content.items.map(x => x.str + (x.hasEOL ? '\n' : ' ')).join('') + '\n';
+    }
+    // Text extraction misses charts, diagrams, screenshots and page layout.
+    // Render up to eight evenly-spaced pages for visual analysis as well.
+    const count = Math.min(8, pdf.numPages);
+    const pageNums = count === 1 ? [1] : Array.from({ length: count }, (_, i) => 1 + Math.round(i * (pdf.numPages - 1) / (count - 1)));
+    const imgs = [];
+    let ocr = '';
+    for (const pageNum of [...new Set(pageNums)]) {
+      if (imgs.length >= 8) break;
+      const page = await pdf.getPage(pageNum);
+      const viewport = page.getViewport({ scale: 1.15 });
+      const canvas = document.createElement('canvas');
+      canvas.width = Math.ceil(viewport.width);
+      canvas.height = Math.ceil(viewport.height);
+      const ctx = canvas.getContext('2d', { alpha: false });
+      await page.render({ canvasContext: ctx, viewport }).promise;
+      const preview = shrink(canvas, canvas.width, canvas.height, 1100, .68);
+      imgs.push(preview);
+      if (!text.trim() && ocr.length < 200000) {
+        try {
+          await load(CDN + 'tesseract.js/5.1.1/tesseract.min.js');
+          ocr += '\n[OCR from PDF page ' + pageNum + ']\n' + (await Tesseract.recognize(preview, 'eng')).data.text + '\n';
+        } catch {}
+      }
+      canvas.width = canvas.height = 1;
+    }
+    if (!text.trim() && ocr.trim()) text = '[Scanned PDF: OCR extracted from sampled pages; OCR may contain mistakes.]\n' + ocr.slice(0, 200000);
+    if (!text.trim() && !imgs.length) throw new Error('has no readable text or pages.');
+    return { text: text.trim() || '[PDF pages attached for visual analysis. Text extraction found no selectable text.]', imgs };
+  }
   if (ext === 'docx' || ext === 'pptx' || ext === 'xlsx') { await load(CDN + 'jszip/3.10.1/jszip.min.js'); const z = await JSZip.loadAsync(await f.arrayBuffer()); if (ext === 'xlsx') return readXlsx(z); if (ext === 'docx') return xml(await z.file('word/document.xml').async('string')); const n = k => +k.match(/\d+/g).pop(); const sl = Object.keys(z.files).filter(k => /^ppt\/slides\/slide\d+\.xml$/.test(k)).sort((a, b) => n(a) - n(b)); let t = ''; for (const [i, k] of sl.entries()) t += 'Slide ' + (i + 1) + '\n' + xml(await z.file(k).async('string')) + '\n'; return t; }
   const t = await f.text(); if (t.slice(0, 2000).includes('\u0000')) throw new Error('is not a text file I can read.');
   return /^html?$/.test(ext) ? plain(t).text : t;
@@ -735,7 +772,13 @@ async function addFiles(fl) {
       if (f.size > (k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : LIMITS.doc)) throw new Error('is too large (limit ' + fmtSize(k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : LIMITS.doc) + ').');
       p.msg = k === 'video' ? 'Extracting frames…' : k === 'image' ? 'Preparing image…' : 'Extracting text…'; render();
       let r; if (k === 'image') r = await readImage(f, p); else if (k === 'video') r = await readVideo(f, p);
-      else { const t = (await readFile(f)).replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim(); if (!t) throw new Error('has no readable text.'); r = { text: t.slice(0, 2e6), imgs: [] }; }
+      else {
+        const parsed = await readFile(f);
+        const t = (typeof parsed === 'string' ? parsed : parsed.text || '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
+        const imgs = typeof parsed === 'object' && Array.isArray(parsed.imgs) ? parsed.imgs : [];
+        if (!t && !imgs.length) throw new Error('has no readable text or visual pages.');
+        r = { text: t.slice(0, 2e6), imgs };
+      }
       if (p.cancel) throw new Error('cancelled');
       pending.splice(pending.indexOf(p), 1);
       addAtt({ name: f.name, text: r.text, imgs: r.imgs, kind: k, source: f.name, size: f.size, dur: r.dur });
