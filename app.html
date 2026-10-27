@@ -250,14 +250,6 @@ button,a,input,textarea,select{outline-offset:3px}
 /* Keep the conversation surface familiar and focused on every screen size. */
 #shell{grid-template-columns:minmax(0,1fr)!important}
 .bar{border-bottom:1px solid var(--viora-border)!important}
-.welcome{justify-content:center!important;padding-block:24px!important}
-.welcome-main{flex:0 0 auto!important;gap:14px!important;padding:12px 6px 24px!important}
-.logo-stage{margin-bottom:0!important}
-.welcome-logo{width:68px!important;height:68px!important;border-radius:21px!important}
-.welcome-logo img{width:42px!important;height:42px!important}
-.welcome-line{font-size:clamp(27px,3.2vw,36px)!important;font-weight:600!important;letter-spacing:-.04em!important}
-.suggestions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr));align-items:stretch!important;gap:10px!important;width:min(100%,700px);margin:0 auto}
-.suggestion{max-width:none;min-height:66px;padding:14px 42px 14px 16px!important;border-radius:14px!important}
 @media(min-width:980px){
  #shell{grid-template-columns:252px minmax(0,1fr)!important}
  #shell.no-left{grid-template-columns:minmax(0,1fr)!important}
@@ -268,15 +260,9 @@ button,a,input,textarea,select{outline-offset:3px}
 @media(max-width:979px){
  body:not(.sb) #shell:not(.no-left) #sh-left{display:none!important}
  #shell{grid-template-columns:minmax(0,1fr)!important}
- .suggestions{grid-template-columns:minmax(0,1fr);width:min(100%,520px)}
- .welcome{padding-block:20px!important}
- .welcome-main{padding-bottom:20px!important}
-}
-@media(max-width:560px){
- .welcome-line{font-size:27px!important}
- .suggestion{min-height:56px;padding:12px 38px 12px 14px!important}
 }
 </style>
+<link rel="stylesheet" href="assets/x/chat-surface.css">
 
 </head>
 <body>
@@ -451,6 +437,13 @@ const hide = () => { $('#model-sheet').hidden = true; $('#attach-sheet').hidden 
 const SEND = $('#send').innerHTML;
 const health = new Health();
 function route(t, c) { return classify(t, { hasPage: !!(c && c.page) }).assistant; }
+function suggestionIcon(text) {
+  if (/\b(?:python|code|javascript|api|palindrome|loop|big-o)\b/i.test(text)) return ic('terminal');
+  if (/\b(?:trip|travel|lisbon)\b/i.test(text)) return ic('globe');
+  if (/\b(?:solve|math|equation)\b/i.test(text)) return ic('target');
+  if (/\b(?:write|email|rewrite|text)\b/i.test(text)) return ic('edit');
+  return ic('search');
+}
 const stat = m => m.wait ? `<span style="color:var(--muted)">${esc(m.wait)}</span>` : m.stage ? `<span style="color:var(--muted)">${esc(m.stage)}</span>` : m.searching ? '<span style="color:var(--muted)">Searching the web…</span>' : '<span style="color:var(--muted)">Preparing your answer…</span>';
 function mdx(t, srcs) { const safe = Src.cleanSources(srcs || []); if (safe.length) t = t.replace(/\[(\d{1,2})\]/g, (x, n) => safe[n - 1] ? `[${n}](${safe[n - 1].url})` : x); return renderMarkdown(t); }
 function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : stat(m); bindCodeCopy(el); Src.decorateCitations(el, m.src); }
@@ -481,7 +474,7 @@ function render() {
   const pj = D.projects.find(x => x.id === curP); $('#page-chip').hidden = !pj; if (pj) $('#pbar').textContent = 'Project: ' + pj.name;
   const first = (S.name || S.email.split('@')[0]).split(' ')[0], th = $('#thread');
   const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 120;
-  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy)).join('') : `<div id="welcome" class="welcome"><div class="welcome-main"><div class="logo-stage"><span class="welcome-logo"><img src="assets/x/mark.png" alt="" width="78" height="78" draggable="false"></span></div><p class="welcome-line">What can I help you with?</p></div><div class="suggestions">${a.s.map(s => `<button type="button" class="suggestion">${esc(s)}</button>`).join('')}</div></div>`;
+  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy)).join('') : `<div id="welcome" class="welcome"><div class="welcome-main"><div class="logo-stage"><span class="welcome-logo"><img src="assets/x/mark.png" alt="" width="78" height="78" draggable="false"></span></div><p class="welcome-line">What can I help you with?</p></div><div class="suggestions">${a.s.map(s => `<button type="button" class="suggestion"><span class="suggestion-icon">${suggestionIcon(s)}</span><span class="suggestion-text">${esc(s)}</span><span class="suggestion-arrow">${ic('back')}</span></button>`).join('')}</div></div>`;
   bindCodeCopy(th);
   const chip = f => { const im = IM[f.id] && IM[f.id][0], web = f.kind === 'web' && Src.parseUrl(f.source);
     const meta = f.kind === 'video' ? `${f.ni || 0} frames${f.dur ? ' · ' + fmtTime(f.dur) : ''}` : f.kind === 'image' ? 'image' : f.kind === 'web' ? Src.hostOf(f.source) : (f.n ? Math.round(f.n / 1000) + 'k chars' : 'text');
@@ -752,7 +745,7 @@ $('#sh-hist').onclick = e => {
   const it = e.target.closest('[data-id]'); if (it) { cur = it.dataset.id; const a = chat().assistant; if (a && A[a]) asst = a; render(); closeSb(); }
 };
 $('#thread').onclick = e => {
-  const sg = e.target.closest('.suggestion'); if (sg) { send(sg.textContent); return; }
+  const sg = e.target.closest('.suggestion'); if (sg) { send(sg.querySelector('.suggestion-text')?.textContent || sg.textContent); return; }
   const cp = e.target.closest('[data-copy]'); if (cp) { navigator.clipboard?.writeText(chat().messages[+cp.dataset.copy].content); cp.innerHTML = ic('check'); setTimeout(() => { cp.innerHTML = ic('copy'); }, 1200); return; } const rm = e.target.closest('[data-remember]'); if (rm) { if (!D.memOn) { toast('Turn on Memory in the Memory panel before saving context.'); return; } const c = chat(), at = +rm.dataset.remember; let u = null; for (let j = at - 1; j >= 0; j--) if (c.messages[j].role === 'user') { u = c.messages[j]; break; } if (!u || !u.content.trim()) { toast('There is no question to save for this reply.'); return; } const t = ('Context: ' + u.content.trim()).slice(0, 300); if (D.memory.some(x => x.t.toLowerCase() === t.toLowerCase() && (x.pid || null) === (c.pid || null))) { toast('That context is already saved in Memory.'); return; } D.memory.unshift({ id: 'm' + Date.now(), t, pid: c.pid || null }); saveD(); toast(c.pid ? 'Saved to this project’s Memory.' : 'Saved to Memory for future chats.'); return; }
   const ar = e.target.closest('[data-art]'); if (ar) { const mm = /```(\w*)\n?([\s\S]*?)(```|$)/.exec(chat().messages[+ar.dataset.art].content); if (mm) openArt(mm[2].replace(/\n$/, ''), mm[1] || 'text'); return; }
   if (e.target.closest('[data-regen]')) { const c = chat(); c.messages.pop(); const u = c.messages.pop(); send(u.content); }

@@ -1,0 +1,356 @@
+:root[data-model] #thread:has(.welcome) {
+  display: grid;
+  align-items: center;
+}
+
+:root[data-model] #thread .welcome {
+  width: min(100%, 780px);
+  max-width: 780px;
+  min-height: 100%;
+  margin: 0 auto;
+  padding: clamp(24px, 5vh, 52px) clamp(16px, 3vw, 32px) 28px;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+}
+
+:root[data-model] #thread .welcome-main {
+  flex: 0 0 auto !important;
+  display: grid;
+  grid-template-columns: 48px minmax(0, 1fr);
+  align-items: center;
+  column-gap: 14px;
+  max-width: 700px;
+  margin: 0 auto 24px;
+  text-align: left;
+}
+
+:root[data-model] #thread .logo-stage {
+  grid-row: 1 / span 2;
+  margin: 0;
+}
+
+:root[data-model] #thread .welcome-logo {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line));
+  border-radius: 15px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--ink-2));
+  box-shadow: none;
+  filter: none;
+}
+
+:root[data-model] #thread .welcome-logo img {
+  width: 29px;
+  height: 29px;
+}
+
+:root[data-model] #thread .welcome-line {
+  max-width: none;
+  margin: 0;
+  color: var(--paper);
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  font-size: clamp(24px, 3vw, 32px);
+  font-weight: 650;
+  line-height: 1.16;
+  letter-spacing: 0;
+  text-align: left;
+  text-wrap: balance;
+}
+
+:root[data-model] #thread .welcome-main:after {
+  grid-column: 2;
+  margin: 5px 0 0;
+  color: var(--muted);
+  font-size: 13px;
+  line-height: 1.5;
+  text-align: left;
+}
+
+:root[data-theme][data-model] .suggestions {
+  display: grid !important;
+  grid-template-columns: repeat(2, minmax(0, 1fr)) !important;
+  align-items: stretch !important;
+  gap: 10px !important;
+  width: 100%;
+  max-width: 700px;
+  margin: 0 auto;
+  padding: 0 !important;
+}
+
+:root[data-theme][data-model] .suggestion {
+  display: grid;
+  grid-template-columns: 34px minmax(0, 1fr) 22px;
+  align-items: center;
+  gap: 12px;
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+  min-height: 76px;
+  padding: 13px 15px !important;
+  overflow: visible;
+  border: 1px solid var(--line) !important;
+  border-radius: 13px !important;
+  background: var(--ink-2) !important;
+  box-shadow: 0 1px 2px color-mix(in srgb, var(--paper) 5%, transparent) !important;
+  color: var(--paper) !important;
+  font: 500 14px/1.45 var(--sans);
+  text-align: left;
+  transition: background-color .15s ease, border-color .15s ease, transform .15s ease !important;
+  animation: none !important;
+}
+
+:root[data-theme][data-model] .suggestion:after {
+  content: none !important;
+}
+
+:root[data-theme][data-model] .suggestion:hover {
+  transform: translateY(-1px);
+  border-color: color-mix(in srgb, var(--accent) 40%, var(--line)) !important;
+  background: color-mix(in srgb, var(--accent) 4%, var(--ink-2)) !important;
+  box-shadow: 0 4px 12px color-mix(in srgb, var(--paper) 7%, transparent) !important;
+}
+
+:root[data-theme][data-model] .suggestion-icon {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  background: color-mix(in srgb, var(--accent) 10%, var(--ink-2));
+  color: var(--accent);
+}
+
+.suggestion-icon .ico {
+  width: 17px;
+  height: 17px;
+}
+
+:root[data-theme][data-model] .suggestion-text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+  text-wrap: pretty;
+}
+
+:root[data-theme][data-model] .suggestion-arrow {
+  display: grid;
+  place-items: center;
+  width: 22px;
+  height: 22px;
+  border-radius: 50%;
+  color: var(--faint);
+  transform: rotate(180deg);
+  transition: color .15s ease, background-color .15s ease;
+}
+
+:root[data-theme][data-model] .suggestion:hover .suggestion-arrow {
+  color: var(--accent);
+  background: color-mix(in srgb, var(--accent) 9%, transparent);
+}
+
+#composer {
+  width: 100% !important;
+  max-width: 840px !important;
+  margin: 0 auto !important;
+  padding: 8px clamp(14px, 3vw, 28px) max(16px, env(safe-area-inset-bottom)) !important;
+  border: 0 !important;
+  background: transparent !important;
+}
+
+#composer .composer-inner {
+  padding: 9px 10px 9px 15px !important;
+  border: 1px solid var(--line) !important;
+  border-radius: 18px !important;
+  background: var(--ink-2) !important;
+  box-shadow: 0 3px 14px color-mix(in srgb, var(--paper) 6%, transparent) !important;
+  backdrop-filter: none;
+  transition: border-color .16s ease, box-shadow .16s ease !important;
+  animation: none !important;
+}
+
+#composer .composer-inner:focus-within {
+  border-color: color-mix(in srgb, var(--accent) 48%, var(--line)) !important;
+  background: var(--ink-2) !important;
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 9%, transparent), 0 4px 16px color-mix(in srgb, var(--paper) 7%, transparent) !important;
+}
+
+#composer #input {
+  box-sizing: border-box;
+  width: 100%;
+  min-height: 44px !important;
+  max-height: 28dvh !important;
+  padding: 8px 2px !important;
+  border: 0 !important;
+  background: transparent !important;
+  color: var(--paper) !important;
+  font: 15px/1.55 var(--sans) !important;
+  resize: none;
+  outline: none;
+}
+
+#composer #input::placeholder {
+  color: var(--faint);
+  opacity: 1;
+}
+
+#composer .composer-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: 3px;
+  padding-top: 8px;
+  border-top: 1px solid color-mix(in srgb, var(--line) 75%, transparent);
+}
+
+#composer .composer-left,
+#composer .composer-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+}
+
+#composer .composer-right {
+  margin-left: auto;
+}
+
+#composer .attach-btn,
+#composer .send {
+  display: grid;
+  place-items: center;
+  flex: 0 0 36px;
+  width: 36px !important;
+  min-width: 36px !important;
+  height: 36px !important;
+  border-radius: 11px !important;
+}
+
+#composer .attach-btn {
+  border: 1px solid transparent !important;
+  background: transparent !important;
+  color: var(--muted) !important;
+}
+
+#composer .attach-btn:hover {
+  border-color: var(--line) !important;
+  background: var(--raised) !important;
+  color: var(--paper) !important;
+}
+
+#composer .send {
+  border: 0 !important;
+  background: var(--accent) !important;
+  color: var(--on-accent) !important;
+  box-shadow: none !important;
+  animation: none !important;
+  transition: filter .15s ease, transform .15s ease !important;
+}
+
+#composer .send:disabled {
+  background: var(--raised) !important;
+  color: var(--faint) !important;
+}
+
+#composer .send:not(:disabled):hover {
+  filter: brightness(1.06);
+  transform: translateY(-1px);
+}
+
+#composer .hint {
+  max-width: 24ch;
+  overflow: hidden;
+  color: var(--muted);
+  font-size: 12px;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+@media (max-width: 700px) {
+  :root[data-model] #thread:has(.welcome) {
+    display: block;
+  }
+
+  :root[data-model] #thread .welcome {
+    justify-content: center;
+    padding: 24px 8px;
+  }
+
+  :root[data-model] #thread .welcome-main {
+    grid-template-columns: 42px minmax(0, 1fr);
+    column-gap: 12px;
+    margin-bottom: 18px;
+  }
+
+  :root[data-model] #thread .welcome-logo {
+    width: 42px;
+    height: 42px;
+    border-radius: 13px;
+  }
+
+  :root[data-model] #thread .welcome-logo img {
+    width: 25px;
+    height: 25px;
+  }
+
+  :root[data-model] #thread .welcome-line {
+    font-size: 25px;
+  }
+
+  :root[data-theme][data-model] .suggestions {
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 8px !important;
+  }
+
+  :root[data-theme][data-model] .suggestion {
+    min-height: 62px;
+    grid-template-columns: 32px minmax(0, 1fr) 22px;
+    gap: 10px;
+    padding: 10px 12px !important;
+  }
+
+  #composer {
+    padding: 6px 10px max(10px, env(safe-area-inset-bottom)) !important;
+  }
+
+  #composer .composer-inner {
+    padding: 8px 9px 8px 12px !important;
+    border-radius: 16px !important;
+  }
+
+  #composer #input {
+    min-height: 42px !important;
+    font-size: 16px !important;
+  }
+
+  #composer .hint {
+    max-width: 18ch;
+    font-size: 11px;
+  }
+}
+
+@media (max-width: 420px) {
+  :root[data-model] #thread .welcome {
+    padding-inline: 2px;
+  }
+
+  :root[data-model] #thread .welcome-line {
+    font-size: 23px;
+  }
+
+  #composer .hint {
+    display: none;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  :root[data-theme][data-model] .suggestion,
+  :root[data-theme][data-model] .suggestion-arrow,
+  #composer .composer-inner,
+  #composer .send {
+    transition: none !important;
+  }
+}
