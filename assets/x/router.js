@@ -27,6 +27,12 @@ export function classify(text, { hasPage = false } = {}) {
   return { assistant: 'flash', reason: 'general conversation' };
 }
 
+/** Use web search only for explicit research mode or prompts classified as needing fresh evidence. */
+export function shouldSearch(text, { assistant = 'auto', enabled = true, hasPage = false } = {}) {
+  if (!enabled || assistant === 'human') return false;
+  return assistant === 'search' || classify(text, { hasPage }).assistant === 'search';
+}
+
 /* Provider health: a small circuit breaker. Three failures in a row open it for 60 s. */
 export class Health {
   constructor({ threshold = 3, cooldownMs = 60000, now = () => Date.now() } = {}) { Object.assign(this, { threshold, cooldownMs, now }); this.s = {}; }
@@ -35,7 +41,7 @@ export class Health {
   healthy(a) { const e = this.s[a]; return !e || e.until <= this.now(); }
 }
 
-const PREFER = { auto: ['flash'], flash: ['flash'], search: ['search', 'flash'], math: ['math', 'flash'], human: ['human', 'flash'] };
+const PREFER = { auto: ['flash'], flash: ['flash', 'math'], search: ['search', 'flash'], math: ['math', 'flash'], human: ['human', 'flash'] };
 
 /** Ordered assistants to try. Only assistants whose declared capabilities cover the attachments are included.
     Unhealthy ones are skipped unless nothing else is left. Never returns an empty list. */

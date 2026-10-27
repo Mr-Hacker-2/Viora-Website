@@ -1,5 +1,5 @@
 import test from 'node:test'; import assert from 'node:assert/strict';
-import { classify, chain, Health, shouldFallback } from '../assets/x/router.js';
+import { classify, shouldSearch, chain, Health, shouldFallback } from '../assets/x/router.js';
 import { pick } from '../assets/x/caps.js';
 const img = [{ kind: 'image', ni: 1 }];
 test('routes code, search, math and rewriting requests', () => {
@@ -23,6 +23,24 @@ test('file questions stay on the file unless web is requested', () => {
   assert.equal(classify('what is the latest figure in this report', { hasPage: true }).assistant, 'flash');
   assert.equal(classify('look up the latest news about this company', { hasPage: true }).assistant, 'search');
 });
+test('web search is reserved for research signals or explicit research mode', () => {
+  assert.equal(shouldSearch('Explain photosynthesis', { assistant: 'auto' }), false);
+  assert.equal(shouldSearch('Hi, how are you?', { assistant: 'flash' }), false);
+  assert.equal(shouldSearch('Why does this Python loop never end?', { assistant: 'math' }), false);
+  assert.equal(shouldSearch('What happened in tech news today?', { assistant: 'auto' }), true);
+  assert.equal(shouldSearch('Find recent studies on sleep', { assistant: 'flash' }), true);
+  assert.equal(shouldSearch('Explain photosynthesis', { assistant: 'search' }), true);
+  assert.equal(shouldSearch('What is the latest figure in this report?', { assistant: 'flash', hasPage: true }), false);
+  assert.equal(shouldSearch('Search outside this report for current figures', { assistant: 'flash', hasPage: true }), true);
+  assert.equal(shouldSearch('What is the latest news?', { assistant: 'auto', enabled: false }), false);
+  assert.equal(shouldSearch('Research the latest news', { assistant: 'human' }), false);
+});
+test('Flash has a distinct compatible fallback when its provider fails', () => {
+  assert.deepEqual(chain('flash', []), ['flash', 'math']);
+  assert.deepEqual(chain('flash', img), ['flash', 'math']);
+  const health = new Health({ threshold: 1 }); health.fail('flash');
+  assert.deepEqual(chain('flash', [], health), ['math']);
+});
 test('chain never offers an assistant that cannot read the attachments', () => {
   assert.deepEqual(chain('human', img), ['flash']);
   assert.deepEqual(chain('legacy', img), ['flash']);
@@ -38,10 +56,13 @@ test('chain skips unhealthy assistants but never returns empty', () => {
 });
 test('a success closes the breaker', () => { const h = new Health(); h.fail('math'); h.fail('math'); h.ok('math'); h.fail('math'); assert.ok(h.healthy('math')); });
 test('fallback only for server trouble, never for user abort or client errors', () => {
-  assert.equal(shouldFallback(503), true); assert.equal(shouldFallback(429), true);
+  assert.equal(shouldFallback(503), true); assert.equal(shouldFallback(500), true);
+  assert.equal(shouldFallback(502), true); assert.equal(shouldFallback(504), true);
+  assert.equal(shouldFallback(429), true);
   assert.equal(shouldFallback(408), true); assert.equal(shouldFallback(425), true);
   assert.equal(shouldFallback(400), false); assert.equal(shouldFallback(401), false);
   assert.equal(shouldFallback(0, new DOMException('x', 'AbortError')), false);
-  assert.equal(shouldFallback(0, new Error('network')), true);
+  assert.equal(shouldFallback(0, new TypeError('network failed')), true);
+  assert.equal(shouldFallback(0, new Error('first-byte timeout')), true);
 });
 test('caps.pick still switches when images are not supported', () => assert.equal(pick('human', img).switched, true));
