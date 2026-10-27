@@ -483,7 +483,11 @@ const closeSb = () => document.body.classList.remove('sb');
 const hide = () => { $('#model-sheet').hidden = true; $('#attach-sheet').hidden = true; $('#umenu').hidden = true; $('#model-btn').setAttribute('aria-expanded', 'false'); $('#attach').setAttribute('aria-expanded', 'false'); };
 const SEND = $('#send').innerHTML;
 const health = new Health();
-function route(t, c) { return classify(t, { hasPage: !!(c && c.page) }).assistant; }
+function route(t, c) {
+  const files = c && c.page ? c.page.files : [];
+  const hasVisual = files.some(f => f.kind === 'video' || (['image', 'file'].includes(f.kind) && (f.ni || 0) > 0));
+  return classify(t, { hasPage: files.length > 0, hasVisual }).assistant;
+}
 function suggestionIcon(text) {
   if (/\b(?:video|frame|scene|visible)\b/i.test(text)) return ic('camera');
   if (/\b(?:python|code|javascript|api|palindrome|loop|big-o)\b/i.test(text)) return ic('terminal');
