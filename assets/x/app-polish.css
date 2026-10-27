@@ -404,3 +404,26 @@
 @media(prefers-reduced-motion:reduce){
   :root[data-model] .welcome-v2 .suggestion{transition:none!important}
 }
+
+
+/* Creator contact details in the account menu */
+:root[data-model] .sheet-contact{
+  margin:8px 0;
+  padding:10px 8px 4px;
+  border-top:1px solid var(--line);
+  border-bottom:1px solid var(--line);
+}
+:root[data-model] .sheet-contact-heading{
+  display:block;
+  padding:0 10px 6px;
+  color:var(--muted);
+  font-size:10px;
+  font-weight:800;
+  letter-spacing:.11em;
+}
+:root[data-model] .sheet-contact .sheet-action{
+  border-radius:10px;
+}
+:root[data-model] .sheet-contact .sheet-sub{
+  overflow-wrap:anywhere;
+}
