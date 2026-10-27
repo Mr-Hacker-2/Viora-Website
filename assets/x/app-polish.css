@@ -166,3 +166,241 @@
   :root[data-model] #sh-right{width:240px;flex:0 0 240px}
   :root[data-model] .bar{gap:8px}
 }
+
+
+/* Viora 2.0 workspace refresh — clear hierarchy, focused empty state, responsive task cards. */
+:root[data-model] #shell{
+  gap:12px!important;
+  padding:12px!important;
+  background:var(--ink)!important;
+}
+:root[data-model] #sh-left,
+:root[data-model] #sh-right{
+  border:1px solid color-mix(in srgb,var(--line) 84%,transparent)!important;
+  background:color-mix(in srgb,var(--ink-2) 94%,transparent)!important;
+  border-radius:22px!important;
+}
+:root[data-model] #sh-center{
+  border:1px solid color-mix(in srgb,var(--line) 74%,transparent)!important;
+  border-radius:24px!important;
+  background:var(--ink)!important;
+}
+:root[data-model] .bar{
+  padding:20px 24px 16px!important;
+  border-bottom:1px solid color-mix(in srgb,var(--line) 70%,transparent);
+  align-items:center;
+}
+:root[data-model] .sh-title h1{
+  font-size:clamp(19px,1.8vw,25px)!important;
+  font-weight:720!important;
+  letter-spacing:-.045em!important;
+}
+:root[data-model] .sh-title p{
+  margin-top:5px!important;
+  max-width:520px;
+  line-height:1.5;
+  color:var(--muted)!important;
+}
+:root[data-model] .model-pill{
+  min-height:40px!important;
+  padding:0 12px!important;
+  border:1px solid var(--line)!important;
+  border-radius:13px!important;
+  background:var(--raised)!important;
+}
+:root[data-model] .thread{
+  padding:26px clamp(16px,3.2vw,44px) 28px!important;
+}
+:root[data-model] .welcome-v2{
+  position:relative;
+  isolation:isolate;
+  width:min(100%,820px);
+  min-height:min(70vh,760px);
+  margin:0 auto;
+  padding:clamp(28px,5vh,64px) 0 20px;
+  display:flex;
+  flex-direction:column;
+  justify-content:center;
+  gap:24px;
+}
+:root[data-model] .welcome-glow{
+  position:absolute;
+  z-index:-1;
+  width:min(66vw,520px);
+  height:260px;
+  top:7%;
+  left:50%;
+  transform:translateX(-50%);
+  pointer-events:none;
+  background:radial-gradient(ellipse at center,color-mix(in srgb,var(--accent) 17%,transparent),transparent 70%);
+  filter:blur(18px);
+  opacity:.85;
+}
+:root[data-model] .welcome-v2 .welcome-main{
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:12px;
+  text-align:center;
+}
+:root[data-model] .welcome-eyebrow{
+  display:inline-flex;
+  align-items:center;
+  gap:8px;
+  border:1px solid color-mix(in srgb,var(--accent) 30%,var(--line));
+  background:color-mix(in srgb,var(--accent) 8%,var(--ink-2));
+  color:var(--muted);
+  border-radius:999px;
+  padding:7px 11px;
+  font-size:10px;
+  font-weight:750;
+  letter-spacing:.13em;
+}
+:root[data-model] .welcome-live-dot{
+  width:7px;height:7px;border-radius:50%;
+  background:var(--accent);
+  box-shadow:0 0 0 4px color-mix(in srgb,var(--accent) 13%,transparent);
+}
+:root[data-model] .welcome-v2 .logo-stage{
+  width:76px;height:76px;
+  display:grid;place-items:center;
+  margin:0!important;
+}
+:root[data-model] .welcome-v2 .welcome-logo{
+  width:68px;height:68px;
+  border-radius:22px;
+  display:grid;place-items:center;
+  border:1px solid color-mix(in srgb,var(--accent) 32%,var(--line));
+  background:linear-gradient(145deg,color-mix(in srgb,var(--accent) 19%,var(--raised)),var(--ink-2));
+  box-shadow:0 14px 44px color-mix(in srgb,var(--accent) 13%,transparent);
+}
+:root[data-model] .welcome-v2 .welcome-logo img{width:42px;height:42px;object-fit:contain}
+:root[data-model] .welcome-v2 .welcome-line{
+  max-width:unset;
+  font-size:clamp(30px,4.3vw,45px)!important;
+  font-weight:760!important;
+  letter-spacing:-.06em!important;
+  line-height:1.08!important;
+}
+:root[data-model] .welcome-subline{
+  max-width:520px;
+  margin:0;
+  color:var(--muted);
+  font-size:14px;
+  line-height:1.7;
+}
+:root[data-model] .welcome-capabilities{
+  display:flex;justify-content:center;align-items:center;flex-wrap:wrap;
+  gap:8px;margin-top:3px;
+}
+:root[data-model] .welcome-capabilities span{
+  display:inline-flex;align-items:center;gap:7px;
+  padding:7px 10px;border:1px solid var(--line);border-radius:999px;
+  color:var(--muted);background:color-mix(in srgb,var(--ink-2) 82%,transparent);
+  font-size:11px;font-weight:550;
+}
+:root[data-model] .welcome-capabilities svg{width:14px;height:14px;opacity:.9}
+:root[data-model] .welcome-prompt-head{
+  display:flex;align-items:center;justify-content:space-between;gap:12px;
+  margin-top:10px;color:var(--muted);
+}
+:root[data-model] .welcome-prompt-head>span:first-child{
+  font-size:10px;font-weight:800;letter-spacing:.12em;color:var(--paper);
+}
+:root[data-model] .welcome-prompt-hint{font-size:11px}
+:root[data-model] .welcome-v2 .suggestions{
+  display:grid!important;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:10px!important;
+  padding:0!important;
+  align-items:stretch!important;
+}
+:root[data-model] .welcome-v2 .suggestion{
+  width:100%;max-width:none!important;min-width:0;
+  min-height:82px;
+  display:grid!important;
+  grid-template-columns:36px minmax(0,1fr) 18px;
+  align-items:center;gap:12px;
+  padding:15px!important;
+  border:1px solid var(--line)!important;
+  border-radius:16px!important;
+  background:linear-gradient(145deg,color-mix(in srgb,var(--raised) 94%,transparent),color-mix(in srgb,var(--ink-2) 92%,transparent))!important;
+  box-shadow:none!important;
+  white-space:normal;
+}
+:root[data-model] .welcome-v2 .suggestion:hover{
+  border-color:color-mix(in srgb,var(--accent) 50%,var(--line))!important;
+  background:color-mix(in srgb,var(--accent) 7%,var(--raised))!important;
+  box-shadow:0 10px 30px #0002!important;
+  transform:translateY(-2px);
+}
+:root[data-model] .welcome-v2 .suggestion-icon{
+  display:grid;place-items:center;width:36px;height:36px;
+  border:1px solid color-mix(in srgb,var(--accent) 25%,var(--line));
+  border-radius:12px;
+  background:color-mix(in srgb,var(--accent) 10%,var(--ink-2));
+  color:var(--accent);
+}
+:root[data-model] .welcome-v2 .suggestion-icon svg{width:17px;height:17px}
+:root[data-model] .welcome-v2 .suggestion-text{
+  min-width:0;font-size:13px!important;line-height:1.5!important;font-weight:580;
+  overflow-wrap:anywhere;
+}
+:root[data-model] .welcome-v2 .suggestion-arrow{
+  color:var(--faint);align-self:center;justify-self:end;
+}
+:root[data-model] .welcome-v2 .suggestion-arrow svg{width:16px;height:16px}
+:root[data-model] .welcome-footnote{
+  margin:0;text-align:center;font-size:10px;line-height:1.5;color:var(--faint);
+}
+:root[data-model] .composer{
+  padding:12px clamp(12px,2.5vw,28px) 20px!important;
+  background:linear-gradient(180deg,transparent,color-mix(in srgb,var(--ink) 96%,transparent) 20%)!important;
+}
+:root[data-model] .composer-inner{
+  max-width:880px;margin:0 auto;width:100%;
+  border:1px solid color-mix(in srgb,var(--line) 90%,var(--accent))!important;
+  border-radius:21px!important;
+  background:var(--ink-2)!important;
+  box-shadow:0 12px 42px #0002!important;
+}
+:root[data-model] .composer-inner:focus-within{
+  border-color:color-mix(in srgb,var(--accent) 58%,var(--line))!important;
+  box-shadow:0 0 0 3px color-mix(in srgb,var(--accent) 9%,transparent),0 14px 44px #0002!important;
+}
+:root[data-model] #input{
+  min-height:48px!important;padding:10px 14px!important;font-size:14px!important;
+}
+:root[data-model] .attach-btn{
+  width:36px;height:36px;border-radius:12px!important;
+}
+:root[data-model] .send{
+  width:38px;height:38px;border-radius:13px!important;
+}
+:root[data-model] #sh-left{padding:16px!important}
+:root[data-model] .sh-logo{margin-bottom:12px}
+:root[data-model] #sh-right{padding:20px!important}
+:root[data-model] #sh-right h2{font-size:16px!important;font-weight:750!important}
+:root[data-model] .sh-desc{line-height:1.6}
+:root[data-model] .sh-mode{padding:11px 0}
+:root[data-model] .sh-hist button{border-radius:10px!important}
+:root[data-model] .sheet{border:1px solid var(--line);box-shadow:0 20px 60px #0004}
+@media(max-width:979px){
+  :root[data-model] #shell{padding:0!important;gap:0!important}
+  :root[data-model] #sh-left,:root[data-model] #sh-right{border-radius:0!important}
+  :root[data-model] #sh-center{border:0!important;border-radius:0!important}
+  :root[data-model] .bar{padding:12px 14px 10px!important}
+  :root[data-model] .thread{padding:22px 14px 18px!important}
+  :root[data-model] .welcome-v2{min-height:unset;padding:22px 0 18px;gap:18px}
+  :root[data-model] .welcome-v2 .welcome-line{font-size:clamp(28px,8vw,38px)!important}
+  :root[data-model] .welcome-subline{font-size:13px;max-width:380px}
+  :root[data-model] .welcome-capabilities{gap:6px}
+  :root[data-model] .welcome-capabilities span{font-size:10px;padding:6px 8px}
+  :root[data-model] .welcome-v2 .suggestions{grid-template-columns:minmax(0,1fr)!important}
+  :root[data-model] .welcome-v2 .suggestion{min-height:68px;padding:12px!important}
+  :root[data-model] .welcome-prompt-hint{display:none}
+  :root[data-model] .composer{padding:8px 12px max(12px,env(safe-area-inset-bottom))!important}
+}
+@media(prefers-reduced-motion:reduce){
+  :root[data-model] .welcome-v2 .suggestion{transition:none!important}
+}
