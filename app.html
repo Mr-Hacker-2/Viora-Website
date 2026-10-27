@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
-<title>Viora</title>
-<meta name="theme-color" content="#f6f8fe">
+<title>Viora AI — Your AI workspace</title>
+<meta name="theme-color" content="#f6f8fe">\n<meta name="description" content="Think, write, research, understand files and solve problems in one AI workspace with Viora.">
 <link rel="icon" href="assets/x/icon32.png">
 <link rel="manifest" href="manifest.json">
 <link rel="apple-touch-icon" href="assets/x/icon32.png">
@@ -538,7 +538,19 @@ function render() {
     : `${videos.length} videos attached. Short eligible MP4 clips include audio; sampled-frame fallback does not.`;
   const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 120;
   const prompts = videos.length ? ['Summarize this video in order', 'Describe the main actions and scene changes', 'What is visible near the beginning and end?', 'Read any text visible in the frames'] : a.s;
-  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy)).join('') : `<div id="welcome" class="welcome"><div class="welcome-main"><div class="logo-stage"><span class="welcome-logo"><img src="assets/x/mark.png" alt="" width="78" height="78" draggable="false"></span></div><p class="welcome-line">What can I help you with?</p></div><div class="suggestions">${prompts.map(s => `<button type="button" class="suggestion"><span class="suggestion-icon">${suggestionIcon(s)}</span><span class="suggestion-text">${esc(s)}</span><span class="suggestion-arrow">${ic('back')}</span></button>`).join('')}</div></div>`;
+  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy)).join('') : `<section id="welcome" class="welcome welcome-v2">
+  <div class="welcome-glow" aria-hidden="true"></div>
+  <div class="welcome-main">
+    <div class="welcome-eyebrow"><span class="welcome-live-dot"></span> YOUR AI WORKSPACE</div>
+    <div class="logo-stage"><span class="welcome-logo"><img src="assets/x/mark.png" alt="Viora" width="64" height="64" draggable="false"></span></div>
+    <h2 class="welcome-line">${videos.length ? 'Let’s explore your video.' : 'What are we working on?'}</h2>
+    <p class="welcome-subline">${videos.length ? 'Ask about scenes, actions, visible text, or the sequence of events.' : 'One workspace for thinking, writing, research, files, images, video, and code.'}</p>
+    <div class="welcome-capabilities" aria-label="Viora capabilities"><span>${ic('zap')} Fast answers</span><span>${ic('globe')} Web research</span><span>${ic('file')} File understanding</span></div>
+  </div>
+  <div class="welcome-prompt-head"><span>${videos.length ? 'START WITH YOUR VIDEO' : 'JUMP RIGHT IN'}</span><span class="welcome-prompt-hint">Choose a prompt or type your own</span></div>
+  <div class="suggestions">${prompts.map((s, i) => `<button type="button" class="suggestion"><span class="suggestion-icon">${suggestionIcon(s)}</span><span class="suggestion-text">${esc(s)}</span><span class="suggestion-arrow">${ic('arrow-up-right')}</span></button>`).join('')}</div>
+  <p class="welcome-footnote">Viora can make mistakes. Check important details and cited sources.</p>
+</section>`;
   bindCodeCopy(th);
   const chip = f => { const im = IM[f.id] && IM[f.id][0], web = f.kind === 'web' && Src.parseUrl(f.source);
     const meta = f.kind === 'video' ? `${f.nativeVideo ? 'native video + audio' : (f.ni || 0) + ' frames'}${f.dur ? ' · ' + fmtTime(f.dur) : ''}` : f.kind === 'image' ? 'image' : f.kind === 'web' ? Src.hostOf(f.source) : (f.n ? Math.round(f.n / 1000) + 'k chars' : 'text');
