@@ -16,7 +16,7 @@ const NEED = { image: 'images', video: 'video frames' };
 /** What the visual attachments of a chat require of the assistant. */
 export function needs(files) {
   const n = new Set();
-  for (const f of files || []) { if (f.kind === 'image' && (f.ni || 0) > 0) n.add('image'); if (f.kind === 'video' && (f.ni || 0) > 0) n.add('video'); }
+  for (const f of files || []) { if ((f.kind === 'image' || f.kind === 'file') && (f.ni || 0) > 0) n.add('image'); if (f.kind === 'video' && (f.ni || 0) > 0) n.add('video'); }
   return [...n];
 }
 /** Keep the user's chosen assistant when it can do the job; otherwise switch to a compatible one and say why. */
