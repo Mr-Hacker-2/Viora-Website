@@ -625,9 +625,10 @@ async function pagePayload(c, q) {
     for (let k = 1; k < ch.length && used + 1500 <= per - 100; k++) if (!pick.has(k)) { pick.add(k); used += 1500; }
     out.push(wrapUntrusted(f.name + ' (excerpts, ' + Math.round(t.length / 1000) + 'k characters in total)', [...pick].sort((a, b) => a - b).map(k => ch[k]).join('\n[…]\n')));
   }
-  const selectedImages = images.slice(0, 8);
-  validateVisualPayload(selectedImages);
-  return { page: { title: c.page.title, text: out.join('\n\n'), source: c.page.source }, images: selectedImages, video };
+  // Never silently drop pages or frames: the model must know if the complete visual payload cannot fit.
+  if (images.length > 8) throw new Error('This chat has more than 8 visual pages or frames. Remove some image/video/PDF attachments or send them in separate messages so Viora does not silently miss pages.');
+  validateVisualPayload(images);
+  return { page: { title: c.page.title, text: out.join('\n\n'), source: c.page.source }, images, video };
 }
 const lib = {}, CDN = 'https://cdnjs.cloudflare.com/ajax/libs/';
 const load = src => lib[src] || (lib[src] = new Promise((ok, no) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = () => no(new Error('Could not load the file reader. Check your connection.')); document.head.appendChild(e); }));
@@ -720,7 +721,10 @@ async function readVideo(f, p) {
     });
     const dur = v.duration || 0;
     if (!isFinite(dur) || dur <= 0) throw new Error('has no readable duration.');
-    const ts = videoSampleTimes(dur), imgs = [];
+    // Native MP4 requests carry the original clip, so extracting frames as well would waste time.
+    // Larger/unsupported clips use timestamped still frames as the fallback.
+    const nativeEligible = /\.mp4$/i.test(f.name) && f.size <= 4e6 && dur <= 120;
+    const ts = nativeEligible ? [] : videoSampleTimes(dur), imgs = [];
     for (const [i, t] of ts.entries()) {
       if (p.cancel) throw new Error('cancelled');
       p.msg = 'Extracting frame ' + (i + 1) + ' of ' + ts.length; render();
@@ -732,11 +736,8 @@ async function readVideo(f, p) {
       });
       imgs.push(shrink(v, v.videoWidth, v.videoHeight, 512, .58));
     }
-    // Native video+audio understanding is used for short MP4 clips that fit
-    // safely inside the existing chat API request-size budget. Larger clips
-    // keep the existing timestamped-frame fallback.
     let video = null;
-    if (/\.mp4$/i.test(f.name) && f.size <= 4e6 && dur <= 120) {
+    if (nativeEligible) {
       p.msg = 'Preparing video and audio for Viora…'; render();
       const raw = await new Promise((resolve, reject) => {
         const reader = new FileReader();
