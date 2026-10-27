@@ -102,9 +102,10 @@ export function cardHtml(src, n) {
   const iconSource = { ...src, url: displayUrl.href };
   const date = src.publishedAt ? new Date(src.publishedAt) : null;
   const dateLabel = date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
+  const retrievalLabel = src.pageFetched === true ? 'Page retrieved' : src.pageFetched === false ? 'Search snippet only' : '';
   return `<a class="src-card" href="${esc(x.href)}" target="_blank" rel="noopener noreferrer nofollow" title="${esc(title || x.href)}">` +
     `<span class="src-top">${iconHtml(iconSource)}<span class="src-site">${esc(siteName(host, src.site))}</span><span class="src-dom">${esc(baseDomain(host))}</span>${dateLabel ? `<span class="src-dom">${esc(dateLabel)}</span>` : ''}${n ? `<span class="src-n">${n}</span>` : ''}</span>` +
-    `<span class="src-title">${esc(title || host)}</span>${snip ? `<span class="src-snip">${esc(String(snip).slice(0, 180))}</span>` : ''}</a>`;
+    `<span class="src-title">${esc(title || host)}</span>${snip ? `<span class="src-snip">${esc(String(snip).slice(0, 180))}</span>` : ''}${retrievalLabel ? `<span class="src-retrieval">${retrievalLabel}</span>` : ''}</a>`;
 }
 /** Compact chip (icon + domain), used for attachments and in-line lists. */
 export function chipHtml(src, n) {

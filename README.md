@@ -46,10 +46,10 @@ it is used first. `site`/`snippet` fields are also honoured.
 * `caps.js` is the single capability registry; if the chosen assistant can't read images/frames the message is sent to Viora Flash and the chat shows "Switched to Viora Flash: Humanizer can't read images." Your selection is not changed.
 * Failed/interrupted answers get a Retry button that replaces the failed answer.
 
-### What this release does NOT include (needs the chat server)
-The chat/auth server (`viora-auth-website.onrender.com`) is not part of this zip, so nothing server-side was changed:
-real audio transcription, server-side FFmpeg video processing, PDF page-image analysis, provider fallback/rate-limit
-handling, and which underlying model answers are decided there. `caps.js` must be kept in sync with that server.
+### Chat service boundary and research limits
+The chat/auth API runs separately from this static website in the `Viora-auth` repository. The backend now fetches up to four search-result pages through its guarded reader and supplies bounded page text and publication dates to the research model. It reports the selected provider model, search/page-fetch timing, and whether each page was retrieved.
+
+Page retrieval is not independent claim verification: the API does not prove that every cited statement is supported, and the interface explicitly reports claim support as unverified. Audio transcription, video-audio analysis, and scanned-PDF page-image analysis are also not implemented. Video uploads remain timestamped still-frame analysis only. Keep `caps.js` aligned with the actual backend capabilities.
 
 ---
 ## v3 upgrade notes

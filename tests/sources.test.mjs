@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { parseUrl, cleanSources, auditCitations } from '../assets/x/sources.js';
+import { parseUrl, cleanSources, auditCitations, cardHtml } from '../assets/x/sources.js';
 
 test('source URL parser rejects unsafe, malformed, and credential-bearing URLs', () => {
   assert.equal(parseUrl('javascript:alert(1)'), null);
@@ -35,4 +35,12 @@ test('research-style citation claims with no usable source links are flagged', (
 
 test('ordinary answers without citations are not unnecessarily flagged', () => {
   assert.equal(auditCitations('Here is the explanation.', [], true).hasIssue, false);
+});
+
+test('source cards distinguish fetched pages from snippets without claiming verification', () => {
+  const fetched = cardHtml({ title: 'Fetched', url: 'https://example.com/a', pageFetched: true }, 1);
+  const snippetOnly = cardHtml({ title: 'Unavailable', url: 'https://example.org/b', pageFetched: false }, 2);
+  assert.match(fetched, /Page retrieved/);
+  assert.match(snippetOnly, /Search snippet only/);
+  assert.doesNotMatch(fetched + snippetOnly, /Verified claim/);
 });

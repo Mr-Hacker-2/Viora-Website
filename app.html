@@ -459,10 +459,11 @@ function msgHtml(m, i, last) {
     : (citationAudit.missingResearchSources
       ? '<div class="switch-note" role="status">This research-style reply included numbered citations, but no valid source links were provided. The citations could not be checked.</div>'
       : '');
-  const note = [m.mode ? 'Auto chose ' + A[m.mode].n : '', m.note || ''].filter(Boolean).join(' · ');
-  const timingParts = m.timing ? [['Response', m.timing.responseMs], ['Sources', m.timing.sourcesMs], ['First text', m.timing.firstTokenMs], ['Total', m.timing.totalMs]]
+  const researchNote = m.research ? `Fetched ${m.research.fetchedPages} of ${m.research.totalSources} source pages; claim support was not independently verified.` : '';
+  const note = [m.mode ? 'Auto chose ' + A[m.mode].n : '', m.model ? 'Model ' + m.model : '', researchNote, m.note || ''].filter(Boolean).join(' · ');
+  const timingParts = m.timing ? [['Search', m.timing.searchMs], ['Page fetch', m.timing.sourceFetchMs], ['Model headers', m.timing.modelHeaderMs], ['Browser first text', m.timing.firstTokenMs], ['Server first chunk', m.timing.firstStreamChunkMs], ['Server total', m.timing.totalServerMs], ['Browser total', m.timing.totalMs]]
     .filter(([, ms]) => Number.isFinite(ms)).map(([label, ms]) => `${label} ${(ms / 1000).toFixed(1)}s`) : [];
-  const timing = timingParts.length ? `<div class="response-metrics" title="Browser-measured timing; backend stage timings are unavailable.">${esc(timingParts.join(' · '))}</div>` : '';
+  const timing = timingParts.length ? `<div class="response-metrics" title="Server timings come from the API; browser timings cover the client request lifecycle.">${esc(timingParts.join(' · '))}</div>` : '';
   const sw = m.sw ? `<div class="switch-note" role="status">${esc(m.sw)}</div>` : '';
   return `<div class="msg assistant${last && busy ? ' streaming' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${evidenceNote}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : stat(m)}</div>${srcs}${timing}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}<button class="msg-act" data-remember="${i}" title="Save the question and context to Memory" aria-label="Save context to Memory">${ic('note')}</button></div></div>`;
 }
@@ -554,7 +555,17 @@ async function send(text) {
       const d = l.slice(5).trim(); if (!d || d === '[DONE]') return;
       try {
         const j = JSON.parse(d);
-        if (j.viora_sources) { m.searching = false; m.stage = 'Checking source links…'; m.src = j.viora_sources; if (m.timing.sourcesMs == null) m.timing.sourcesMs = Math.round(performance.now() - timingStart); if (!m.src.length) m.note = 'Web search returned no source links. Treat live claims as unverified.'; render(); }
+        if (j.viora_meta) { m.model = j.viora_meta.model; m.timing = { ...m.timing, modelHeaderMs: j.viora_meta.modelHeaderMs }; render(); }
+        else if (Object.hasOwn(j, 'viora_sources')) {
+          m.searching = false; m.stage = 'Checking source links…'; m.src = j.viora_sources;
+          m.research = j.viora_research || null; m.timing = { ...m.timing, ...(j.viora_timings || {}) };
+          if (!m.src.length) m.note = 'Web search returned no source links. Treat live claims as unverified.';
+          render();
+        }
+        else if (j.viora_metrics) {
+          m.model = j.viora_metrics.model || m.model; m.research = { ...m.research, fetchedPages: j.viora_metrics.fetchedPages, totalSources: j.viora_metrics.totalSources, verification: j.viora_metrics.verification, claimSupportVerified: j.viora_metrics.claimSupportVerified };
+          m.timing = { ...m.timing, ...j.viora_metrics }; render();
+        }
         else { const t = j.choices?.[0]?.delta?.content; if (t) { if (m.timing.firstTokenMs == null) m.timing.firstTokenMs = Math.round(performance.now() - timingStart); m.content += t; } }
       } catch {}
     };
