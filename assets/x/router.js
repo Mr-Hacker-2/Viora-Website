@@ -16,9 +16,12 @@ const R = {
 };
 
 /** Decide which assistant fits a message. Returns { assistant, reason }. */
-export function classify(text, { hasPage = false } = {}) {
+export function classify(text, { hasPage = false, hasVisual = false } = {}) {
   const x = String(text || '').toLowerCase();
-  if (R.human.test(x)) return { assistant: 'human', reason: 'rewriting request' };
+  // A visual attachment must not be routed to the text-only humanizer.
+  // Keep the general vision-capable assistant so the attachment is actually analyzed.
+  if (R.human.test(x) && !hasVisual) return { assistant: 'human', reason: 'rewriting request' };
+  if (R.human.test(x) && hasVisual) return { assistant: 'flash', reason: 'visual attachment requires a vision-capable assistant' };
   if (R.explicitWeb.test(x)) return { assistant: 'search', reason: 'explicit research request' };
   if (R.fence.test(x) || R.snippet.test(x) || R.loopSyntax.test(x) || R.codeIntent.test(x) || (R.lang.test(x) && /\b(write|fix|why|how (do|to|can)|error|query|snippet)\b/.test(x))) return { assistant: 'math', reason: 'code signals' };
   if (R.math.test(x)) return { assistant: 'math', reason: 'math signals' };
@@ -28,9 +31,9 @@ export function classify(text, { hasPage = false } = {}) {
 }
 
 /** Use web search only for explicit research mode or prompts classified as needing fresh evidence. */
-export function shouldSearch(text, { assistant = 'auto', enabled = true, hasPage = false } = {}) {
+export function shouldSearch(text, { assistant = 'auto', enabled = true, hasPage = false, hasVisual = false } = {}) {
   if (!enabled || assistant === 'human') return false;
-  return assistant === 'search' || classify(text, { hasPage }).assistant === 'search';
+  return assistant === 'search' || classify(text, { hasPage, hasVisual }).assistant === 'search';
 }
 
 /* Provider health: a small circuit breaker. Three failures in a row open it for 60 s. */
