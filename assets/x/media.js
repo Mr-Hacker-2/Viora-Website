@@ -2,6 +2,13 @@
 export const LIMITS = { image: 25e6, video: 300e6, doc: 40e6, parse: 15e6, maxFiles: 8, video_frames: 8, video_every_s: 5 };
 export const fmtSize = n => n < 1e3 ? n + ' B' : n < 1e6 ? (n / 1e3).toFixed(n < 1e4 ? 1 : 0) + ' KB' : (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + ' MB';
 export const fmtTime = s => { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); };
+export function videoSampleTimes(duration) {
+  const seconds = Number(duration);
+  if (!Number.isFinite(seconds) || seconds <= 0) return [];
+  const count = Math.min(LIMITS.video_frames, Math.max(2, Math.ceil(seconds / LIMITS.video_every_s)));
+  const edge = Math.min(.25, seconds / (count * 2));
+  return Array.from({ length: count }, (_, index) => edge + (seconds - edge * 2) * index / (count - 1));
+}
 
 const hex = (b, n) => [...b.slice(0, n)].map(x => x.toString(16).padStart(2, '0')).join('');
 /** Look at the first bytes and say what the file really is. */

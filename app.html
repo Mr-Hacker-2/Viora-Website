@@ -308,6 +308,7 @@ button,a,input,textarea,select{outline-offset:3px}
     <div class="composer-inner">
       <div id="page-chip" class="page-chip" hidden><span class="page-chip-icon" data-ic="folder"></span><span class="page-chip-title" id="pbar" style="cursor:pointer"></span><button type="button" id="page-chip-remove" class="page-chip-remove" aria-label="Leave this project">×</button></div>
       <div id="attach-tray" class="attach-chips" hidden></div>
+      <div id="video-note" class="video-note" hidden role="status"><span data-ic="camera"></span><span id="video-note-copy"></span></div>
       <textarea id="input" rows="1" aria-label="Message" autocomplete="off" spellcheck="true"></textarea>
       <div class="composer-row">
         <div class="composer-left">
@@ -400,7 +401,7 @@ import { pick as pickModel } from './assets/x/caps.js';
 import { classify, chain, Health, shouldFallback } from './assets/x/router.js';
 import { withPersona, normLevel, LEVELS } from './assets/x/persona.js';
 import { retrieveMemory, retrieveNotes, wrapUntrusted } from './assets/x/memory.js';
-import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK } from './assets/x/media.js';
+import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes } from './assets/x/media.js';
 import * as NP from './assets/x/netperf.js';
 (() => {
 'use strict';
@@ -438,6 +439,7 @@ const SEND = $('#send').innerHTML;
 const health = new Health();
 function route(t, c) { return classify(t, { hasPage: !!(c && c.page) }).assistant; }
 function suggestionIcon(text) {
+  if (/\b(?:video|frame|scene|visible)\b/i.test(text)) return ic('camera');
   if (/\b(?:python|code|javascript|api|palindrome|loop|big-o)\b/i.test(text)) return ic('terminal');
   if (/\b(?:trip|travel|lisbon)\b/i.test(text)) return ic('globe');
   if (/\b(?:solve|math|equation)\b/i.test(text)) return ic('target');
@@ -473,8 +475,14 @@ function render() {
   $('#model-list').innerHTML = Object.entries(A).map(([k, v]) => `<li><button type="button" class="model-row" data-model="${k}" role="option" aria-selected="${k === asst}"><span class="row-icon">${icon(v.ic)}</span><span class="row-copy"><span class="row-name">${esc(v.n)}</span><span class="row-blurb">${esc(v.b)}</span></span><span class="row-tick">${k === asst ? ic('check') : ''}</span></button></li>`).join('');
   const pj = D.projects.find(x => x.id === curP); $('#page-chip').hidden = !pj; if (pj) $('#pbar').textContent = 'Project: ' + pj.name;
   const first = (S.name || S.email.split('@')[0]).split(' ')[0], th = $('#thread');
+  const videos = files.filter(f => f.kind === 'video');
+  $('#video-note').hidden = !videos.length;
+  $('#video-note-copy').textContent = videos.length === 1
+    ? `${videos[0].ni || 0} timestamped frames ready. Video audio is not transcribed.`
+    : `${videos.length} videos ready as sampled frames. Audio is not transcribed.`;
   const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 120;
-  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy)).join('') : `<div id="welcome" class="welcome"><div class="welcome-main"><div class="logo-stage"><span class="welcome-logo"><img src="assets/x/mark.png" alt="" width="78" height="78" draggable="false"></span></div><p class="welcome-line">What can I help you with?</p></div><div class="suggestions">${a.s.map(s => `<button type="button" class="suggestion"><span class="suggestion-icon">${suggestionIcon(s)}</span><span class="suggestion-text">${esc(s)}</span><span class="suggestion-arrow">${ic('back')}</span></button>`).join('')}</div></div>`;
+  const prompts = videos.length ? ['Summarize this video in order', 'Describe the main actions and scene changes', 'What is visible near the beginning and end?', 'Read any text visible in the frames'] : a.s;
+  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy)).join('') : `<div id="welcome" class="welcome"><div class="welcome-main"><div class="logo-stage"><span class="welcome-logo"><img src="assets/x/mark.png" alt="" width="78" height="78" draggable="false"></span></div><p class="welcome-line">What can I help you with?</p></div><div class="suggestions">${prompts.map(s => `<button type="button" class="suggestion"><span class="suggestion-icon">${suggestionIcon(s)}</span><span class="suggestion-text">${esc(s)}</span><span class="suggestion-arrow">${ic('back')}</span></button>`).join('')}</div></div>`;
   bindCodeCopy(th);
   const chip = f => { const im = IM[f.id] && IM[f.id][0], web = f.kind === 'web' && Src.parseUrl(f.source);
     const meta = f.kind === 'video' ? `${f.ni || 0} frames${f.dur ? ' · ' + fmtTime(f.dur) : ''}` : f.kind === 'image' ? 'image' : f.kind === 'web' ? Src.hostOf(f.source) : (f.n ? Math.round(f.n / 1000) + 'k chars' : 'text');
@@ -637,20 +645,37 @@ async function readImage(f, p) {
 }
 /* Video: sample frames at a configurable interval, keep each frame's timestamp, and say plainly that audio is not analysed. */
 async function readVideo(f, p) {
-  const v = document.createElement('video'), u = URL.createObjectURL(f); v.muted = true; v.preload = 'auto'; v.src = u;
-  try { await new Promise((ok, no) => { v.onloadeddata = ok; v.onerror = () => no(new Error('uses a format or codec this browser cannot decode (try MP4/H.264 or WebM).')); setTimeout(() => no(new Error('took too long to open.')), 30000); }); }
-  catch (e) { URL.revokeObjectURL(u); throw e; }
-  const dur = v.duration || 0; if (!isFinite(dur) || dur <= 0) { URL.revokeObjectURL(u); throw new Error('has no readable duration.'); }
-  const n = Math.min(LIMITS.video_frames, Math.max(2, Math.ceil(dur / LIMITS.video_every_s))), imgs = [], ts = [];
-  for (let i = 0; i < n; i++) {
-    if (p.cancel) { URL.revokeObjectURL(u); throw new Error('cancelled'); }
-    const t = Math.min(Math.max(dur - .1, 0), dur * (i + .5) / n); p.msg = 'Extracting frame ' + (i + 1) + ' of ' + n; render();
-    v.currentTime = t; await new Promise((ok, no) => { v.onseeked = ok; setTimeout(() => no(new Error('could not seek in this video.')), 15000); });
-    imgs.push(shrink(v, v.videoWidth, v.videoHeight, 768)); ts.push(t);
+  const v = document.createElement('video'), u = URL.createObjectURL(f);
+  try {
+    v.muted = true; v.preload = 'auto';
+    await new Promise((ok, no) => {
+      const cleanup = () => { clearTimeout(timer); v.removeEventListener('loadeddata', loaded); v.removeEventListener('error', failed); };
+      const loaded = () => { cleanup(); ok(); };
+      const failed = () => { cleanup(); no(new Error('uses a format or codec this browser cannot decode (try MP4/H.264 or WebM).')); };
+      const timer = setTimeout(() => { cleanup(); no(new Error('took too long to open.')); }, 30000);
+      v.addEventListener('loadeddata', loaded, { once: true });
+      v.addEventListener('error', failed, { once: true });
+      v.src = u;
+    });
+    const dur = v.duration || 0;
+    if (!isFinite(dur) || dur <= 0) throw new Error('has no readable duration.');
+    const ts = videoSampleTimes(dur), imgs = [];
+    for (const [i, t] of ts.entries()) {
+      if (p.cancel) throw new Error('cancelled');
+      p.msg = 'Extracting frame ' + (i + 1) + ' of ' + ts.length; render();
+      await new Promise((ok, no) => {
+        const timer = setTimeout(() => { v.removeEventListener('seeked', seeked); no(new Error('could not seek in this video.')); }, 15000);
+        const seeked = () => { clearTimeout(timer); ok(); };
+        v.addEventListener('seeked', seeked, { once: true });
+        try { v.currentTime = t; } catch (e) { clearTimeout(timer); v.removeEventListener('seeked', seeked); no(e); }
+      });
+      imgs.push(shrink(v, v.videoWidth, v.videoHeight, 768));
+    }
+    const trunc = dur > LIMITS.video_frames * LIMITS.video_every_s ? ' Only ' + ts.length + ' frames from a ' + fmtTime(dur) + ' video were sampled, so details between frames are not visible.' : '';
+    return { text: '[Video: ' + f.name + ', ' + fmtTime(dur) + ' long. ' + ts.length + ' still frames are attached in order, taken at: ' + ts.map((t, i) => 'frame ' + (i + 1) + ' = ' + fmtTime(t)).join(', ') + '. Audio is NOT analysed: do not describe speech or sound.' + trunc + ']', imgs, dur };
+  } finally {
+    v.pause(); v.removeAttribute('src'); v.load(); URL.revokeObjectURL(u);
   }
-  URL.revokeObjectURL(u);
-  const trunc = dur > n * LIMITS.video_every_s ? ' Only ' + n + ' frames from a ' + fmtTime(dur) + ' video were sampled, so details between frames are not visible.' : '';
-  return { text: '[Video: ' + f.name + ', ' + fmtTime(dur) + ' long. ' + n + ' still frames are attached in order, taken at: ' + ts.map((t, i) => 'frame ' + (i + 1) + ' = ' + fmtTime(t)).join(', ') + '. Audio is NOT analysed: do not describe speech or sound.' + trunc + ']', imgs, dur };
 }
 const EXPLAIN = { audio: 'is audio. Audio files cannot be analysed yet, so it was not attached.', zip: null, bmp: 'is a BMP image, which is not supported. Use PNG, JPEG or WebP.', gif: null, avi: 'is an AVI video, which browsers cannot decode. Convert it to MP4 or WebM.', unknown: null };
 async function addFiles(fl) {

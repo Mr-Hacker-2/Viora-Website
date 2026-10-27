@@ -177,6 +177,31 @@
   box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 9%, transparent), 0 4px 16px color-mix(in srgb, var(--paper) 7%, transparent) !important;
 }
 
+#composer .video-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin: 0 2px 5px;
+  padding: 7px 9px;
+  border-radius: 9px;
+  background: color-mix(in srgb, var(--accent) 6%, var(--ink-2));
+  color: var(--muted);
+  font-size: 12px;
+  line-height: 1.45;
+}
+
+#composer .video-note[hidden] {
+  display: none !important;
+}
+
+#composer .video-note .ico {
+  flex: 0 0 auto;
+  width: 15px;
+  height: 15px;
+  margin-top: 1px;
+  color: var(--accent);
+}
+
 #composer #input {
   box-sizing: border-box;
   width: 100%;
