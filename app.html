@@ -201,13 +201,13 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
   <header class="bar">
     <div class="sh-title"><h1>Chat with Viora AI</h1><p>Research, create, debug, and explore with a capable AI workspace</p></div>
     <div class="bar-id">
-      <h1 class="wordmark">Viora AI</h1>
+      <button id="open-full" class="icon-btn" type="button" title="Chats and menu" aria-label="Open navigation" data-ic="panel"></button>
+      <h1 class="wordmark">Viora</h1>
       <button id="model-btn" class="model-pill" type="button" aria-expanded="false" aria-controls="model-sheet"><span class="pill-icon" id="pill-icon"></span><span class="pill-name" id="pill-name"></span><svg class="pill-caret" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg></button>
     </div>
     <div class="bar-actions">
       <button id="pwa-install" class="icon-btn pwa-install" type="button" title="Install Viora app" aria-label="Install Viora app" hidden>＋</button>
       <button id="new-thread" class="icon-btn" type="button" title="New conversation" aria-label="New conversation"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>
-      <button id="open-full" class="icon-btn" type="button" title="Menu" aria-label="Menu" data-ic="panel"></button>
     </div>
   </header>
   <section id="model-sheet" class="sheet" hidden aria-label="Choose an assistant"><ul id="model-list" class="model-list" role="listbox"></ul><p class="sheet-foot">Viora Auto picks the best assistant for each message.</p></section>
