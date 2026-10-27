@@ -527,9 +527,9 @@ async function send(text) {
   m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
   try {
     const pp = await pagePayload(c, text);
-    const expectsVisualData = !!(c.page && c.page.files.some(f => (f.kind === 'image' || f.kind === 'video') && (f.ni || 0) > 0));
-    if (expectsVisualData && !pp.images.length) throw new Error('I can see that a picture or video is attached, but its image data did not load. Please remove it and upload it again, then retry.');
-    m.stage = useWeb ? 'Connecting and preparing web research…' : expectsVisualData ? 'Sending your image to Viora vision…' : 'Connecting to Viora…'; paint();
+    const expectsVisualData = !!(c.page && c.page.files.some(f => (f.kind === 'image' || f.kind === 'video') && ((f.ni || 0) > 0 || f.nativeVideo)));
+    if (expectsVisualData && !pp.images.length && !pp.video) throw new Error('I can see that a picture or video is attached, but its visual data did not load. Please remove it and upload it again, then retry.');
+    m.stage = useWeb ? 'Connecting and preparing web research…' : pp.video ? 'Sending your video to Viora’s video-understanding model…' : expectsVisualData ? 'Sending your image to Viora vision…' : 'Connecting to Viora…'; paint();
     timingStart = performance.now(); m.timing = { responseMs: null, sourcesMs: null, firstTokenMs: null, totalMs: null };
     const files = c.page ? c.page.files : [], names = Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])), tries = chain(eff, files, health);
     let r, last;
@@ -538,7 +538,7 @@ async function send(text) {
       const web2 = !!(A[a].web && useWeb);
       try {
         r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '') }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images }) },
+          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '') }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images, video: pp.video }) },
           { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
         if (m.timing.responseMs == null) m.timing.responseMs = Math.round(performance.now() - timingStart);
       } catch (e) { if (!shouldFallback(0, e)) throw e; health.fail(a); last = e; r = null; if (n < tries.length - 1) continue; throw e; }
@@ -597,24 +597,27 @@ const newChat = () => { cur = null; hide(); render(); $('#input').focus(); close
 const dlg = $('#dlg');
 const plain = html => { const d = new DOMParser().parseFromString(html, 'text/html'); d.querySelectorAll('script,style,noscript,svg,template').forEach(n => n.remove()); return { title: (d.title || '').trim().slice(0, 200), text: (d.body?.textContent || html).replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim().slice(0, 24000) }; };
 function setPage(p, source) { addAtt({ name: (p.title || source || 'Page').slice(0, 80), text: p.text, source, kind: 'web' }); }
-const FT = {}, IM = {};
+const FT = {}, IM = {}, VI = {};
 const idb = () => idb.p || (idb.p = new Promise((ok, no) => { const r = indexedDB.open('viora_files', 1); r.onupgradeneeded = () => r.result.createObjectStore('f'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
 const idbSet = async (k, v) => { try { (await idb()).transaction('f', 'readwrite').objectStore('f').put(v, k); } catch {} };
 const idbGet = async k => { try { const d = await idb(); return await new Promise(ok => { const q = d.transaction('f').objectStore('f').get(k); q.onsuccess = () => ok(q.result); q.onerror = () => ok(null); }); } catch { return null; } };
-async function full(f) { if (FT[f.id] == null) { const v = f.text != null ? { t: f.text, i: [] } : await idbGet(f.id); FT[f.id] = v?.t || ''; IM[f.id] = v?.i || []; } return FT[f.id]; }
+async function full(f) { if (FT[f.id] == null) { const v = f.text != null ? { t: f.text, i: [], v: null } : await idbGet(f.id); FT[f.id] = v?.t || ''; IM[f.id] = v?.i || []; VI[f.id] = v?.v || null; } return FT[f.id]; }
 function addAtt(a) {
   let c = chat(); if (!c) { c = { id: String(Date.now()), title: a.name.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
   const p = c.page || (c.page = { files: [] }), id = 'f' + Date.now() + p.files.length, imgs = a.imgs || [];
-  FT[id] = a.text; IM[id] = imgs; idbSet(id, { t: a.text, i: imgs });
-  p.files.push({ id, name: a.name, kind: a.kind, source: a.source, n: a.text.length, ni: imgs.length, size: a.size, dur: a.dur }); rebuild(c); save(); render();
+  FT[id] = a.text; IM[id] = imgs; VI[id] = a.video || null; idbSet(id, { t: a.text, i: imgs, v: a.video || null });
+  p.files.push({ id, name: a.name, kind: a.kind, source: a.source, n: a.text.length, ni: imgs.length, size: a.size, dur: a.dur, nativeVideo: !!a.video }); rebuild(c); save(); render();
 }
 function rebuild(c) { const p = c.page; if (!p || !p.files.length) { c.page = null; return; } p.title = p.files.length === 1 ? p.files[0].name : p.files.length + ' attachments'; p.source = p.files.length === 1 ? p.files[0].source : 'attachments'; p.text = ''; }
 /* long files: send the opening plus the passages that best match the question */
 async function pagePayload(c, q) {
   const fs = c.page ? c.page.files : []; if (!fs.length) return { page: null, images: [] };
   const words = [...new Set(q.toLowerCase().match(/[a-z0-9]{3,}/g) || [])], B = 24000, per = Math.floor(B / fs.length), out = [], images = [];
+  let video = null;
   for (const f of fs) {
-    const t = await full(f); images.push(...(IM[f.id] || []));
+    const t = await full(f);
+    if (f.kind === 'video' && VI[f.id] && !video) video = VI[f.id];
+    else images.push(...(IM[f.id] || []));
     if (t.length <= per) { out.push(wrapUntrusted(f.name, t)); continue; }
     const ch = []; for (let i = 0; i < t.length; i += 1500) ch.push(t.slice(i, i + 1500));
     const sc = ch.map((x, k) => ({ k, v: words.filter(w => x.toLowerCase().includes(w)).length })), pick = new Set([0]); let used = 1500;
@@ -624,7 +627,7 @@ async function pagePayload(c, q) {
   }
   const selectedImages = images.slice(0, 8);
   validateVisualPayload(selectedImages);
-  return { page: { title: c.page.title, text: out.join('\n\n'), source: c.page.source }, images: selectedImages };
+  return { page: { title: c.page.title, text: out.join('\n\n'), source: c.page.source }, images: selectedImages, video };
 }
 const lib = {}, CDN = 'https://cdnjs.cloudflare.com/ajax/libs/';
 const load = src => lib[src] || (lib[src] = new Promise((ok, no) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = () => no(new Error('Could not load the file reader. Check your connection.')); document.head.appendChild(e); }));
@@ -692,8 +695,25 @@ async function readVideo(f, p) {
       });
       imgs.push(shrink(v, v.videoWidth, v.videoHeight, 512, .58));
     }
+    // Native video+audio understanding is used for short MP4 clips that fit
+    // safely inside the existing chat API request-size budget. Larger clips
+    // keep the existing timestamped-frame fallback.
+    let video = null;
+    if (/\.mp4$/i.test(f.name) && f.size <= 4e6 && dur <= 120) {
+      p.msg = 'Preparing video and audio for Viora…'; render();
+      const raw = await new Promise((resolve, reject) => {
+        const reader = new FileReader();
+        reader.onload = () => resolve(String(reader.result || '').replace(/^data:[^;]*;base64,/, ''));
+        reader.onerror = () => reject(new Error('could not prepare the video for analysis.'));
+        reader.readAsDataURL(f);
+      });
+      video = 'data:video/mp4;base64,' + raw;
+    }
+    if (video) {
+      return { text: '[Video: ' + f.name + ', ' + fmtTime(dur) + ' long. Native video understanding is enabled. Analyze the actual sequence and any audible audio; do not invent speech or events.]', imgs, dur, video };
+    }
     const trunc = dur > LIMITS.video_frames * LIMITS.video_every_s ? ' Only ' + ts.length + ' frames from a ' + fmtTime(dur) + ' video were sampled, so details between frames are not visible.' : '';
-    return { text: '[Video: ' + f.name + ', ' + fmtTime(dur) + ' long. ' + ts.length + ' still frames are attached in order, taken at: ' + ts.map((t, i) => 'frame ' + (i + 1) + ' = ' + fmtTime(t)).join(', ') + '. Audio is NOT analysed: do not describe speech or sound.' + trunc + ']', imgs, dur };
+    return { text: '[Video: ' + f.name + ', ' + fmtTime(dur) + ' long. ' + ts.length + ' still frames are attached in order, taken at: ' + ts.map((t, i) => 'frame ' + (i + 1) + ' = ' + fmtTime(t)).join(', ') + '. Audio is NOT analysed: do not describe speech or sound.' + trunc + ']', imgs, dur, video: null };
   } finally {
     v.pause(); v.removeAttribute('src'); v.load(); URL.revokeObjectURL(u);
   }
