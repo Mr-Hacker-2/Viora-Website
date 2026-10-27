@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { sniff, IMG_OK, VID_OK, videoSampleTimes } from '../assets/x/media.js';
+import { sniff, IMG_OK, VID_OK, videoSampleTimes, validateVisualPayload, LIMITS } from '../assets/x/media.js';
 
 function file(bytes, name = 'upload.bin') {
   const blob = new Blob([Uint8Array.from(bytes)]);
@@ -27,6 +27,12 @@ test('video frame sampling covers short clips and caps long clips evenly', () =>
 
   assert.deepEqual(videoSampleTimes(0), []);
   assert.deepEqual(videoSampleTimes(NaN), []);
+});
+
+test('visual payload preflight rejects requests that exceed the API body budget', () => {
+  assert.equal(validateVisualPayload(['a'.repeat(100), 'b'.repeat(200)]), 300);
+  assert.throws(() => validateVisualPayload(['a'.repeat(LIMITS.visual_request_chars + 1)]), /8 MB analysis limit/);
+  assert.throws(() => validateVisualPayload(Array.from({ length: 9 }, () => 'frame')), /up to 8 image frames/);
 });
 
 test('sniff detects documents and refuses to trust a misleading extension', async () => {
