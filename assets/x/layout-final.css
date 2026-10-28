@@ -1,0 +1,105 @@
+/* Viora final layout pass — stable responsive app shell, readable spacing, clean controls */
+:root[data-model] {
+  --layout-sidebar: 252px;
+  --layout-inspector: 260px;
+  --layout-gap: 14px;
+  --layout-content: 860px;
+}
+:root[data-model] *, :root[data-model] *::before, :root[data-model] *::after { box-sizing: border-box; }
+:root[data-model] body { min-width: 320px; }
+:root[data-model] #shell {
+  width: 100%;
+  min-width: 0;
+  min-height: 100dvh;
+  gap: var(--layout-gap);
+}
+:root[data-model] #sh-left,
+:root[data-model] #sh-center,
+:root[data-model] #sh-right { min-width: 0; }
+:root[data-model] #sh-left { overflow-x: hidden; }
+:root[data-model] #sh-center { overflow: hidden; }
+:root[data-model] .bar { min-width: 0; }
+:root[data-model] .bar-id, :root[data-model] .bar-actions { min-width: 0; }
+:root[data-model] .bar-id .wordmark { flex: 0 0 auto; }
+:root[data-model] .model-pill { min-width: 0; max-width: min(240px, 35vw); }
+:root[data-model] #thread, :root[data-model] .thread {
+  min-width: 0;
+  overflow-x: clip;
+  overflow-wrap: anywhere;
+  scrollbar-gutter: stable;
+}
+:root[data-model] .msg { min-width: 0; max-width: 100%; }
+:root[data-model] .msg.assistant { width: 100%; }
+:root[data-model] .msg.user { max-width: min(88%, 720px); }
+:root[data-model] .msg pre, :root[data-model] pre {
+  max-width: 100%;
+  overflow-x: auto;
+  white-space: pre;
+  tab-size: 2;
+}
+:root[data-model] .msg code { overflow-wrap: anywhere; }
+:root[data-model] .msg table { display: block; max-width: 100%; overflow-x: auto; border-collapse: collapse; }
+:root[data-model] .msg img, :root[data-model] .msg video, :root[data-model] .msg iframe {
+  max-width: 100%; border-radius: 12px;
+}
+:root[data-model] .composer { min-width: 0; }
+:root[data-model] .composer-inner { min-width: 0; }
+:root[data-model] #input { width: 100%; min-width: 0; max-height: 30dvh; line-height: 1.5; }
+:root[data-model] button, :root[data-model] input, :root[data-model] textarea, :root[data-model] select { font: inherit; }
+:root[data-model] button { -webkit-tap-highlight-color: transparent; }
+:root[data-model] :is(button, a, input, textarea, select, [tabindex]):focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+:root[data-model] .suggestion { min-width: 0; overflow-wrap: anywhere; }
+:root[data-model] #sh-left :is(button, a) { max-width: 100%; }
+:root[data-model] .sh-hist button { min-width: 0; }
+:root[data-model] .sh-hist button > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+:root[data-model] dialog { max-width: calc(100vw - 24px); }
+@media (min-width: 1180px) {
+  :root[data-model] #shell {
+    grid-template-columns: var(--layout-sidebar) minmax(0, 1fr) var(--layout-inspector);
+  }
+  :root[data-model] #sh-center { width: 100%; }
+}
+@media (min-width: 980px) and (max-width: 1179px) {
+  :root[data-model] #shell { grid-template-columns: var(--layout-sidebar) minmax(0, 1fr); }
+  :root[data-model] #sh-right { display: none !important; }
+}
+@media (max-width: 979px) {
+  :root[data-model] #shell {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) !important;
+    gap: 0;
+    width: 100%;
+    height: 100dvh;
+    min-height: 0;
+  }
+  :root[data-model] #sh-center { grid-column: 1; width: 100%; }
+  :root[data-model] #sh-right { display: none !important; }
+  :root[data-model] .bar { padding-inline: 12px; }
+  :root[data-model] .thread { padding-inline: 14px; }
+  :root[data-model] .composer { padding-inline: 10px; }
+}
+@media (max-width: 600px) {
+  :root[data-model] .bar { gap: 7px; min-height: 54px; }
+  :root[data-model] .bar-id { gap: 7px; }
+  :root[data-model] .bar-id .wordmark { font-size: 18px; }
+  :root[data-model] .model-pill { max-width: 42vw; padding: 6px 8px; }
+  :root[data-model] .icon-btn { width: 34px; height: 34px; }
+  :root[data-model] .welcome { padding: 20px 12px; }
+  :root[data-model] .welcome-logo { width: 62px; height: 62px; }
+  :root[data-model] .suggestions { grid-template-columns: minmax(0, 1fr); width: 100%; }
+  :root[data-model] .suggestion { min-height: 52px; padding: 12px 38px 12px 14px; }
+  :root[data-model] .msg.user { max-width: 94%; }
+  :root[data-model] .composer-inner { border-radius: 20px; padding: 10px 11px; }
+  :root[data-model] #input { font-size: 16px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-model] *, :root[data-model] *::before, :root[data-model] *::after {
+    scroll-behavior: auto !important;
+    animation-duration: .01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: .01ms !important;
+  }
+}
