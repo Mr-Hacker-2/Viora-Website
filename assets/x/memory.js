@@ -1,5 +1,5 @@
 /* Relevance retrieval for memories and project notes, plus untrusted-content wrapping.
-   Memories are only what the user saved on purpose; nothing here saves anything. */
+   Memory retrieval and conservative extraction of explicit, non-sensitive user details. */
 const STOP = new Set('the and for you that with this have from are was but not what when how can your about into out use get has had will would could should there their them then than just like over also any all'.split(' '));
 export const tokens = s => [...new Set((String(s).toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) || []).filter(w => !STOP.has(w)))];
 const stem = w => w.replace(/(ing|ed|es|s)$/, '');
