@@ -8,7 +8,7 @@
 <meta name="description" content="Think, write, research, understand files and solve problems in one AI workspace with Viora.">
 <link rel="icon" href="assets/x/icon32.png">
 <link rel="manifest" href="manifest.json">
-<link rel="apple-touch-icon" href="assets/x/icon32.png">
+<link rel="apple-touch-icon" href="assets/mark.png">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <script src="assets/x/prefs.js"></script>
@@ -458,8 +458,6 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 :root[data-model] #composer .composer-inner{width:min(100%,820px)!important;margin-inline:auto!important}
 :root[data-model] #sh-left .sh-user{display:flex!important;align-items:center!important}
 :root[data-model] #sh-left .sh-uname{display:block!important;flex:1 1 auto!important;min-width:0!important;color:var(--paper)!important}
-:root[data-model] #pwa-install:not([hidden]){font-size:0!important}
-:root[data-model] #pwa-install:not([hidden])::before{content:"↓"!important;display:block!important;font:600 21px/1 var(--sans)!important;width:auto!important;height:auto!important;background:none!important;mask:none!important;-webkit-mask:none!important}
 @media(max-width:979px){
  :root[data-model] #sh-center>.thread,:root[data-model] #sh-center>#thread{padding:16px 14px 10px!important}
  :root[data-model] #thread .welcome-v2{min-height:0!important;padding:22px 0!important}
@@ -472,7 +470,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 <body>
 <div id="shell">
 <aside id="sh-left">
-  <div class="sh-logo"><img src="assets/x/icon32.png" alt="" width="26" height="26"><span>Viora AI</span><button type="button" class="sh-collapse" id="sh-collapse" title="Hide sidebar" aria-label="Hide sidebar" data-ic="panel"></button></div>
+  <div class="sh-logo"><img src="assets/mark.png" alt="" width="26" height="26"><span>Viora AI</span><button type="button" class="sh-collapse" id="sh-collapse" title="Hide sidebar" aria-label="Hide sidebar" data-ic="panel"></button></div>
   <div class="sh-user"><span class="sh-av" id="av"></span><span class="sh-uname" id="nm"></span><button type="button" id="sh-gear" class="sh-gear" title="Account" aria-label="Account" data-ic="gear"></button></div>
   <div id="umenu" class="sheet" hidden>
     <a class="sheet-action" href="index.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Viora home</span></span></a>
@@ -722,7 +720,7 @@ function render() {
   <div class="welcome-glow" aria-hidden="true"></div>
   <div class="welcome-main">
     <div class="welcome-eyebrow"><span class="welcome-live-dot"></span> ${esc(greet())}, ${esc(first)}</div>
-    <div class="logo-stage"><span class="welcome-logo"><img src="assets/x/mark.png" alt="Viora" width="64" height="64" draggable="false"></span></div>
+    <div class="logo-stage"><span class="welcome-logo"><img src="assets/mark.png" alt="Viora" width="64 height="64" draggable="false"></span></div>
     <h2 class="welcome-line">${videos.length ? 'Let’s explore your video.' : 'What are we working on?'}</h2>
     <p class="welcome-subline">${videos.length ? 'Ask about scenes, actions, visible text, or the sequence of events.' : 'One workspace for thinking, writing, research, files, images, video, and code.'}</p>
     <div class="welcome-capabilities" aria-label="Viora capabilities"><span>${ic('bolt')} Fast answers</span><span>${ic('globe')} Web research</span><span>${ic('folder')} File understanding</span></div>
