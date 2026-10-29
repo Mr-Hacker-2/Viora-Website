@@ -801,10 +801,11 @@ async function send(text) {
     if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(NP.describeHttpFailure(r.status, e.error || '')); }
     m.stage = 'Reading the response…'; paint();
-    const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0;
+    const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0, streamEnded = false;
     const handleLine = l => {
       if (!l.startsWith('data:')) return;
-      const d = l.slice(5).trim(); if (!d || d === '[DONE]') return;
+      const d = l.slice(5).trim(); if (!d) return;
+      if (d === '[DONE]') { streamEnded = true; return; }
       try {
         const j = JSON.parse(d);
         if (j.viora_meta) { m.model = j.viora_meta.model; m.timing = { ...m.timing, modelHeaderMs: j.viora_meta.modelHeaderMs }; render(); }
@@ -826,6 +827,7 @@ async function send(text) {
       const { done, value, stalled } = await NP.readChunk(rd); if (stalled) { m.note = 'The connection went quiet, so this reply may be cut short. Use Regenerate to try again.'; render(); break; } if (done) break;
       const split = NP.splitStreamLines(buf + dec.decode(value, { stream: true })); buf = split.rest;
       split.lines.forEach(handleLine);
+      if (streamEnded) { try { rd.cancel(); } catch {} break; }
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); });
     }
     NP.splitStreamLines(buf + dec.decode(), true).lines.forEach(handleLine);
