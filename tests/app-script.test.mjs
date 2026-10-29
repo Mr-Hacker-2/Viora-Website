@@ -9,12 +9,10 @@ test('the app inline module parses before the chat UI can initialize', async () 
   assert.notEqual(start, -1, 'app.html must include its chat module');
   assert.notEqual(end, -1, 'the chat module must be closed');
 
-  // The module imports browser-only helpers. Strip those imports and compile the
-  // remaining source without running it; AsyncFunction supports module-level await.
-  const source = html.slice(start + '<script type="module">'.length, end)
-    .split('\\n')
-    .filter(line => !line.trimStart().startsWith('import '))
-    .join('\\n');
+  // Browser-only imports precede the IIFE. Compile without executing browser code.
+  const body = html.slice(start + '<script type="module">'.length, end);
+  const iife = body.indexOf('(() => {');
+  assert.notEqual(iife, -1, 'the chat module must initialize its app IIFE');
   const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
-  assert.doesNotThrow(() => new AsyncFunction(source));
+  assert.doesNotThrow(() => new AsyncFunction(body.slice(iife)));
 });
