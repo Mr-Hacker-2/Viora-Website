@@ -358,6 +358,62 @@ button:disabled{cursor:not-allowed;opacity:.55}
    dimmed and nothing in it could be tapped. Put it above the backdrop. */
 @media(max-width:979px){:root[data-model] body.sb #sh-left{z-index:101!important}}
 
+/* ===== Visual upgrade: aurora, glass, glow ===== */
+:root{--aur-1:color-mix(in srgb,var(--accent) 55%,#ff5ca8);--aur-2:color-mix(in srgb,var(--accent) 65%,#3ad6ff);--aur-3:color-mix(in srgb,var(--accent) 75%,#ffb86b)}
+#sh-center{position:relative;isolation:isolate}
+#sh-center::before,#sh-center::after{content:"";position:absolute;z-index:-1;pointer-events:none;border-radius:50%;filter:blur(70px);opacity:.34;will-change:transform}
+#sh-center::before{width:46vmax;height:46vmax;top:-18vmax;left:-10vmax;background:radial-gradient(circle,var(--aur-1),transparent 65%);animation:aur-a 22s ease-in-out infinite alternate}
+#sh-center::after{width:42vmax;height:42vmax;bottom:-16vmax;right:-12vmax;background:radial-gradient(circle,var(--aur-2),transparent 65%);animation:aur-b 26s ease-in-out infinite alternate}
+:root[data-theme=light] #sh-center::before,:root[data-theme=light] #sh-center::after{opacity:.2}
+@keyframes aur-a{to{transform:translate(12vmax,8vmax) scale(1.15)}}
+@keyframes aur-b{to{transform:translate(-10vmax,-9vmax) scale(1.2)}}
+
+/* Headline: slow shimmer through the accent colours */
+:root[data-model] #thread .welcome-v2 .welcome-line{background:linear-gradient(100deg,var(--paper) 0%,var(--aur-1) 22%,var(--aur-2) 45%,var(--paper) 62%,var(--aur-3) 82%,var(--paper) 100%);background-size:200% 100%;-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:transparent;animation:shine 12s linear infinite}
+@keyframes shine{from{background-position:0 0}to{background-position:-200% 0}}
+:root[data-model] .welcome-eyebrow{backdrop-filter:blur(10px);text-transform:uppercase}
+:root[data-model] .welcome-live-dot{animation:pulse 2.4s ease-in-out infinite}
+@keyframes pulse{50%{box-shadow:0 0 0 7px color-mix(in srgb,var(--accent) 4%,transparent)}}
+:root[data-model] .welcome-v2 .welcome-logo{animation:float 6s ease-in-out infinite}
+@keyframes float{50%{transform:translateY(-6px)}}
+:root[data-model] .welcome-v2 .suggestion{backdrop-filter:blur(12px)}
+:root[data-model] .welcome-v2 .suggestion .suggestion-arrow{transition:transform .2s,color .2s}
+:root[data-model] .welcome-v2 .suggestion:hover .suggestion-arrow{transform:translateX(4px);color:var(--accent)}
+
+/* Composer: frosted glass with a glowing send button */
+:root[data-model] .composer-inner{backdrop-filter:blur(18px) saturate(1.5);background:color-mix(in srgb,var(--ink-2) 74%,transparent)!important}
+#composer .send:not(:disabled){background:linear-gradient(135deg,var(--accent),var(--aur-1))!important;color:#fff!important;box-shadow:0 6px 20px color-mix(in srgb,var(--accent) 45%,transparent)}
+#composer .send:not(:disabled):hover{box-shadow:0 8px 28px color-mix(in srgb,var(--accent) 60%,transparent)}
+
+/* Messages: app-polish.css fades in every .msg (from opacity 0) and render() rebuilds the thread on each state change,
+   so all messages flashed several times per reply. Keep the entrance only for messages that are actually new (.enter). */
+:root[data-model] .msg{animation:none}
+:root[data-model] .msg.enter{animation:viora-message-in .3s ease-out both}
+:root[data-model] .msg.user.enter{animation:fx-rise-right .38s ease-out both}
+:root[data-model] .msg.user{background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 24%,var(--ink-2)),color-mix(in srgb,var(--aur-1) 14%,var(--ink-2)));border-color:color-mix(in srgb,var(--accent) 28%,var(--line))}
+.dots{display:inline-flex;gap:4px;margin-left:8px;vertical-align:middle}
+.dots i{width:6px;height:6px;border-radius:50%;background:var(--accent);animation:dot 1.2s infinite ease-in-out both}
+.dots i:nth-child(2){animation-delay:.15s}.dots i:nth-child(3){animation-delay:.3s}
+@keyframes dot{0%,80%,100%{transform:scale(.5);opacity:.4}40%{transform:scale(1);opacity:1}}
+.msg.streaming .body>p:last-child::after{content:"";display:inline-block;width:8px;height:1.05em;margin-left:3px;vertical-align:-.15em;border-radius:2px;background:var(--accent);animation:blink 1s steps(2,start) infinite}
+@keyframes blink{to{visibility:hidden}}
+
+/* Jump-to-latest button */
+#composer{position:relative}
+#to-bottom{position:absolute;left:50%;top:-46px;transform:translate(-50%,8px);z-index:40;display:flex;align-items:center;gap:6px;padding:8px 14px;border-radius:999px;border:1px solid var(--viora-border);background:color-mix(in srgb,var(--ink-2) 85%,transparent);backdrop-filter:blur(14px);color:var(--paper);font:500 13px var(--sans);box-shadow:0 10px 30px #0002;cursor:pointer;opacity:0;pointer-events:none;transition:opacity .2s,transform .2s}
+#to-bottom.show{opacity:1;pointer-events:auto;transform:translate(-50%,0)}
+#to-bottom svg{width:14px;height:14px;transform:rotate(-90deg)}
+
+/* Keyboard shortcuts panel */
+.keys{display:grid;gap:10px;margin:4px 0 16px}
+.keys div{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:14px}
+kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--line);border-bottom-width:2px;border-radius:7px;background:var(--raised);color:var(--paper);font:600 12px var(--sans);text-align:center}
+
+@media(prefers-reduced-motion:reduce){
+  #sh-center::before,#sh-center::after,:root[data-model] #thread .welcome-v2 .welcome-line,:root[data-model] .welcome-live-dot,:root[data-model] .welcome-v2 .welcome-logo,.dots i,.msg.streaming .body>p:last-child::after{animation:none!important}
+  #to-bottom{transition:none}
+}
+
 /* Composer: the box already shows a focus ring (:focus-within), so the textarea must not draw a second one inside it. */
 #input:focus,#input:focus-visible{outline:none!important;box-shadow:none!important}
 
@@ -387,7 +443,9 @@ button:disabled{cursor:not-allowed;opacity:.55}
   <nav class="sh-nav">
     <button type="button" class="on" id="nav-chat" data-ic="chat"> AI Chat</button>
     <button type="button" id="mem" data-ic="note"> Memory</button>
+    <button type="button" id="exp-chat" data-ic="note"> Export this chat</button>
     <button type="button" id="exp" data-ic="download"> Export my data</button>
+    <button type="button" id="keys-btn" data-ic="help"> Keyboard shortcuts</button>
   </nav>
   <h6>CHAT HISTORY</h6>
   <div id="sh-hist" class="sh-hist"></div>
@@ -410,6 +468,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
   <main id="thread" class="thread" tabindex="-1"></main>
   <div id="status" class="status" hidden role="status"></div>
   <form id="composer" class="composer">
+    <button type="button" id="to-bottom" aria-label="Jump to the latest message"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l-5 5 5 5"/></svg> Latest</button>
     <div class="composer-inner">
       <div id="page-chip" class="page-chip" hidden><span class="page-chip-icon" data-ic="folder"></span><span class="page-chip-title" id="pbar" style="cursor:pointer"></span><button type="button" id="page-chip-remove" class="page-chip-remove" aria-label="Leave this project">×</button></div>
       <div id="attach-tray" class="attach-chips" hidden></div>
@@ -495,6 +554,18 @@ button:disabled{cursor:not-allowed;opacity:.55}
   <div id="derr" role="alert"></div>
   <div class="dl"><label class="btn">Upload .html / .txt<input type="file" id="d-file" accept=".html,.htm,.txt,.md,.csv,.json,.xml,.yml,.yaml,.js,.ts,.py,.css,.java,.c,.cpp,.sql,.sh,.log" hidden></label><span style="flex:1"></span><button class="btn" id="d-x" type="button">Cancel</button><button class="btn p" id="d-ok" type="button">Read page</button></div>
 </dialog>
+<dialog id="kdlg">
+  <h3>Keyboard shortcuts</h3><p>Move faster without leaving the keyboard.</p>
+  <div class="keys">
+    <div><span>Send message</span><span><kbd>Enter</kbd></span></div>
+    <div><span>New line</span><span><kbd>Shift</kbd> <kbd>Enter</kbd></span></div>
+    <div><span>Search chats</span><span><kbd>Ctrl</kbd> / <kbd>⌘</kbd> <kbd>K</kbd></span></div>
+    <div><span>New chat</span><span><kbd>Ctrl</kbd> / <kbd>⌘</kbd> <kbd>Shift</kbd> <kbd>O</kbd></span></div>
+    <div><span>Stop a reply, close menus</span><span><kbd>Esc</kbd></span></div>
+    <div><span>Show this panel</span><span><kbd>Ctrl</kbd> / <kbd>⌘</kbd> <kbd>/</kbd></span></div>
+  </div>
+  <div class="dl"><span style="flex:1"></span><button class="btn p" id="k-x" type="button">Done</button></div>
+</dialog>
 <button id="att" type="button" hidden></button>
 
 <script type="module">
@@ -557,11 +628,13 @@ function suggestionIcon(text) {
   if (/\b(?:write|email|rewrite|text)\b/i.test(text)) return ic('edit');
   return ic('search');
 }
-const stat = m => m.wait ? `<span style="color:var(--muted)">${esc(m.wait)}</span>` : m.stage ? `<span style="color:var(--muted)">${esc(m.stage)}</span>` : m.searching ? '<span style="color:var(--muted)">Searching the web…</span>' : '<span style="color:var(--muted)">Preparing your answer…</span>';
+const stat0 = m => m.wait ? `<span style="color:var(--muted)">${esc(m.wait)}</span>` : m.stage ? `<span style="color:var(--muted)">${esc(m.stage)}</span>` : m.searching ? '<span style="color:var(--muted)">Searching the web…</span>' : '<span style="color:var(--muted)">Preparing your answer…</span>';
+const DOTS = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>', stat = m => stat0(m) + DOTS;
+const greet = () => { const h = new Date().getHours(); return h < 5 ? 'Burning the midnight oil' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
 function mdx(t, srcs) { const safe = Src.cleanSources(srcs || []); if (safe.length) t = t.replace(/\[(\d{1,2})\]/g, (x, n) => safe[n - 1] ? `[${n}](${safe[n - 1].url})` : x); return renderMarkdown(t); }
 function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : stat(m); bindCodeCopy(el); Src.decorateCitations(el, m.src); }
-function msgHtml(m, i, last) {
-  if (m.role === 'user') return `<div class="msg user">${(m.att || []).length ? `<div class="msg-att">${m.att.map(f => `<span class="msg-att-i" title="${esc(f.name)}">${f.src && Src.parseUrl(f.src) ? Src.iconHtml({ url: f.src }, 14) : ''}${esc(f.name)}</span>`).join('')}</div>` : ''}<div class="user-text">${esc(m.content)}</div></div>`;
+function msgHtml(m, i, last, enter) {
+  if (m.role === 'user') return `<div class="msg user${enter ? ' enter' : ''}">${(m.att || []).length ? `<div class="msg-att">${m.att.map(f => `<span class="msg-att-i" title="${esc(f.name)}">${f.src && Src.parseUrl(f.src) ? Src.iconHtml({ url: f.src }, 14) : ''}${esc(f.name)}</span>`).join('')}</div>` : ''}<div class="user-text">${esc(m.content)}</div></div>`;
   const safeSrcs = Src.cleanSources(m.src || []);
   const srcs = Src.sourcesBlock(safeSrcs);
   const citationAudit = Src.auditCitations(m.content || '', safeSrcs, (m.eff || m.mode) === 'search');
@@ -576,9 +649,9 @@ function msgHtml(m, i, last) {
     .filter(([, ms]) => Number.isFinite(ms)).map(([label, ms]) => `${label} ${(ms / 1000).toFixed(1)}s`) : [];
   const timing = timingParts.length ? `<div class="response-metrics" title="Server timings come from the API; browser timings cover the client request lifecycle.">${esc(timingParts.join(' · '))}</div>` : '';
   const sw = m.sw ? `<div class="switch-note" role="status">${esc(m.sw)}</div>` : '';
-  return `<div class="msg assistant${last && busy ? ' streaming' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${evidenceNote}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : stat(m)}</div>${srcs}${timing}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}<button class="msg-act" data-remember="${i}" title="Save the question and context to Memory" aria-label="Save context to Memory">${ic('note')}</button></div></div>`;
+  return `<div class="msg assistant${last && busy ? ' streaming' : ''}${enter ? ' enter' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${evidenceNote}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : stat(m)}</div>${srcs}${timing}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}<button class="msg-act" data-remember="${i}" title="Save the question and context to Memory" aria-label="Save context to Memory">${ic('note')}</button></div></div>`;
 }
-let shown = null;
+let shown = null, rendered = { id: null }; const painted = new WeakSet();
 function render() {
   const a = A[asst], c = chat(), has = c && c.messages.length, files = c && c.page ? c.page.files : [];
   document.documentElement.dataset.model = MODEL[asst];
@@ -597,11 +670,15 @@ function render() {
     ? (videos[0].nativeVideo ? 'Native video and audio understanding ready.' : `${videos[0].ni || 0} timestamped frames ready. Audio is not analysed in frame-sampling mode.`)
     : `${videos.length} videos attached. Short eligible MP4 clips include audio; sampled-frame fallback does not.`;
   const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 120;
+  /* Only messages that have not been on screen yet fade in. The whole thread is rebuilt on every state change, so
+     animating every message made the chat flash several times per reply. Opening another chat animates nothing. */
+  if (c && rendered.id !== c.id) c.messages.forEach(m => painted.add(m));
+  rendered = { id: c ? c.id : null };
   const prompts = videos.length ? ['Summarize this video in order', 'Describe the main actions and scene changes', 'What is visible near the beginning and end?', 'Read any text visible in the frames'] : a.s;
-  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy)).join('') : `<section id="welcome" class="welcome welcome-v2">
+  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy, !painted.has(m))).join('') : `<section id="welcome" class="welcome welcome-v2">
   <div class="welcome-glow" aria-hidden="true"></div>
   <div class="welcome-main">
-    <div class="welcome-eyebrow"><span class="welcome-live-dot"></span> YOUR AI WORKSPACE</div>
+    <div class="welcome-eyebrow"><span class="welcome-live-dot"></span> ${esc(greet())}, ${esc(first)}</div>
     <div class="logo-stage"><span class="welcome-logo"><img src="assets/x/mark.png" alt="Viora" width="64" height="64" draggable="false"></span></div>
     <h2 class="welcome-line">${videos.length ? 'Let’s explore your video.' : 'What are we working on?'}</h2>
     <p class="welcome-subline">${videos.length ? 'Ask about scenes, actions, visible text, or the sequence of events.' : 'One workspace for thinking, writing, research, files, images, video, and code.'}</p>
@@ -612,6 +689,7 @@ function render() {
   <p class="welcome-footnote">Viora can make mistakes. Check important details and cited sources.</p>
 </section>`;
   bindCodeCopy(th);
+  if (has) { const fresh = c.messages.filter(m => !painted.has(m)); if (fresh.length) requestAnimationFrame(() => requestAnimationFrame(() => fresh.forEach(m => painted.add(m)))); }
   const chip = f => { const im = IM[f.id] && IM[f.id][0], web = f.kind === 'web' && Src.parseUrl(f.source);
     const meta = f.kind === 'video' ? `${f.nativeVideo ? 'native video + audio' : (f.ni || 0) + ' frames'}${f.dur ? ' · ' + fmtTime(f.dur) : ''}` : f.kind === 'image' ? 'image' : f.kind === 'web' ? Src.hostOf(f.source) : (f.n ? Math.round(f.n / 1000) + 'k chars' : 'text');
     return `<span class="attach-chip ready" title="${esc(f.name)}">${im ? `<img src="${im}" alt="">` : web ? `<span class="attach-icon">${Src.iconHtml({ url: f.source }, 20)}</span>` : `<span class="attach-icon">${esc((f.name.split('.').pop() || 'TXT').slice(0, 4).toUpperCase())}</span>`}<span class="attach-name">${esc(f.name)}<small>${f.size ? fmtSize(f.size) + ' · ' : ''}${esc(meta)} · <b class="st-ok">Ready</b></small></span><button type="button" class="page-chip-remove" data-rm="${f.id}" aria-label="Remove ${esc(f.name)}">×</button></span>`; };
@@ -631,8 +709,13 @@ function render() {
   /* The welcome screen always starts at the top (otherwise its logo and headline load scrolled out of view);
      a conversation sticks to the bottom while streaming and jumps to the latest message when you open a different chat. */
   const switched = shown !== cur; shown = cur;
-  if (!has) th.scrollTop = 0; else if (shouldStickToBottom || switched) th.scrollTop = th.scrollHeight;
+  /* .thread is scroll-behavior:smooth (app-polish.css); opening a chat or the welcome screen should snap, not glide through the whole thread */
+  const snap = y => { th.style.scrollBehavior = 'auto'; th.scrollTop = y; th.style.scrollBehavior = ''; };
+  if (!has) snap(0); else if (switched) snap(th.scrollHeight); else if (shouldStickToBottom) th.scrollTop = th.scrollHeight;
+  jump();
 }
+/* "Latest" button: appears when you have scrolled well above the newest message */
+function jump() { const th = $('#thread'), c = chat(); $('#to-bottom').classList.toggle('show', !!(c && c.messages.length) && th.scrollHeight - th.scrollTop - th.clientHeight > 240); }
 function sendState(on) { $('#send').innerHTML = on ? ic('stop') : SEND; $('#send').setAttribute('aria-label', on ? 'Stop' : 'Send'); $('#send').disabled = false; }
 async function send(text) {
   text = (text || '').trim(); if (!text || busy) return;
@@ -641,6 +724,7 @@ async function send(text) {
   if (!c) { c = { id: String(Date.now()), title: text.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
   c.assistant = asst; c.updated = Date.now(); chats = [c, ...chats.filter(x => x !== c)];
   c.messages.push({ role: 'user', content: text, att: (c.page ? c.page.files : []).map(f => ({ name: f.name, kind: f.kind, src: f.kind === 'web' ? f.source : '' })) }, { role: 'assistant', content: '' });
+  if (rendered.id !== c.id) rendered = { id: c.id }; /* a brand-new chat: its first messages are new, not "opened" */
   $('#input').value = ''; try { localStorage.removeItem('viora_draft_' + S.email); } catch {} grow(); save(); render();
   const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); let timingStart = 0; busy = ctl; m.stage = 'Starting task…'; sendState(true);
   const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 140, b = $('#b' + idx); if (b) { paintBody(b, m); if (near) th.scrollTop = th.scrollHeight; } };
@@ -1015,6 +1099,22 @@ $('#m-add').onclick = () => { const t = $('#m-new').value.trim(); if (!t) return
 $('#m-new').addEventListener('keydown', e => { if (e.key === 'Enter') $('#m-add').click(); });
 $('#mlist').onclick = e => { const d = e.target.closest('[data-md]'); if (d) { D.memory = D.memory.filter(m => m.id !== d.dataset.md); saveD(); memList(); } };
 $('#mlist').onchange = e => { const i = e.target.closest('[data-m]'); const m = i && D.memory.find(x => x.id === i.dataset.m); if (m) { m.t = i.value.trim().slice(0, 300) || m.t; saveD(); } };
+$('#thread').addEventListener('scroll', jump, { passive: true });
+$('#to-bottom').onclick = () => { const th = $('#thread'); th.scrollTo({ top: th.scrollHeight, behavior: matchMedia('(prefers-reduced-motion:reduce)').matches ? 'auto' : 'smooth' }); };
+$('#exp-chat').onclick = () => {
+  hide(); closeSb(); const c = chat();
+  if (!c || !c.messages.length) { toast('Open a conversation first, then export it.'); return; }
+  const md = '# ' + (c.title || 'Viora chat') + '\n\n' + c.messages.filter(m => m.content).map(m => {
+    const src = m.role === 'assistant' ? Src.cleanSources(m.src || []) : [];
+    return (m.role === 'user' ? '## You\n\n' : '## Viora\n\n') + m.content + (src.length ? '\n\nSources:\n' + src.map((s, i) => `${i + 1}. [${s.title || s.url}](${s.url})`).join('\n') : '');
+  }).join('\n\n---\n\n') + '\n';
+  const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown' }));
+  a.download = 'viora-' + ((c.title || 'chat').toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '').slice(0, 40) || 'chat') + '.md'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  toast('Chat exported as Markdown.');
+};
+const showKeys = () => { hide(); closeSb(); if (!$('#kdlg').open) $('#kdlg').showModal(); };
+$('#keys-btn').onclick = showKeys; $('#k-x').onclick = () => $('#kdlg').close();
+addEventListener('keydown', e => { if ((e.ctrlKey || e.metaKey) && e.key === '/') { e.preventDefault(); showKeys(); } });
 $('#exp').onclick = () => { hide(); const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify({ chats, data: D }, null, 2)], { type: 'application/json' })); a.download = 'viora-export.json'; a.click(); };
 
 /* artifact panel: editable code, live HTML preview, version history */
