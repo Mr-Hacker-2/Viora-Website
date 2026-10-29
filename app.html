@@ -777,7 +777,7 @@ async function send(text) {
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
   const useWeb = shouldSearch(text, { assistant: eff, enabled: web && !!A[eff].web, hasPage: !!c.page, hasVisual: visualFiles(c).length > 0 }), pj = D.projects.find(x => x.id === c.pid);
-  const remembered = D.autoMem ? rememberPersonalDetails(text) : 0;
+  const remembered = D.autoMem && eff !== 'human' ? rememberPersonalDetails(text) : 0;
   if (remembered) toast('Saved ' + remembered + (remembered === 1 ? ' detail to Memory.' : ' details to Memory.') + ' You can review or remove them in Memory.');
   const context = { instructions: withPersona(eff, tone, pj ? pj.instr : ''), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
   m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
