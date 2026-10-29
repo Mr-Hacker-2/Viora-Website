@@ -9,15 +9,15 @@ const score = (qs, text) => { const t = new Set(tokens(text).map(stem)); return 
     so short standing preferences still apply. Memories are newest-first. Returns at most `max` strings. */
 /* Extract only explicit, low-risk facts the user states about themself. Never infer from tone,
    uploaded material, or questions. Sensitive topics are deliberately excluded. */
-const PERSONAL_STATEMENT = /\\b(?:i prefer|i like|i love|i enjoy|i use|i work as|i study|i am studying|i speak|i want to learn|i'm learning|my (?:name|favorite|favourite|goal|job|profession|pet|dog|cat|preferred name) is|call me)\\b/i;
-const SENSITIVE_DETAIL = /\\b(?:password|passcode|secret|api key|access token|ssn|social security|credit card|bank account|diagnos(?:is|ed)|medication|prescription|therapy|depress(?:ion|ed)|anxiety|adhd|autis(?:m|tic)|allerg(?:y|ic)|disabilit\\w*|religion|muslim|christian|jewish|hindu|buddhist|atheis\\w*|politic\\w*|vote for|sexual orientation|gay|lesbian|bisexual|transgender|pregnan\\w*|hiv|aids|cancer|address|phone number|email address|salary|income|debt|immigration status|citizenship)\\b/i;
+const PERSONAL_STATEMENT = /\b(?:i prefer|i like|i love|i enjoy|i use|i work as|i study|i am studying|i speak|i want to learn|i'm learning|my (?:name|favorite|favourite|goal|job|profession|pet|dog|cat|preferred name) is|call me)\b/i;
+const SENSITIVE_DETAIL = /\b(?:password|passcode|secret|api key|access token|ssn|social security|credit card|bank account|diagnos(?:is|ed)|medication|prescription|therapy|depress(?:ion|ed)|anxiety|adhd|autis(?:m|tic)|allerg(?:y|ic)|disabilit\w*|religion|muslim|christian|jewish|hindu|buddhist|atheis\w*|politic\w*|vote for|sexual orientation|gay|lesbian|bisexual|transgender|pregnan\w*|hiv|aids|cancer|address|phone number|email address|salary|income|debt|immigration status|citizenship)\b/i;
 
 /** Return up to three short, explicit, non-sensitive self-descriptions from a user message. */
 export function extractPersonalMemories(input) {
-  const text = String(input || '').replace(/```[\\s\\S]*?```/g, ' ').replace(/https?:\\/\\/\\S+/g, ' ').slice(0, 5000);
+  const text = String(input || '').replace(/```[\s\S]*?```/g, ' ').replace(/https?:\/\/\S+/g, ' ').slice(0, 5000);
   const found = [];
-  for (const raw of text.split(/(?<=[.!?])\\s+|\\n+/)) {
-    const sentence = raw.trim().replace(/^[-*•\\s]+/, '').slice(0, 300);
+  for (const raw of text.split(/(?<=[.!?])\s+|\n+/)) {
+    const sentence = raw.trim().replace(/^[-*•\s]+/, '').slice(0, 300);
     if (!sentence || sentence.includes('?') || !PERSONAL_STATEMENT.test(sentence) || SENSITIVE_DETAIL.test(sentence)) continue;
     if (!found.some(x => x.toLowerCase() === sentence.toLowerCase())) found.push(sentence);
     if (found.length >= 3) break;
