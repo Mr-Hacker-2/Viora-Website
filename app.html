@@ -601,7 +601,7 @@ if (!A[asst]) asst = 'auto';
 chats.forEach(c => { if (c.page && !c.page.files) c.page.files = [{ id: 'o', name: c.page.title || c.page.source || 'Page', text: c.page.text || '', source: c.page.source }]; });
 const dkey = 'viora_data_' + S.email; let D = ls.get(dkey, { projects: [], memory: [], memOn: true }), curP = null, editP = null;
 const saveD = () => ls.set(dkey, D);
-const save = () => { if (!ls.set(key, chats.slice(0, 80))) ls.set(key, chats.slice(0, 30)); };
+const save = () => { if (!ls.set(key, chats.slice(0, 80)) && !ls.set(key, chats.slice(0, 30))) setStatus('Could not save chats: browser storage is full or blocked. Export your data to keep them.', 8000); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const chat = () => chats.find(c => c.id === cur);
 const host = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
@@ -631,7 +631,7 @@ function suggestionIcon(text) {
 const stat0 = m => m.wait ? `<span style="color:var(--muted)">${esc(m.wait)}</span>` : m.stage ? `<span style="color:var(--muted)">${esc(m.stage)}</span>` : m.searching ? '<span style="color:var(--muted)">Searching the web…</span>' : '<span style="color:var(--muted)">Preparing your answer…</span>';
 const DOTS = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>', stat = m => stat0(m) + DOTS;
 const greet = () => { const h = new Date().getHours(); return h < 5 ? 'Burning the midnight oil' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
-function mdx(t, srcs) { const safe = Src.cleanSources(srcs || []); if (safe.length) t = t.replace(/\[(\d{1,2})\]/g, (x, n) => safe[n - 1] ? `[${n}](${safe[n - 1].url})` : x); return renderMarkdown(t); }
+function mdx(t, srcs) { const safe = Src.cleanSources(srcs || []); if (safe.length) t = t.split(/(```[\s\S]*?(?:```|$)|`[^`\n]*`)/).map((seg, i) => i % 2 ? seg : seg.replace(/\[(\d{1,2})\]\(?!\()/g, (x, n) => safe[n - 1] ? `[${n}](${safe[n - 1].url})` : x)).join(''); return renderMarkdown(t); }
 function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : stat(m); bindCodeCopy(el); Src.decorateCitations(el, m.src); }
 function msgHtml(m, i, last, enter) {
   if (m.role === 'user') return `<div class="msg user${enter ? ' enter' : ''}">${(m.att || []).length ? `<div class="msg-att">${m.att.map(f => `<span class="msg-att-i" title="${esc(f.name)}">${f.src && Src.parseUrl(f.src) ? Src.iconHtml({ url: f.src }, 14) : ''}${esc(f.name)}</span>`).join('')}</div>` : ''}<div class="user-text">${esc(m.content)}</div></div>`;
@@ -1043,7 +1043,7 @@ $('#composer').onsubmit = e => { e.preventDefault(); busy ? busy.abort() : send(
 $('#input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); busy || send(e.target.value); } });
 $('#input').addEventListener('input', grow);
 addEventListener('keydown', e => {
-  if (e.key === 'Escape') { busy?.abort(); hide(); }
+  if (e.key === 'Escape') { if (!document.querySelector('dialog[open]')) busy?.abort(); hide(); }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault(); $('#sh-search').focus(); $('#sh-search').select();
   }
