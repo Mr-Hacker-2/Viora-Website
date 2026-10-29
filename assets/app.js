@@ -167,9 +167,10 @@ if (page === 'login') {
 if (page === 'account') {
   if (!s) location.replace('login.html');
   else {
-    const name = s.name || s.email.split('@')[0];
-    const av = $('#avatar'); av.innerHTML = s.picture ? `<img src="${s.picture.replace(/"/g, '')}" alt="" referrerpolicy="no-referrer">` : '';
-    if (!s.picture) av.textContent = name[0].toUpperCase();
+    const name = s.name || (s.email || 'Account').split('@')[0];
+    const av = $('#avatar'); av.textContent = '';
+    if (/^https:\/\//i.test(s.picture || '')) { const im = document.createElement('img'); im.src = s.picture; im.alt = ''; im.referrerPolicy = 'no-referrer'; av.appendChild(im); }
+    else av.textContent = name[0].toUpperCase();
     $('#a-name').textContent = name; $('#a-email').textContent = s.email;
     $('#kv-email').textContent = s.email; $('#kv-name').textContent = name;
     $('#kv-prov').textContent = 'Google';
@@ -197,7 +198,7 @@ if (page === 'help') {
   input.addEventListener('input', apply);
   $$('.chip').forEach(c => c.onclick = () => { cat = c.dataset.cat; $$('.chip').forEach(x => x.setAttribute('aria-pressed', x === c)); apply(); });
   addEventListener('keydown', e => { if (e.key === '/' && document.activeElement !== input) { e.preventDefault(); input.focus(); } });
-  if (location.hash) { const t = $(location.hash + '.q'); if (t) t.open = true; }
+  if (location.hash.length > 1) { let id = location.hash.slice(1); try { id = decodeURIComponent(id); } catch {} const t = document.getElementById(id); if (t && t.matches('details.q')) t.open = true; }
   const secs = $$('.help-sec'), links = $$('.toc a');
   const spy = new IntersectionObserver(es => es.forEach(e => { if (e.isIntersecting) links.forEach(a => a.classList.toggle('on', a.getAttribute('href') === '#' + e.target.id)); }), { rootMargin: '-30% 0px -60% 0px' });
   secs.forEach(x => spy.observe(x));
