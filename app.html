@@ -1103,8 +1103,8 @@ document.addEventListener('click', e => {
   if (document.body.classList.contains('sb') && !e.target.closest('#sh-left, #open-full')) closeSb();
 });
 $('#composer').onsubmit = e => { e.preventDefault(); busy ? busy.abort() : send($('#input').value); };
-$('#hz-form').onsubmit = e => { e.preventDefault(); if (busy) { busy.abort(); return; } const text = $('#hz-input').value.trim(); if (!text) { $('#hz-input').focus(); toast('Paste the words or essay you want Viora to polish.'); return; } send(text + '\\n\\nRewrite this text in a ' + $('#hz-style').value + ' style. Preserve its meaning and all factual details. Return only the rewritten text.'); };
-$('#hz-input').addEventListener('input', () => { const n = $('#hz-input').value.trim().split(/\\s+/).filter(Boolean).length; $('#hz-count').textContent = n + (n === 1 ? ' word' : ' words'); });
+$('#hz-form').onsubmit = e => { e.preventDefault(); if (busy) { busy.abort(); return; } const text = $('#hz-input').value.trim(); if (!text) { $('#hz-input').focus(); toast('Paste the words or essay you want Viora to polish.'); return; } send(text + '\n\nRewrite this text in a ' + $('#hz-style').value + ' style. Preserve its meaning and all factual details. Return only the rewritten text.'); };
+$('#hz-input').addEventListener('input', () => { const n = $('#hz-input').value.trim().split(/\s+/).filter(Boolean).length; $('#hz-count').textContent = n + (n === 1 ? ' word' : ' words'); });
 $('#hz-copy').onclick = async () => { const value = $('#hz-output').value; if (!value) return; try { await navigator.clipboard.writeText(value); toast('Rewrite copied.'); } catch { $('#hz-output').focus(); $('#hz-output').select(); toast('Select and copy the rewritten text.'); } };
 $('#hz-replace').onclick = () => { if (!$('#hz-output').value) return; $('#hz-input').value = $('#hz-output').value; $('#hz-input').dispatchEvent(new Event('input')); $('#hz-input').focus(); };
 $('#input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); busy || send(e.target.value); } });
