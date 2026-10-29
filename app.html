@@ -541,7 +541,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
               <button type="button" id="attach-web" class="sheet-action"><span class="sheet-action-icon" data-ic="globe"></span><span class="sheet-copy"><span class="sheet-title">Search the web</span><span class="sheet-sub"></span></span></button>
             </section>
           </div>
-          <input id="file-input" type="file" hidden multiple accept="image/*,video/*,.xlsx,.pdf,.docx,.pptx,.txt,.md,.csv,.tsv,.json,.xml,.yml,.yaml,.html,.htm,.js,.ts,.py,.css,.java,.c,.cpp,.sql,.sh,.log">
+          <input id="file-input" type="file" hidden multiple accept="image/*,video/*,audio/wav,audio/mpeg,audio/flac,.wav,.mp3,.flac,.xlsx,.pdf,.docx,.pptx,.txt,.md,.csv,.tsv,.json,.xml,.yml,.yaml,.html,.htm,.js,.ts,.py,.css,.java,.c,.cpp,.sql,.sh,.log">
         </div>
         <div class="composer-right"><span id="hint" class="hint"></span><button id="send" class="send" type="submit" aria-label="Send"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 10h11M10 5l5 5-5 5"/></svg></button></div>
       </div>
@@ -874,26 +874,27 @@ const newChat = () => { cur = null; hide(); render(); $('#input').focus(); close
 const dlg = $('#dlg');
 const plain = html => { const d = new DOMParser().parseFromString(html, 'text/html'); d.querySelectorAll('script,style,noscript,svg,template').forEach(n => n.remove()); return { title: (d.title || '').trim().slice(0, 200), text: (d.body?.textContent || html).replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim().slice(0, 24000) }; };
 function setPage(p, source) { addAtt({ name: (p.title || source || 'Page').slice(0, 80), text: p.text, source, kind: 'web' }); }
-const FT = {}, IM = {}, VI = {};
+const FT = {}, IM = {}, VI = {}, AU = {};
 const idb = () => idb.p || (idb.p = new Promise((ok, no) => { const r = indexedDB.open('viora_files', 1); r.onupgradeneeded = () => r.result.createObjectStore('f'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
 const idbSet = async (k, v) => { try { (await idb()).transaction('f', 'readwrite').objectStore('f').put(v, k); } catch {} };
 const idbGet = async k => { try { const d = await idb(); return await new Promise(ok => { const q = d.transaction('f').objectStore('f').get(k); q.onsuccess = () => ok(q.result); q.onerror = () => ok(null); }); } catch { return null; } };
-async function full(f) { if (FT[f.id] == null) { const v = f.text != null ? { t: f.text, i: [], v: null } : await idbGet(f.id); FT[f.id] = v?.t || ''; IM[f.id] = v?.i || []; VI[f.id] = v?.v || null; } return FT[f.id]; }
+async function full(f) { if (FT[f.id] == null) { const v = f.text != null ? { t: f.text, i: [], v: null, a: null } : await idbGet(f.id); FT[f.id] = v?.t || ''; IM[f.id] = v?.i || []; VI[f.id] = v?.v || null; AU[f.id] = v?.a || null; } return FT[f.id]; }
 function addAtt(a) {
   let c = chat(); if (!c) { c = { id: String(Date.now()), title: a.name.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
   const p = c.page || (c.page = { files: [] }), id = 'f' + Date.now() + p.files.length, imgs = a.imgs || [];
-  FT[id] = a.text; IM[id] = imgs; VI[id] = a.video || null; idbSet(id, { t: a.text, i: imgs, v: a.video || null });
-  p.files.push({ id, name: a.name, kind: a.kind, source: a.source, n: a.text.length, ni: imgs.length, size: a.size, dur: a.dur, nativeVideo: !!a.video }); rebuild(c); save(); render();
+  FT[id] = a.text; IM[id] = imgs; VI[id] = a.video || null; AU[id] = a.audio || null; idbSet(id, { t: a.text, i: imgs, v: a.video || null, a: a.audio || null });
+  p.files.push({ id, name: a.name, kind: a.kind, source: a.source, n: a.text.length, ni: imgs.length, size: a.size, dur: a.dur, nativeVideo: !!a.video, nativeAudio: !!a.audio }); rebuild(c); save(); render();
 }
 function rebuild(c) { const p = c.page; if (!p || !p.files.length) { c.page = null; return; } p.title = p.files.length === 1 ? p.files[0].name : p.files.length + ' attachments'; p.source = p.files.length === 1 ? p.files[0].source : 'attachments'; p.text = ''; }
 /* long files: send the opening plus the passages that best match the question */
 async function pagePayload(c, q) {
-  const fs = c.page ? c.page.files : []; if (!fs.length) return { page: null, images: [] };
+  const fs = c.page ? c.page.files : []; if (!fs.length) return { page: null, images: [], video: null, audio: null };
   const words = [...new Set(q.toLowerCase().match(/[a-z0-9]{3,}/g) || [])], B = 24000, per = Math.floor(B / fs.length), out = [], images = [];
-  let video = null;
+  let video = null, audio = null;
   for (const f of fs) {
     const t = await full(f);
     if (f.kind === 'video' && VI[f.id] && !video) video = VI[f.id];
+    else if (f.kind === 'audio' && AU[f.id]) { if (audio) throw new Error('Attach one audio file at a time so Viora can analyze the correct recording.'); audio = AU[f.id]; }
     else images.push(...(IM[f.id] || []));
     if (t.length <= per) { out.push(wrapUntrusted(f.name, t)); continue; }
     const ch = []; for (let i = 0; i < t.length; i += 1500) ch.push(t.slice(i, i + 1500));
@@ -905,7 +906,7 @@ async function pagePayload(c, q) {
   // Never silently drop pages or frames: the model must know if the complete visual payload cannot fit.
   if (images.length > 8) throw new Error('This chat has more than 8 visual pages or frames. Remove some image/video/PDF attachments or send them in separate messages so Viora does not silently miss pages.');
   validateVisualPayload(images);
-  return { page: { title: c.page.title, text: out.join('\n\n'), source: c.page.source }, images, video };
+  return { page: { title: c.page.title, text: out.join('\n\n'), source: c.page.source }, images, video, audio };
 }
 const lib = {}, CDN = 'https://cdnjs.cloudflare.com/ajax/libs/';
 const load = src => lib[src] || (lib[src] = new Promise((ok, no) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = () => no(new Error('Could not load the file reader. Check your connection.')); document.head.appendChild(e); }));
@@ -1033,7 +1034,7 @@ async function readVideo(f, p) {
     v.pause(); v.removeAttribute('src'); v.load(); URL.revokeObjectURL(u);
   }
 }
-const EXPLAIN = { audio: 'is audio. Audio files cannot be analysed yet, so it was not attached.', zip: null, bmp: 'is a BMP image, which is not supported. Use PNG, JPEG or WebP.', gif: null, avi: 'is an AVI video, which browsers cannot decode. Convert it to MP4 or WebM.', unknown: null };
+const EXPLAIN = { audio: null, zip: null, bmp: 'is a BMP image, which is not supported. Use PNG, JPEG or WebP.', gif: null, avi: 'is an AVI video, which browsers cannot decode. Convert it to MP4 or WebM.', unknown: null };
 async function addFiles(fl) {
   for (const f of [...fl]) {
     if ((chat()?.page?.files.length || 0) + pending.filter(x => !x.err).length >= LIMITS.maxFiles) { toast('You can attach up to ' + LIMITS.maxFiles + ' items per chat.'); break; }
@@ -1042,14 +1043,16 @@ async function addFiles(fl) {
       const ext = (f.name.split('.').pop() || '').toLowerCase(), real = await sniff(f);
       if (p.cancel) throw new Error('cancelled');
       if (EXPLAIN[real]) throw new Error(EXPLAIN[real]);
-      const isImg = IMG_OK.has(real), isVid = VID_OK.has(real);
+      const isImg = IMG_OK.has(real), isVid = VID_OK.has(real), isAud = real === 'audio' && /^(mp3|wav|flac)$/.test(ext);
+      if (real === 'audio' && !isAud) throw new Error('is an unsupported audio format. Use WAV, MP3, or FLAC.');
       if (/^image\//.test(f.type) && !isImg) throw new Error('is not a PNG, JPEG, WebP or GIF image, even though its name says so.');
       if (/^video\//.test(f.type) && !isVid) throw new Error('is not an MP4 or WebM video.');
+      if (/^audio\//.test(f.type) && !isAud) throw new Error('is not a supported WAV, MP3 or FLAC audio file.');
       if (isImg && /^(pdf|docx|xlsx|pptx|txt|md|csv|json)$/.test(ext)) throw new Error('has a ' + ext + ' name but contains an image.');
-      const k = isImg ? 'image' : isVid ? 'video' : 'file';
-      if (f.size > (k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : LIMITS.doc)) throw new Error('is too large (limit ' + fmtSize(k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : LIMITS.doc) + ').');
-      p.msg = k === 'video' ? 'Extracting frames…' : k === 'image' ? 'Preparing image…' : 'Extracting text…'; render();
-      let r; if (k === 'image') r = await readImage(f, p); else if (k === 'video') r = await readVideo(f, p);
+      const k = isImg ? 'image' : isVid ? 'video' : isAud ? 'audio' : 'file';
+      if (f.size > (k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : k === 'audio' ? LIMITS.audio : LIMITS.doc)) throw new Error('is too large (limit ' + fmtSize(k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : k === 'audio' ? LIMITS.audio : LIMITS.doc) + ').');
+      p.msg = k === 'video' ? 'Extracting frames…' : k === 'image' ? 'Preparing image…' : k === 'audio' ? 'Preparing audio…' : 'Extracting text…'; render();
+      let r; if (k === 'image') r = await readImage(f, p); else if (k === 'video') r = await readVideo(f, p); else if (k === 'audio') r = await readAudio(f, p);
       else {
         const parsed = await readFile(f);
         const t = (typeof parsed === 'string' ? parsed : parsed.text || '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
@@ -1098,7 +1101,7 @@ $('#input').addEventListener('paste', e => { const fs = e.clipboardData?.files; 
 document.addEventListener('click', e => {
   const pd = e.target.closest('[data-pd]'); if (pd) { const p = pending.find(x => x.id === pd.dataset.pd); if (p) { p.cancel = true; const i = pending.indexOf(p); if (p.err) pending.splice(i, 1); render(); } return; }
   const b = e.target.closest('[data-rm]'), c = chat();
-  if (b && c && c.page) { c.page.files = c.page.files.filter(f => f.id !== b.dataset.rm); delete FT[b.dataset.rm]; delete IM[b.dataset.rm]; rebuild(c); save(); render(); return; }
+  if (b && c && c.page) { c.page.files = c.page.files.filter(f => f.id !== b.dataset.rm); delete FT[b.dataset.rm]; delete IM[b.dataset.rm]; delete VI[b.dataset.rm]; delete AU[b.dataset.rm]; rebuild(c); save(); render(); return; }
   if (!e.target.closest('.sheet, #model-btn, #attach, #sh-gear')) hide();
   if (document.body.classList.contains('sb') && !e.target.closest('#sh-left, #open-full')) closeSb();
 });
