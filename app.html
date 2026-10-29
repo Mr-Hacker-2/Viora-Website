@@ -311,6 +311,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
 
 </style>
 <link rel="stylesheet" href="assets/x/chat-surface.css">
+<link rel="stylesheet" href="assets/x/humanizer.css">
 
 <style id="app-final">
 /* Final layer — keep this block last.
@@ -507,6 +508,19 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   </header>
   <section id="model-sheet" class="sheet" hidden aria-label="Choose an assistant"><ul id="model-list" class="model-list" role="listbox"></ul><p class="sheet-foot">Viora Auto picks the best assistant for each message.</p></section>
   <main id="thread" class="thread" tabindex="-1"></main>
+  <section id="humanizer-studio" class="humanizer-studio" hidden aria-label="Humanizer split screen">
+    <div class="hz-hero"><div><span class="hz-eyebrow">VIORA WRITING STUDIO <i></i> HUMANIZER</span><h2>Keep your ideas. Polish the words.</h2><p>Paste an essay, paragraph, or rough draft. Your meaning stays yours; the rewrite appears beside it.</p></div><span class="hz-hero-mark" aria-hidden="true">Aa</span></div>
+    <form id="hz-form" class="hz-grid">
+      <section class="hz-card hz-input-card"><header class="hz-card-head"><div><span class="hz-step">01 / INPUT</span><h3>Your draft</h3></div><span class="hz-card-icon" aria-hidden="true">✎</span></header>
+        <label class="sr-only" for="hz-input">Paste your essay or words here</label><textarea id="hz-input" placeholder="Paste your essay, paragraph, or rough words here…" spellcheck="true"></textarea>
+        <footer class="hz-tools"><span id="hz-count">0 words</span><label class="hz-style">Writing style<select id="hz-style"><option value="natural">Natural</option><option value="academic">Academic</option><option value="professional">Professional</option><option value="casual">Casual</option></select></label><button class="hz-run" id="hz-run" type="submit">Polish my draft <span aria-hidden="true">↗</span></button></footer>
+      </section>
+      <section class="hz-card hz-output-card"><header class="hz-card-head"><div><span class="hz-step">02 / OUTPUT</span><h3>Viora’s rewrite</h3></div><span class="hz-live" aria-hidden="true"><i></i> AI OUTPUT</span></header>
+        <label class="sr-only" for="hz-output">AI rewritten text</label><textarea id="hz-output" readonly placeholder="Your polished version will appear here…"></textarea>
+        <footer class="hz-tools hz-output-tools"><span id="hz-status" role="status" aria-live="polite">Your rewritten text will appear here.</span><button class="hz-small" id="hz-copy" type="button" disabled>Copy</button><button class="hz-small" id="hz-replace" type="button" disabled>Use this text</button></footer>
+      </section>
+    </form>
+  </section>
   <div id="status" class="status" hidden role="status"></div>
   <form id="composer" class="composer">
     <button type="button" id="to-bottom" aria-label="Jump to the latest message"><svg viewBox="0 0 20 20" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 5l-5 5 5 5"/></svg> Latest</button>
@@ -580,7 +594,8 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   <div class="dl"><button class="btn" id="p-del" type="button" hidden>Delete</button><span style="flex:1"></span><button class="btn" id="p-x" type="button">Cancel</button><button class="btn p" id="p-ok" type="button">Save</button></div>
 </dialog>
 <dialog id="mdlg">
-  <h3>Memory</h3><p>Your saved context for future chats. Use the bookmark on an AI reply to save its question, or add facts manually. Memory stays on this device; edit or delete anything, and turn it off whenever you like.</p>
+  <h3>Memory</h3><p>Viora can remember explicit, non-sensitive preferences, interests, and goals you share. Memories stay on this device; review, edit, or delete them here. Passwords, health details, and other sensitive topics are skipped.</p>
+  <label style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:14px"><input type="checkbox" id="m-auto"> Automatically remember details I share</label>
   <label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:14px"><input type="checkbox" id="m-on"> Use memory in chats</label>
   <input type="search" id="m-q" placeholder="Search memory">
   <div id="mlist"></div>
@@ -617,7 +632,7 @@ import * as Src from './assets/x/sources.js';
 import { pick as pickModel } from './assets/x/caps.js';
 import { classify, shouldSearch, chain, Health, shouldFallback } from './assets/x/router.js';
 import { withPersona, normLevel, LEVELS } from './assets/x/persona.js';
-import { retrieveMemory, retrieveNotes, wrapUntrusted } from './assets/x/memory.js';
+import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories } from './assets/x/memory.js';
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes, validateVisualPayload } from './assets/x/media.js';
 import * as NP from './assets/x/netperf.js';
 (() => {
@@ -640,7 +655,8 @@ const pending = [];
 let tone = normLevel(ls.get('viora_tone', null)), chats = ls.get(key, []), cur = null, asst = ls.get('viora_assistant', 'auto'), web = ls.get('viora_web', true), busy = null, filter = '';
 if (!A[asst]) asst = 'auto';
 chats.forEach(c => { if (c.page && !c.page.files) c.page.files = [{ id: 'o', name: c.page.title || c.page.source || 'Page', text: c.page.text || '', source: c.page.source }]; });
-const dkey = 'viora_data_' + S.email; let D = ls.get(dkey, { projects: [], memory: [], memOn: true }), curP = null, editP = null;
+const dkey = 'viora_data_' + S.email; let D = ls.get(dkey, { projects: [], memory: [], memOn: true, autoMem: true }), curP = null, editP = null;
+if (typeof D.autoMem !== 'boolean') D.autoMem = true;
 const saveD = () => ls.set(dkey, D);
 const save = () => { if (!ls.set(key, chats.slice(0, 80)) && !ls.set(key, chats.slice(0, 30))) setStatus('Could not save chats: browser storage is full or blocked. Export your data to keep them.', 8000); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -715,6 +731,7 @@ function render() {
      animating every message made the chat flash several times per reply. Opening another chat animates nothing. */
   if (c && rendered.id !== c.id) c.messages.forEach(m => painted.add(m));
   rendered = { id: c ? c.id : null };
+  const humanizer = asst === 'human'; th.hidden = humanizer; $('#humanizer-studio').hidden = !humanizer; $('#composer').hidden = humanizer; syncHumanizer();
   const prompts = videos.length ? ['Summarize this video in order', 'Describe the main actions and scene changes', 'What is visible near the beginning and end?', 'Read any text visible in the frames'] : a.s;
   th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy, !painted.has(m))).join('') : `<section id="welcome" class="welcome welcome-v2">
   <div class="welcome-glow" aria-hidden="true"></div>
@@ -756,6 +773,7 @@ function render() {
   jump();
 }
 /* "Latest" button: appears when you have scrolled well above the newest message */
+function syncHumanizer() { const c = chat(), last = c && [...c.messages].reverse().find(m => m.role === 'assistant'); const out = $('#hz-output'); if (!out) return; out.value = last && last.content || ''; const active = !!busy && asst === 'human'; $('#hz-run').textContent = active ? 'Stop rewriting' : 'Polish my draft ↗'; $('#hz-run').classList.toggle('is-stop', active); $('#hz-copy').disabled = !out.value.trim(); $('#hz-replace').disabled = !out.value.trim(); $('#hz-status').textContent = active ? (out.value ? 'Viora is still polishing your draft…' : 'Viora is reading your draft…') : out.value ? 'Ready to use or copy.' : 'Your rewritten text will appear here.'; }
 function jump() { const th = $('#thread'), c = chat(); $('#to-bottom').classList.toggle('show', !!(c && c.messages.length) && th.scrollHeight - th.scrollTop - th.clientHeight > 240); }
 function sendState(on) { $('#send').innerHTML = on ? ic('stop') : SEND; $('#send').setAttribute('aria-label', on ? 'Stop' : 'Send'); $('#send').disabled = false; }
 async function send(text) {
@@ -767,14 +785,16 @@ async function send(text) {
   c.messages.push({ role: 'user', content: text, att: (c.page ? c.page.files : []).map(f => ({ name: f.name, kind: f.kind, src: f.kind === 'web' ? f.source : '' })) }, { role: 'assistant', content: '' });
   if (rendered.id !== c.id) rendered = { id: c.id }; /* a brand-new chat: its first messages are new, not "opened" */
   $('#input').value = ''; try { localStorage.removeItem('viora_draft_' + S.email); } catch {} grow(); save(); render();
-  const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); let timingStart = 0; busy = ctl; m.stage = 'Starting task…'; sendState(true);
-  const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 140, b = $('#b' + idx); if (b) { paintBody(b, m); if (near) th.scrollTop = th.scrollHeight; } };
+  const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); let timingStart = 0; busy = ctl; m.stage = 'Starting task…'; sendState(true); syncHumanizer();
+  const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 140, b = $('#b' + idx); if (b) { paintBody(b, m); if (near) th.scrollTop = th.scrollHeight; } if (asst === 'human') syncHumanizer(); };
   let eff = asst === 'auto' ? route(text, c) : asst;
   /* capability check: keep the chosen assistant when it can read the attachments, otherwise switch and say why */
   const pk = pickModel(eff, c.page ? c.page.files : [], Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
   const useWeb = shouldSearch(text, { assistant: eff, enabled: web && !!A[eff].web, hasPage: !!c.page, hasVisual: visualFiles(c).length > 0 }), pj = D.projects.find(x => x.id === c.pid);
+  const remembered = D.autoMem && eff !== 'human' ? rememberPersonalDetails(text) : 0;
+  if (remembered) toast('Saved ' + remembered + (remembered === 1 ? ' detail to Memory.' : ' details to Memory.') + ' You can review or remove them in Memory.');
   const context = { instructions: withPersona(eff, tone, pj ? pj.instr : ''), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
   m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
   try {
@@ -801,10 +821,11 @@ async function send(text) {
     if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(NP.describeHttpFailure(r.status, e.error || '')); }
     m.stage = 'Reading the response…'; paint();
-    const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0;
+    const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0, streamEnded = false;
     const handleLine = l => {
       if (!l.startsWith('data:')) return;
-      const d = l.slice(5).trim(); if (!d || d === '[DONE]') return;
+      const d = l.slice(5).trim(); if (!d) return;
+      if (d === '[DONE]') { streamEnded = true; return; }
       try {
         const j = JSON.parse(d);
         if (j.viora_meta) { m.model = j.viora_meta.model; m.timing = { ...m.timing, modelHeaderMs: j.viora_meta.modelHeaderMs }; render(); }
@@ -826,6 +847,7 @@ async function send(text) {
       const { done, value, stalled } = await NP.readChunk(rd); if (stalled) { m.note = 'The connection went quiet, so this reply may be cut short. Use Regenerate to try again.'; render(); break; } if (done) break;
       const split = NP.splitStreamLines(buf + dec.decode(value, { stream: true })); buf = split.rest;
       split.lines.forEach(handleLine);
+      if (streamEnded) { try { rd.cancel(); } catch {} break; }
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); });
     }
     NP.splitStreamLines(buf + dec.decode(), true).lines.forEach(handleLine);
@@ -1081,6 +1103,10 @@ document.addEventListener('click', e => {
   if (document.body.classList.contains('sb') && !e.target.closest('#sh-left, #open-full')) closeSb();
 });
 $('#composer').onsubmit = e => { e.preventDefault(); busy ? busy.abort() : send($('#input').value); };
+$('#hz-form').onsubmit = e => { e.preventDefault(); if (busy) { busy.abort(); return; } const text = $('#hz-input').value.trim(); if (!text) { $('#hz-input').focus(); toast('Paste the words or essay you want Viora to polish.'); return; } send(text + '\n\nRewrite this text in a ' + $('#hz-style').value + ' style. Preserve its meaning and all factual details. Return only the rewritten text.'); };
+$('#hz-input').addEventListener('input', () => { const n = $('#hz-input').value.trim().split(/\s+/).filter(Boolean).length; $('#hz-count').textContent = n + (n === 1 ? ' word' : ' words'); });
+$('#hz-copy').onclick = async () => { const value = $('#hz-output').value; if (!value) return; try { await navigator.clipboard.writeText(value); toast('Rewrite copied.'); } catch { $('#hz-output').focus(); $('#hz-output').select(); toast('Select and copy the rewritten text.'); } };
+$('#hz-replace').onclick = () => { if (!$('#hz-output').value) return; $('#hz-input').value = $('#hz-output').value; $('#hz-input').dispatchEvent(new Event('input')); $('#hz-input').focus(); };
 $('#input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); busy || send(e.target.value); } });
 $('#input').addEventListener('input', grow);
 addEventListener('keydown', e => {
@@ -1131,11 +1157,22 @@ $('#p-del').onclick = () => { if (!confirm('Delete this project? Its chats move 
 $('#projs').onclick = e => { if (e.target.closest('#np')) return openProj(null); const pe = e.target.closest('[data-pe]'); if (pe) return openProj(pe.dataset.pe); const it = e.target.closest('[data-p]'); if (it) { curP = curP === it.dataset.p ? null : it.dataset.p; cur = null; render(); } };
 /* memory */
 const mdlg = $('#mdlg');
+function rememberPersonalDetails(text) {
+  const facts = extractPersonalMemories(text); let added = 0;
+  for (const fact of facts) {
+    const normalized = fact.toLowerCase().replace(/\s+/g, ' ');
+    if (D.memory.some(m => String(m.t || '').toLowerCase().replace(/\s+/g, ' ') === normalized)) continue;
+    D.memory.unshift({ id: 'm' + Date.now() + '_' + added, t: fact, pid: null, auto: true }); added++;
+  }
+  if (added) { saveD(); }
+  return added;
+}
 function memList() { const q = $('#m-q').value.trim().toLowerCase();
-  $('#mlist').innerHTML = D.memory.filter(m => m.t.toLowerCase().includes(q)).map(m => { const p = D.projects.find(x => x.id === m.pid); return `<div class="mi"><input type="text" data-m="${m.id}" value="${esc(m.t)}" aria-label="Memory"><small>${p ? '📁 ' + esc(p.name) : 'All chats'}</small><button data-md="${m.id}" aria-label="Delete">×</button></div>`; }).join('') || '<div class="emp">Nothing saved yet.</div>'; }
-$('#mem').onclick = () => { hide(); $('#m-on').checked = D.memOn; const sc = $('#m-scope'); sc.hidden = !curP; if (curP) sc.innerHTML = '<option value="">All chats</option><option value="' + curP + '">This project</option>'; $('#m-q').value = ''; memList(); mdlg.showModal(); };
+  $('#mlist').innerHTML = D.memory.filter(m => m.t.toLowerCase().includes(q)).map(m => { const p = D.projects.find(x => x.id === m.pid); return `<div class="mi"><input type="text" data-m="${m.id}" value="${esc(m.t)}" aria-label="Memory"><small>${p ? '📁 ' + esc(p.name) : m.auto ? 'Auto-saved' : 'All chats'}</small><button data-md="${m.id}" aria-label="Delete">×</button></div>`; }).join('') || '<div class="emp">Nothing saved yet.</div>'; }
+$('#mem').onclick = () => { hide(); $('#m-on').checked = D.memOn; $('#m-auto').checked = D.autoMem !== false; const sc = $('#m-scope'); sc.hidden = !curP; if (curP) sc.innerHTML = '<option value="">All chats</option><option value="' + curP + '">This project</option>'; $('#m-q').value = ''; memList(); mdlg.showModal(); };
 $('#m-q').oninput = memList; $('#m-x').onclick = () => mdlg.close();
 $('#m-on').onchange = e => { D.memOn = e.target.checked; saveD(); };
+$('#m-auto').onchange = e => { D.autoMem = e.target.checked; saveD(); toast(D.autoMem ? 'Automatic memory is on.' : 'Automatic memory is off.'); };
 $('#m-add').onclick = () => { const t = $('#m-new').value.trim(); if (!t) return; D.memory.unshift({ id: 'm' + Date.now(), t: t.slice(0, 300), pid: $('#m-scope').hidden ? null : ($('#m-scope').value || null) }); $('#m-new').value = ''; saveD(); memList(); };
 $('#m-new').addEventListener('keydown', e => { if (e.key === 'Enter') $('#m-add').click(); });
 $('#mlist').onclick = e => { const d = e.target.closest('[data-md]'); if (d) { D.memory = D.memory.filter(m => m.id !== d.dataset.md); saveD(); memList(); } };
