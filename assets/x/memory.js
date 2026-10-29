@@ -5,8 +5,6 @@ export const tokens = s => [...new Set((String(s).toLowerCase().match(/[\p{L}\p{
 const stem = w => w.replace(/(ing|ed|es|s)$/, '');
 const score = (qs, text) => { const t = new Set(tokens(text).map(stem)); return qs.reduce((n, w) => n + (t.has(stem(w)) ? 1 : 0), 0); };
 
-/** Pick the saved memories relevant to this question: best matches first, then the newest up to `floor`
-    so short standing preferences still apply. Memories are newest-first. Returns at most `max` strings. */
 /* Extract only explicit, low-risk facts the user states about themself. Never infer from tone,
    uploaded material, or questions. Sensitive topics are deliberately excluded. */
 const PERSONAL_STATEMENT = /\b(?:i prefer|i like|i love|i enjoy|i use|i work as|i study|i am studying|i speak|i want to learn|i'm learning|my (?:name|favorite|favourite|goal|job|profession|pet|dog|cat|preferred name) is|call me)\b/i;
@@ -25,6 +23,8 @@ export function extractPersonalMemories(input) {
   return found;
 }
 
+/** Pick the saved memories relevant to this question: best matches first, then the newest up to `floor`
+    so short standing preferences still apply. Memories are newest-first. Returns at most `max` strings. */
 export function retrieveMemory(memories, query, { max = 12, floor = 4, pid = null } = {}) {
   const pool = (memories || []).filter(m => m && m.t && (!m.pid || m.pid === pid)), qs = tokens(query);
   const ranked = pool.map((m, i) => ({ m, i, v: score(qs, m.t) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v || a.i - b.i);
