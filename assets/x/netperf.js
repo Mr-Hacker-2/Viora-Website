@@ -13,7 +13,7 @@ export const DEFAULTS = Object.freeze({
   firstByteSec: 60,   // allow cold starts; retrying early can make slow hosts slower
   retries: 1,         // one retry for transient failures instead of repeated long waits
   stallSec: 25,       // detect a genuinely stalled stream sooner (0 = never)
-  history: 12,        // send less chat history by default to reduce payload and prompt processing (0 = all)
+  history: 8,         // send fewer recent messages by default to reduce prompt processing (0 = all)
   keepWarm: true,     // ping the server every ~8 minutes while the app is open
   restoreOnFail: true,// put your message back in the box if it could not be sent
   saveDraft: true     // remember what you were typing if the page is closed or reloads
