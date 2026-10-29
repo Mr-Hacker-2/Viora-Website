@@ -724,7 +724,7 @@ function render() {
   const videos = files.filter(f => f.kind === 'video'), audioFiles = files.filter(f => f.kind === 'audio');
   $('#video-note').hidden = !videos.length && !audioFiles.length;
   $('#video-note-copy').textContent = videos.length
-    ? videos.length === 1 ? (videos[0].nativeVideo ? 'Native video and embedded audio analysis ready.' : `${videos[0].ni || 0} timestamped frames ready. Sampled frames do not include the video’s audio.`) : `${videos.length} videos attached. Native MP4 clips include audio; sampled frames do not.`
+    ? videos.length === 1 ? (videos[0].nativeVideo ? `Native video and audio, plus ${videos[0].ni || 0} preview frames, ready.` : `${videos[0].ni || 0} timestamped frames ready. Sampled frames do not include the video’s audio.`) : `${videos.length} videos attached. Native MP4 clips include audio; sampled frames do not.`
     : 'Audio ready for transcription and sound analysis.';
   const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 120;
   /* Only messages that have not been on screen yet fade in. The whole thread is rebuilt on every state change, so
@@ -749,11 +749,11 @@ function render() {
   bindCodeCopy(th);
   if (has) { const fresh = c.messages.filter(m => !painted.has(m)); if (fresh.length) requestAnimationFrame(() => requestAnimationFrame(() => fresh.forEach(m => painted.add(m)))); }
   const chip = f => { const im = IM[f.id] && IM[f.id][0], web = f.kind === 'web' && Src.parseUrl(f.source);
-    const meta = f.kind === 'video' ? `${f.nativeVideo ? 'video + embedded audio' : (f.ni || 0) + ' frames'}${f.dur ? ' · ' + fmtTime(f.dur) : ''}` : f.kind === 'audio' ? 'audio recording' : f.kind === 'image' ? 'image' : f.kind === 'web' ? Src.hostOf(f.source) : (f.n ? Math.round(f.n / 1000) + 'k chars' : 'text');
+    const meta = f.kind === 'video' ? `${f.nativeVideo ? 'video + audio + ' + (f.ni || 0) + ' frames' : (f.ni || 0) + ' frames'}${f.dur ? ' · ' + fmtTime(f.dur) : ''}` : f.kind === 'audio' ? 'audio recording' : f.kind === 'image' ? 'image' : f.kind === 'web' ? Src.hostOf(f.source) : (f.n ? Math.round(f.n / 1000) + 'k chars' : 'text');
     return `<span class="attach-chip ready" title="${esc(f.name)}">${im ? `<img src="${im}" alt="">` : web ? `<span class="attach-icon">${Src.iconHtml({ url: f.source }, 20)}</span>` : `<span class="attach-icon">${esc((f.name.split('.').pop() || 'TXT').slice(0, 4).toUpperCase())}</span>`}<span class="attach-name">${esc(f.name)}<small>${f.size ? fmtSize(f.size) + ' · ' : ''}${esc(meta)} · <b class="st-ok">Ready</b></small></span><button type="button" class="page-chip-remove" data-rm="${f.id}" aria-label="Remove ${esc(f.name)}">×</button></span>`; };
   const pend = p => `<span class="attach-chip ${p.err ? 'failed' : 'busy'}" title="${esc(p.name)}" role="status"><span class="attach-icon">${p.err ? '!' : '<i class="spin"></i>'}</span><span class="attach-name">${esc(p.name)}<small>${fmtSize(p.size)} · ${p.err ? `<b class="st-err">Not analysed</b> — ${esc(p.err)}` : `<b>${esc(p.msg || 'Reading…')}</b>`}</small></span><button type="button" class="page-chip-remove" data-pd="${p.id}" aria-label="${p.err ? 'Dismiss' : 'Cancel'} ${esc(p.name)}">×</button></span>`;
   $('#attach-tray').innerHTML = files.map(chip).join('') + pending.map(pend).join(''); $('#attach-tray').hidden = !files.length && !pending.length;
-  $('#sh-filelist').innerHTML = files.map(f => `<div class="sh-sw-row" style="display:flex;gap:8px;align-items:center"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}<small style="display:block;color:var(--faint)">${f.kind === 'video' ? (f.nativeVideo ? 'video + embedded audio analysis' : 'video, ' + (f.ni || 0) + ' sampled frames') : f.kind === 'audio' ? 'audio recording' : f.kind === 'image' ? 'image' : f.n ? Math.round(f.n / 1000) + 'k characters, searched in full' : 'text'}</small></span><button type="button" class="sh-collapse" style="margin:0" data-rm="${f.id}" aria-label="Remove">×</button></div>`).join('') || '<span class="sh-empty">Nothing attached yet.</span>';
+  $('#sh-filelist').innerHTML = files.map(f => `<div class="sh-sw-row" style="display:flex;gap:8px;align-items:center"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}<small style="display:block;color:var(--faint)">${f.kind === 'video' ? (f.nativeVideo ? 'video + embedded audio + ' + (f.ni || 0) + ' preview frames' : 'video, ' + (f.ni || 0) + ' sampled frames') : f.kind === 'audio' ? 'audio recording' : f.kind === 'image' ? 'image' : f.n ? Math.round(f.n / 1000) + 'k characters, searched in full' : 'text'}</small></span><button type="button" class="sh-collapse" style="margin:0" data-rm="${f.id}" aria-label="Remove">×</button></div>`).join('') || '<span class="sh-empty">Nothing attached yet.</span>';
   const list = chats.filter(x => {
     if (curP ? x.pid !== curP : !!x.pid) return false;
     if (!filter) return true;
@@ -894,8 +894,10 @@ async function pagePayload(c, q) {
   let video = null, audio = null;
   for (const f of fs) {
     const t = await full(f);
-    if (f.kind === 'video' && VI[f.id] && !video) video = VI[f.id];
-    else if (f.kind === 'audio' && AU[f.id]) { if (audio) throw new Error('Attach one audio file at a time so Viora can analyze the correct recording.'); audio = AU[f.id]; }
+    if (f.kind === 'video') {
+      if (VI[f.id] && !video) video = VI[f.id];
+      images.push(...(IM[f.id] || []));
+    } else if (f.kind === 'audio' && AU[f.id]) { if (audio) throw new Error('Attach one audio file at a time so Viora can analyze the correct recording.'); audio = AU[f.id]; }
     else images.push(...(IM[f.id] || []));
     if (t.length <= per) { out.push(wrapUntrusted(f.name, t)); continue; }
     const ch = []; for (let i = 0; i < t.length; i += 1500) ch.push(t.slice(i, i + 1500));
@@ -1003,7 +1005,7 @@ async function readVideo(f, p) {
     // Native MP4 requests carry the original clip, so extracting frames as well would waste time.
     // Larger/unsupported clips use timestamped still frames as the fallback.
     const nativeEligible = /\.mp4$/i.test(f.name) && f.size <= 4e6 && dur <= 120;
-    const ts = nativeEligible ? [] : videoSampleTimes(dur), imgs = [];
+    const ts = videoSampleTimes(dur), imgs = [];
     for (const [i, t] of ts.entries()) {
       if (p.cancel) throw new Error('cancelled');
       p.msg = 'Extracting frame ' + (i + 1) + ' of ' + ts.length; render();
@@ -1027,7 +1029,8 @@ async function readVideo(f, p) {
       video = 'data:video/mp4;base64,' + raw;
     }
     if (video) {
-      return { text: '[Video: ' + f.name + ', ' + fmtTime(dur) + ' long. Native video understanding is enabled. Analyze the actual sequence and any audible audio; do not invent speech or events.]', imgs, dur, video };
+      const stamps = ts.map((t, i) => 'frame ' + (i + 1) + ' = ' + fmtTime(t)).join(', ');
+      return { text: '[Video: ' + f.name + ', ' + fmtTime(dur) + ' long. The native video and embedded audio are attached with ' + imgs.length + ' timestamped preview frames (' + stamps + '). Use the video to understand motion and audible content, and use the frames as a visual fallback. Do not claim no frames were provided. Only describe details supported by the clip or frames.]', imgs, dur, video };
     }
     const trunc = dur > LIMITS.video_frames * LIMITS.video_every_s ? ' Only ' + ts.length + ' frames from a ' + fmtTime(dur) + ' video were sampled, so details between frames are not visible.' : '';
     return { text: '[Video: ' + f.name + ', ' + fmtTime(dur) + ' long. ' + ts.length + ' still frames are attached in order, taken at: ' + ts.map((t, i) => 'frame ' + (i + 1) + ' = ' + fmtTime(t)).join(', ') + '. Audio is NOT analysed: do not describe speech or sound.' + trunc + ']', imgs, dur, video: null };
