@@ -580,7 +580,8 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   <div class="dl"><button class="btn" id="p-del" type="button" hidden>Delete</button><span style="flex:1"></span><button class="btn" id="p-x" type="button">Cancel</button><button class="btn p" id="p-ok" type="button">Save</button></div>
 </dialog>
 <dialog id="mdlg">
-  <h3>Memory</h3><p>Your saved context for future chats. Use the bookmark on an AI reply to save its question, or add facts manually. Memory stays on this device; edit or delete anything, and turn it off whenever you like.</p>
+  <h3>Memory</h3><p>Viora can remember explicit, non-sensitive preferences, interests, and goals you share. Memories stay on this device; review, edit, or delete them here. Passwords, health details, and other sensitive topics are skipped.</p>
+  <label style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:14px"><input type="checkbox" id="m-auto"> Automatically remember details I share</label>
   <label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:14px"><input type="checkbox" id="m-on"> Use memory in chats</label>
   <input type="search" id="m-q" placeholder="Search memory">
   <div id="mlist"></div>
@@ -617,7 +618,7 @@ import * as Src from './assets/x/sources.js';
 import { pick as pickModel } from './assets/x/caps.js';
 import { classify, shouldSearch, chain, Health, shouldFallback } from './assets/x/router.js';
 import { withPersona, normLevel, LEVELS } from './assets/x/persona.js';
-import { retrieveMemory, retrieveNotes, wrapUntrusted } from './assets/x/memory.js';
+import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories } from './assets/x/memory.js';
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes, validateVisualPayload } from './assets/x/media.js';
 import * as NP from './assets/x/netperf.js';
 (() => {
@@ -640,7 +641,8 @@ const pending = [];
 let tone = normLevel(ls.get('viora_tone', null)), chats = ls.get(key, []), cur = null, asst = ls.get('viora_assistant', 'auto'), web = ls.get('viora_web', true), busy = null, filter = '';
 if (!A[asst]) asst = 'auto';
 chats.forEach(c => { if (c.page && !c.page.files) c.page.files = [{ id: 'o', name: c.page.title || c.page.source || 'Page', text: c.page.text || '', source: c.page.source }]; });
-const dkey = 'viora_data_' + S.email; let D = ls.get(dkey, { projects: [], memory: [], memOn: true }), curP = null, editP = null;
+const dkey = 'viora_data_' + S.email; let D = ls.get(dkey, { projects: [], memory: [], memOn: true, autoMem: true }), curP = null, editP = null;
+if (typeof D.autoMem !== 'boolean') D.autoMem = true;
 const saveD = () => ls.set(dkey, D);
 const save = () => { if (!ls.set(key, chats.slice(0, 80)) && !ls.set(key, chats.slice(0, 30))) setStatus('Could not save chats: browser storage is full or blocked. Export your data to keep them.', 8000); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
@@ -775,6 +777,8 @@ async function send(text) {
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
   const useWeb = shouldSearch(text, { assistant: eff, enabled: web && !!A[eff].web, hasPage: !!c.page, hasVisual: visualFiles(c).length > 0 }), pj = D.projects.find(x => x.id === c.pid);
+  const remembered = D.autoMem ? rememberPersonalDetails(text) : 0;
+  if (remembered) toast('Saved ' + remembered + (remembered === 1 ? ' detail to Memory.' : ' details to Memory.') + ' You can review or remove them in Memory.');
   const context = { instructions: withPersona(eff, tone, pj ? pj.instr : ''), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
   m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
   try {
@@ -1133,11 +1137,22 @@ $('#p-del').onclick = () => { if (!confirm('Delete this project? Its chats move 
 $('#projs').onclick = e => { if (e.target.closest('#np')) return openProj(null); const pe = e.target.closest('[data-pe]'); if (pe) return openProj(pe.dataset.pe); const it = e.target.closest('[data-p]'); if (it) { curP = curP === it.dataset.p ? null : it.dataset.p; cur = null; render(); } };
 /* memory */
 const mdlg = $('#mdlg');
+function rememberPersonalDetails(text) {
+  const facts = extractPersonalMemories(text); let added = 0;
+  for (const fact of facts) {
+    const normalized = fact.toLowerCase().replace(/\\s+/g, ' ');
+    if (D.memory.some(m => String(m.t || '').toLowerCase().replace(/\\s+/g, ' ') === normalized)) continue;
+    D.memory.unshift({ id: 'm' + Date.now() + '_' + added, t: fact, pid: null, auto: true }); added++;
+  }
+  if (added) { saveD(); }
+  return added;
+}
 function memList() { const q = $('#m-q').value.trim().toLowerCase();
-  $('#mlist').innerHTML = D.memory.filter(m => m.t.toLowerCase().includes(q)).map(m => { const p = D.projects.find(x => x.id === m.pid); return `<div class="mi"><input type="text" data-m="${m.id}" value="${esc(m.t)}" aria-label="Memory"><small>${p ? '📁 ' + esc(p.name) : 'All chats'}</small><button data-md="${m.id}" aria-label="Delete">×</button></div>`; }).join('') || '<div class="emp">Nothing saved yet.</div>'; }
-$('#mem').onclick = () => { hide(); $('#m-on').checked = D.memOn; const sc = $('#m-scope'); sc.hidden = !curP; if (curP) sc.innerHTML = '<option value="">All chats</option><option value="' + curP + '">This project</option>'; $('#m-q').value = ''; memList(); mdlg.showModal(); };
+  $('#mlist').innerHTML = D.memory.filter(m => m.t.toLowerCase().includes(q)).map(m => { const p = D.projects.find(x => x.id === m.pid); return `<div class="mi"><input type="text" data-m="${m.id}" value="${esc(m.t)}" aria-label="Memory"><small>${p ? '📁 ' + esc(p.name) : m.auto ? 'Auto-saved' : 'All chats'}</small><button data-md="${m.id}" aria-label="Delete">×</button></div>`; }).join('') || '<div class="emp">Nothing saved yet.</div>'; }
+$('#mem').onclick = () => { hide(); $('#m-on').checked = D.memOn; $('#m-auto').checked = D.autoMem !== false; const sc = $('#m-scope'); sc.hidden = !curP; if (curP) sc.innerHTML = '<option value="">All chats</option><option value="' + curP + '">This project</option>'; $('#m-q').value = ''; memList(); mdlg.showModal(); };
 $('#m-q').oninput = memList; $('#m-x').onclick = () => mdlg.close();
 $('#m-on').onchange = e => { D.memOn = e.target.checked; saveD(); };
+$('#m-auto').onchange = e => { D.autoMem = e.target.checked; saveD(); toast(D.autoMem ? 'Automatic memory is on.' : 'Automatic memory is off.'); };
 $('#m-add').onclick = () => { const t = $('#m-new').value.trim(); if (!t) return; D.memory.unshift({ id: 'm' + Date.now(), t: t.slice(0, 300), pid: $('#m-scope').hidden ? null : ($('#m-scope').value || null) }); $('#m-new').value = ''; saveD(); memList(); };
 $('#m-new').addEventListener('keydown', e => { if (e.key === 'Enter') $('#m-add').click(); });
 $('#mlist').onclick = e => { const d = e.target.closest('[data-md]'); if (d) { D.memory = D.memory.filter(m => m.id !== d.dataset.md); saveD(); memList(); } };
