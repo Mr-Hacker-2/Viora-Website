@@ -41,7 +41,16 @@ export function normalize(p) {
     saveDraft: bool(p.saveDraft, DEFAULTS.saveDraft)
   };
 }
-export function load() { try { return normalize(JSON.parse(localStorage.getItem(KEY))); } catch (e) { return normalize(); } }
+export function load() {
+  try {
+    const stored = JSON.parse(localStorage.getItem(KEY));
+    if (!stored || typeof stored !== 'object') return normalize();
+    const p = { ...stored };
+    // Move untouched stock settings to the faster 8-message default; preserve custom choices.
+    if (p.firstByteSec === 60 && p.retries === 1 && p.stallSec === 25 && p.history === 12) p.history = 8;
+    return normalize(p);
+  } catch (e) { return normalize(); }
+}
 export function save(p) { const n = normalize(p); try { localStorage.setItem(KEY, JSON.stringify(n)); } catch (e) { /* blocked storage: the choice lasts until reload */ } current = n; return n; }
 let current = load();
 export const get = () => current;
