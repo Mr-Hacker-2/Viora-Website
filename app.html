@@ -541,7 +541,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
               <button type="button" id="attach-web" class="sheet-action"><span class="sheet-action-icon" data-ic="globe"></span><span class="sheet-copy"><span class="sheet-title">Search the web</span><span class="sheet-sub"></span></span></button>
             </section>
           </div>
-          <input id="file-input" type="file" hidden multiple accept="image/*,video/*,.xlsx,.pdf,.docx,.pptx,.txt,.md,.csv,.tsv,.json,.xml,.yml,.yaml,.html,.htm,.js,.ts,.py,.css,.java,.c,.cpp,.sql,.sh,.log">
+          <input id="file-input" type="file" hidden multiple accept="image/*,video/*,audio/wav,audio/mpeg,audio/flac,.wav,.mp3,.flac,.xlsx,.pdf,.docx,.pptx,.txt,.md,.csv,.tsv,.json,.xml,.yml,.yaml,.html,.htm,.js,.ts,.py,.css,.java,.c,.cpp,.sql,.sh,.log">
         </div>
         <div class="composer-right"><span id="hint" class="hint"></span><button id="send" class="send" type="submit" aria-label="Send"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M3.5 10h11M10 5l5 5-5 5"/></svg></button></div>
       </div>
@@ -671,7 +671,7 @@ const hide = () => { $('#model-sheet').hidden = true; $('#attach-sheet').hidden 
 const SEND = $('#send').innerHTML;
 const health = new Health();
 function visualFiles(c) {
-  return c && c.page ? c.page.files.filter(f => f.kind === 'video' || f.nativeVideo || (['image', 'file'].includes(f.kind) && (f.ni || 0) > 0)) : [];
+  return c && c.page ? c.page.files.filter(f => f.kind === 'video' || f.kind === 'audio' || f.nativeVideo || (['image', 'file'].includes(f.kind) && (f.ni || 0) > 0)) : [];
 }
 function route(t, c) {
   const files = c && c.page ? c.page.files : [];
@@ -721,11 +721,11 @@ function render() {
   $('#model-list').innerHTML = Object.entries(A).map(([k, v]) => `<li><button type="button" class="model-row" data-model="${k}" role="option" aria-selected="${k === asst}"><span class="row-icon">${icon(v.ic)}</span><span class="row-copy"><span class="row-name">${esc(v.n)}</span><span class="row-blurb">${esc(v.b)}</span></span><span class="row-tick">${k === asst ? ic('check') : ''}</span></button></li>`).join('');
   const pj = D.projects.find(x => x.id === curP); $('#page-chip').hidden = !pj; if (pj) $('#pbar').textContent = 'Project: ' + pj.name;
   const first = (S.name || S.email.split('@')[0]).split(' ')[0], th = $('#thread');
-  const videos = files.filter(f => f.kind === 'video');
-  $('#video-note').hidden = !videos.length;
-  $('#video-note-copy').textContent = videos.length === 1
-    ? (videos[0].nativeVideo ? 'Native video and audio understanding ready.' : `${videos[0].ni || 0} timestamped frames ready. Audio is not analysed in frame-sampling mode.`)
-    : `${videos.length} videos attached. Short eligible MP4 clips include audio; sampled-frame fallback does not.`;
+  const videos = files.filter(f => f.kind === 'video'), audioFiles = files.filter(f => f.kind === 'audio');
+  $('#video-note').hidden = !videos.length && !audioFiles.length;
+  $('#video-note-copy').textContent = videos.length
+    ? videos.length === 1 ? (videos[0].nativeVideo ? 'Native video and embedded audio analysis ready.' : `${videos[0].ni || 0} timestamped frames ready. Sampled frames do not include the video’s audio.`) : `${videos.length} videos attached. Native MP4 clips include audio; sampled frames do not.`
+    : 'Audio ready for transcription and sound analysis.';
   const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 120;
   /* Only messages that have not been on screen yet fade in. The whole thread is rebuilt on every state change, so
      animating every message made the chat flash several times per reply. Opening another chat animates nothing. */
@@ -749,11 +749,11 @@ function render() {
   bindCodeCopy(th);
   if (has) { const fresh = c.messages.filter(m => !painted.has(m)); if (fresh.length) requestAnimationFrame(() => requestAnimationFrame(() => fresh.forEach(m => painted.add(m)))); }
   const chip = f => { const im = IM[f.id] && IM[f.id][0], web = f.kind === 'web' && Src.parseUrl(f.source);
-    const meta = f.kind === 'video' ? `${f.nativeVideo ? 'native video + audio' : (f.ni || 0) + ' frames'}${f.dur ? ' · ' + fmtTime(f.dur) : ''}` : f.kind === 'image' ? 'image' : f.kind === 'web' ? Src.hostOf(f.source) : (f.n ? Math.round(f.n / 1000) + 'k chars' : 'text');
+    const meta = f.kind === 'video' ? `${f.nativeVideo ? 'video + embedded audio' : (f.ni || 0) + ' frames'}${f.dur ? ' · ' + fmtTime(f.dur) : ''}` : f.kind === 'audio' ? 'audio recording' : f.kind === 'image' ? 'image' : f.kind === 'web' ? Src.hostOf(f.source) : (f.n ? Math.round(f.n / 1000) + 'k chars' : 'text');
     return `<span class="attach-chip ready" title="${esc(f.name)}">${im ? `<img src="${im}" alt="">` : web ? `<span class="attach-icon">${Src.iconHtml({ url: f.source }, 20)}</span>` : `<span class="attach-icon">${esc((f.name.split('.').pop() || 'TXT').slice(0, 4).toUpperCase())}</span>`}<span class="attach-name">${esc(f.name)}<small>${f.size ? fmtSize(f.size) + ' · ' : ''}${esc(meta)} · <b class="st-ok">Ready</b></small></span><button type="button" class="page-chip-remove" data-rm="${f.id}" aria-label="Remove ${esc(f.name)}">×</button></span>`; };
   const pend = p => `<span class="attach-chip ${p.err ? 'failed' : 'busy'}" title="${esc(p.name)}" role="status"><span class="attach-icon">${p.err ? '!' : '<i class="spin"></i>'}</span><span class="attach-name">${esc(p.name)}<small>${fmtSize(p.size)} · ${p.err ? `<b class="st-err">Not analysed</b> — ${esc(p.err)}` : `<b>${esc(p.msg || 'Reading…')}</b>`}</small></span><button type="button" class="page-chip-remove" data-pd="${p.id}" aria-label="${p.err ? 'Dismiss' : 'Cancel'} ${esc(p.name)}">×</button></span>`;
   $('#attach-tray').innerHTML = files.map(chip).join('') + pending.map(pend).join(''); $('#attach-tray').hidden = !files.length && !pending.length;
-  $('#sh-filelist').innerHTML = files.map(f => `<div class="sh-sw-row" style="display:flex;gap:8px;align-items:center"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}<small style="display:block;color:var(--faint)">${f.kind === 'video' ? (f.nativeVideo ? 'native video + audio understanding' : 'video, ' + (f.ni || 0) + ' sampled frames') : f.kind === 'image' ? 'image' : f.n ? Math.round(f.n / 1000) + 'k characters, searched in full' : 'text'}</small></span><button type="button" class="sh-collapse" style="margin:0" data-rm="${f.id}" aria-label="Remove">×</button></div>`).join('') || '<span class="sh-empty">Nothing attached yet.</span>';
+  $('#sh-filelist').innerHTML = files.map(f => `<div class="sh-sw-row" style="display:flex;gap:8px;align-items:center"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}<small style="display:block;color:var(--faint)">${f.kind === 'video' ? (f.nativeVideo ? 'video + embedded audio analysis' : 'video, ' + (f.ni || 0) + ' sampled frames') : f.kind === 'audio' ? 'audio recording' : f.kind === 'image' ? 'image' : f.n ? Math.round(f.n / 1000) + 'k characters, searched in full' : 'text'}</small></span><button type="button" class="sh-collapse" style="margin:0" data-rm="${f.id}" aria-label="Remove">×</button></div>`).join('') || '<span class="sh-empty">Nothing attached yet.</span>';
   const list = chats.filter(x => {
     if (curP ? x.pid !== curP : !!x.pid) return false;
     if (!filter) return true;
@@ -800,8 +800,9 @@ async function send(text) {
   try {
     const pp = await pagePayload(c, text);
     const expectsVisualData = !!(c.page && c.page.files.some(f => ((f.ni || 0) > 0 && (f.kind === 'image' || f.kind === 'video' || f.kind === 'file')) || f.nativeVideo));
+    if (c.page && c.page.files.some(f => f.kind === 'audio') && !pp.audio) throw new Error('The audio data did not load. Remove the recording and upload it again.');
     if (expectsVisualData && !pp.images.length && !pp.video) throw new Error('I can see that a picture or video is attached, but its visual data did not load. Please remove it and upload it again, then retry.');
-    m.stage = useWeb ? 'Connecting and preparing web research…' : pp.video ? 'Sending your video to Viora’s video-understanding model…' : expectsVisualData ? 'Sending your image to Viora vision…' : 'Connecting to Viora…'; paint();
+    m.stage = useWeb ? 'Connecting and preparing web research…' : pp.video ? 'Sending your video to Viora’s multimodal model…' : pp.audio ? 'Sending your audio to Viora’s multimodal model…' : expectsVisualData ? 'Sending your image to Viora’s multimodal model…' : 'Connecting to Viora…'; paint();
     timingStart = performance.now(); m.timing = { responseMs: null, sourcesMs: null, firstTokenMs: null, totalMs: null };
     const files = c.page ? c.page.files : [], names = Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])), tries = chain(eff, files, health);
     let r, last;
@@ -810,7 +811,7 @@ async function send(text) {
       const web2 = !!(A[a].web && useWeb);
       try {
         r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '') }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images, video: pp.video }) },
+          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '') }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images, video: pp.video, audio: pp.audio }) },
           { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
         if (m.timing.responseMs == null) m.timing.responseMs = Math.round(performance.now() - timingStart);
       } catch (e) { if (!shouldFallback(0, e)) throw e; health.fail(a); last = e; r = null; if (n < tries.length - 1) continue; throw e; }
@@ -874,26 +875,27 @@ const newChat = () => { cur = null; hide(); render(); $('#input').focus(); close
 const dlg = $('#dlg');
 const plain = html => { const d = new DOMParser().parseFromString(html, 'text/html'); d.querySelectorAll('script,style,noscript,svg,template').forEach(n => n.remove()); return { title: (d.title || '').trim().slice(0, 200), text: (d.body?.textContent || html).replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim().slice(0, 24000) }; };
 function setPage(p, source) { addAtt({ name: (p.title || source || 'Page').slice(0, 80), text: p.text, source, kind: 'web' }); }
-const FT = {}, IM = {}, VI = {};
+const FT = {}, IM = {}, VI = {}, AU = {};
 const idb = () => idb.p || (idb.p = new Promise((ok, no) => { const r = indexedDB.open('viora_files', 1); r.onupgradeneeded = () => r.result.createObjectStore('f'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
 const idbSet = async (k, v) => { try { (await idb()).transaction('f', 'readwrite').objectStore('f').put(v, k); } catch {} };
 const idbGet = async k => { try { const d = await idb(); return await new Promise(ok => { const q = d.transaction('f').objectStore('f').get(k); q.onsuccess = () => ok(q.result); q.onerror = () => ok(null); }); } catch { return null; } };
-async function full(f) { if (FT[f.id] == null) { const v = f.text != null ? { t: f.text, i: [], v: null } : await idbGet(f.id); FT[f.id] = v?.t || ''; IM[f.id] = v?.i || []; VI[f.id] = v?.v || null; } return FT[f.id]; }
+async function full(f) { if (FT[f.id] == null) { const v = f.text != null ? { t: f.text, i: [], v: null, a: null } : await idbGet(f.id); FT[f.id] = v?.t || ''; IM[f.id] = v?.i || []; VI[f.id] = v?.v || null; AU[f.id] = v?.a || null; } return FT[f.id]; }
 function addAtt(a) {
   let c = chat(); if (!c) { c = { id: String(Date.now()), title: a.name.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
   const p = c.page || (c.page = { files: [] }), id = 'f' + Date.now() + p.files.length, imgs = a.imgs || [];
-  FT[id] = a.text; IM[id] = imgs; VI[id] = a.video || null; idbSet(id, { t: a.text, i: imgs, v: a.video || null });
-  p.files.push({ id, name: a.name, kind: a.kind, source: a.source, n: a.text.length, ni: imgs.length, size: a.size, dur: a.dur, nativeVideo: !!a.video }); rebuild(c); save(); render();
+  FT[id] = a.text; IM[id] = imgs; VI[id] = a.video || null; AU[id] = a.audio || null; idbSet(id, { t: a.text, i: imgs, v: a.video || null, a: a.audio || null });
+  p.files.push({ id, name: a.name, kind: a.kind, source: a.source, n: a.text.length, ni: imgs.length, size: a.size, dur: a.dur, nativeVideo: !!a.video, nativeAudio: !!a.audio }); rebuild(c); save(); render();
 }
 function rebuild(c) { const p = c.page; if (!p || !p.files.length) { c.page = null; return; } p.title = p.files.length === 1 ? p.files[0].name : p.files.length + ' attachments'; p.source = p.files.length === 1 ? p.files[0].source : 'attachments'; p.text = ''; }
 /* long files: send the opening plus the passages that best match the question */
 async function pagePayload(c, q) {
-  const fs = c.page ? c.page.files : []; if (!fs.length) return { page: null, images: [] };
+  const fs = c.page ? c.page.files : []; if (!fs.length) return { page: null, images: [], video: null, audio: null };
   const words = [...new Set(q.toLowerCase().match(/[a-z0-9]{3,}/g) || [])], B = 24000, per = Math.floor(B / fs.length), out = [], images = [];
-  let video = null;
+  let video = null, audio = null;
   for (const f of fs) {
     const t = await full(f);
     if (f.kind === 'video' && VI[f.id] && !video) video = VI[f.id];
+    else if (f.kind === 'audio' && AU[f.id]) { if (audio) throw new Error('Attach one audio file at a time so Viora can analyze the correct recording.'); audio = AU[f.id]; }
     else images.push(...(IM[f.id] || []));
     if (t.length <= per) { out.push(wrapUntrusted(f.name, t)); continue; }
     const ch = []; for (let i = 0; i < t.length; i += 1500) ch.push(t.slice(i, i + 1500));
@@ -905,7 +907,7 @@ async function pagePayload(c, q) {
   // Never silently drop pages or frames: the model must know if the complete visual payload cannot fit.
   if (images.length > 8) throw new Error('This chat has more than 8 visual pages or frames. Remove some image/video/PDF attachments or send them in separate messages so Viora does not silently miss pages.');
   validateVisualPayload(images);
-  return { page: { title: c.page.title, text: out.join('\n\n'), source: c.page.source }, images, video };
+  return { page: { title: c.page.title, text: out.join('\n\n'), source: c.page.source }, images, video, audio };
 }
 const lib = {}, CDN = 'https://cdnjs.cloudflare.com/ajax/libs/';
 const load = src => lib[src] || (lib[src] = new Promise((ok, no) => { const e = document.createElement('script'); e.src = src; e.onload = ok; e.onerror = () => no(new Error('Could not load the file reader. Check your connection.')); document.head.appendChild(e); }));
@@ -1033,8 +1035,15 @@ async function readVideo(f, p) {
     v.pause(); v.removeAttribute('src'); v.load(); URL.revokeObjectURL(u);
   }
 }
-const EXPLAIN = { audio: 'is audio. Audio files cannot be analysed yet, so it was not attached.', zip: null, bmp: 'is a BMP image, which is not supported. Use PNG, JPEG or WebP.', gif: null, avi: 'is an AVI video, which browsers cannot decode. Convert it to MP4 or WebM.', unknown: null };
-async function addFiles(fl) {
+const EXPLAIN = { audio: null, zip: null, bmp: 'is a BMP image, which is not supported. Use PNG, JPEG or WebP.', gif: null, avi: 'is an AVI video, which browsers cannot decode. Convert it to MP4 or WebM.', unknown: null };
+async async function readAudio(f, p) {
+  p.msg = 'Encoding audio for secure analysis…'; render();
+  const data = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result || '')); r.onerror = () => reject(new Error('could not be read.')); r.readAsDataURL(f); });
+  const base64 = data.slice(data.indexOf(',') + 1), ext = (f.name.split('.').pop() || '').toLowerCase(), subtype = ext === 'mp3' ? 'mpeg' : ext;
+  if (!base64) throw new Error('could not be read.');
+  return { text: '[Audio attachment: ' + f.name + ']', audio: 'data:audio/' + subtype + ';base64,' + base64 };
+}
+function addFiles(fl) {
   for (const f of [...fl]) {
     if ((chat()?.page?.files.length || 0) + pending.filter(x => !x.err).length >= LIMITS.maxFiles) { toast('You can attach up to ' + LIMITS.maxFiles + ' items per chat.'); break; }
     const p = { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), name: f.name, size: f.size, msg: 'Checking file…' }; pending.push(p); render();
@@ -1042,14 +1051,17 @@ async function addFiles(fl) {
       const ext = (f.name.split('.').pop() || '').toLowerCase(), real = await sniff(f);
       if (p.cancel) throw new Error('cancelled');
       if (EXPLAIN[real]) throw new Error(EXPLAIN[real]);
-      const isImg = IMG_OK.has(real), isVid = VID_OK.has(real);
+      const isImg = IMG_OK.has(real), isVid = VID_OK.has(real), isAud = real === 'audio' && /^(mp3|wav|flac)$/.test(ext);
+      if (real === 'audio' && !isAud) throw new Error('is an unsupported audio format. Use WAV, MP3, or FLAC.');
       if (/^image\//.test(f.type) && !isImg) throw new Error('is not a PNG, JPEG, WebP or GIF image, even though its name says so.');
       if (/^video\//.test(f.type) && !isVid) throw new Error('is not an MP4 or WebM video.');
+      if (/^audio\//.test(f.type) && !isAud) throw new Error('is not a supported WAV, MP3 or FLAC audio file.');
       if (isImg && /^(pdf|docx|xlsx|pptx|txt|md|csv|json)$/.test(ext)) throw new Error('has a ' + ext + ' name but contains an image.');
-      const k = isImg ? 'image' : isVid ? 'video' : 'file';
-      if (f.size > (k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : LIMITS.doc)) throw new Error('is too large (limit ' + fmtSize(k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : LIMITS.doc) + ').');
-      p.msg = k === 'video' ? 'Extracting frames…' : k === 'image' ? 'Preparing image…' : 'Extracting text…'; render();
-      let r; if (k === 'image') r = await readImage(f, p); else if (k === 'video') r = await readVideo(f, p);
+      const k = isImg ? 'image' : isVid ? 'video' : isAud ? 'audio' : 'file';
+      if (k === 'audio' && chat()?.page?.files.some(x => x.kind === 'audio')) throw new Error('supports one audio recording per chat request. Remove the existing audio file first.');
+      if (f.size > (k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : k === 'audio' ? LIMITS.audio : LIMITS.doc)) throw new Error('is too large (limit ' + fmtSize(k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : k === 'audio' ? LIMITS.audio : LIMITS.doc) + ').');
+      p.msg = k === 'video' ? 'Extracting frames…' : k === 'image' ? 'Preparing image…' : k === 'audio' ? 'Preparing audio…' : 'Extracting text…'; render();
+      let r; if (k === 'image') r = await readImage(f, p); else if (k === 'video') r = await readVideo(f, p); else if (k === 'audio') r = await readAudio(f, p);
       else {
         const parsed = await readFile(f);
         const t = (typeof parsed === 'string' ? parsed : parsed.text || '').replace(/[ \t]+/g, ' ').replace(/\n{3,}/g, '\n\n').trim();
@@ -1098,7 +1110,7 @@ $('#input').addEventListener('paste', e => { const fs = e.clipboardData?.files; 
 document.addEventListener('click', e => {
   const pd = e.target.closest('[data-pd]'); if (pd) { const p = pending.find(x => x.id === pd.dataset.pd); if (p) { p.cancel = true; const i = pending.indexOf(p); if (p.err) pending.splice(i, 1); render(); } return; }
   const b = e.target.closest('[data-rm]'), c = chat();
-  if (b && c && c.page) { c.page.files = c.page.files.filter(f => f.id !== b.dataset.rm); delete FT[b.dataset.rm]; delete IM[b.dataset.rm]; rebuild(c); save(); render(); return; }
+  if (b && c && c.page) { c.page.files = c.page.files.filter(f => f.id !== b.dataset.rm); delete FT[b.dataset.rm]; delete IM[b.dataset.rm]; delete VI[b.dataset.rm]; delete AU[b.dataset.rm]; rebuild(c); save(); render(); return; }
   if (!e.target.closest('.sheet, #model-btn, #attach, #sh-gear')) hide();
   if (document.body.classList.contains('sb') && !e.target.closest('#sh-left, #open-full')) closeSb();
 });

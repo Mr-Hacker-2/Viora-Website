@@ -4,19 +4,19 @@
    describe the Viora assistants as the product ships them and must be kept in sync with that server.
    Short MP4 clips can use native video+audio understanding; larger clips fall back to timestamped still frames. */
 export const CAPS = {
-  auto:     { text: 1, image: 1, video: 1, docs: 1, audio: 0 },
-  flash:    { text: 1, image: 1, video: 1, docs: 1, audio: 0 },
-  search:   { text: 1, image: 1, video: 1, docs: 1, audio: 0 },
-  math:     { text: 1, image: 1, video: 1, docs: 1, audio: 0 },
-  human:    { text: 1, image: 0, video: 0, docs: 1, audio: 0 }
+  auto:     { text: 1, image: 1, video: 1, docs: 1, audio: 1 },
+  flash:    { text: 1, image: 1, video: 1, docs: 1, audio: 1 },
+  search:   { text: 1, image: 1, video: 1, docs: 1, audio: 1 },
+  math:     { text: 1, image: 1, video: 1, docs: 1, audio: 1 },
+  human:    { text: 1, image: 0, video: 0, docs: 1, audio: 1 }
 };
 export const FALLBACK = 'flash';
-const NEED = { image: 'images', video: 'video frames' };
+const NEED = { image: 'images', video: 'video frames', audio: 'audio files' };
 
 /** What the visual attachments of a chat require of the assistant. */
 export function needs(files) {
   const n = new Set();
-  for (const f of files || []) { if ((f.kind === 'image' || f.kind === 'file') && (f.ni || 0) > 0) n.add('image'); if (f.kind === 'video' && ((f.ni || 0) > 0 || f.nativeVideo)) n.add('video'); }
+  for (const f of files || []) { if ((f.kind === 'image' || f.kind === 'file') && (f.ni || 0) > 0) n.add('image'); if (f.kind === 'video' && ((f.ni || 0) > 0 || f.nativeVideo)) n.add('video'); if (f.kind === 'audio') n.add('audio'); }
   return [...n];
 }
 /** Keep the user's chosen assistant when it can do the job; otherwise switch to a compatible one and say why. */
