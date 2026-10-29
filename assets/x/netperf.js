@@ -12,7 +12,7 @@
 export const DEFAULTS = Object.freeze({
   firstByteSec: 60,   // allow cold starts; retrying early can make slow hosts slower
   retries: 1,         // one retry for transient failures instead of repeated long waits
-  stallSec: 25,       // detect a genuinely stalled stream sooner (0 = never)
+  stallSec: 90,       // allow slow reasoning and research between streamed tokens (0 = never)
   history: 8,         // send fewer recent messages by default to reduce prompt processing (0 = all)
   keepWarm: true,     // ping the server every ~8 minutes while the app is open
   restoreOnFail: true,// put your message back in the box if it could not be sent
@@ -20,9 +20,9 @@ export const DEFAULTS = Object.freeze({
 });
 
 export const PRESETS = Object.freeze({
-  fast: { firstByteSec: 45, retries: 0, stallSec: 20, history: 8, keepWarm: true },
+  fast: { firstByteSec: 45, retries: 0, stallSec: 60, history: 8, keepWarm: true },
   balanced: { ...DEFAULTS },
-  reliable: { firstByteSec: 90, retries: 4, stallSec: 60, history: 40, keepWarm: true, restoreOnFail: true, saveDraft: true }
+  reliable: { firstByteSec: 90, retries: 4, stallSec: 120, history: 40, keepWarm: true, restoreOnFail: true, saveDraft: true }
 });
 
 const KEY = 'viora_perf';
@@ -47,7 +47,7 @@ export function load() {
     if (!stored || typeof stored !== 'object') return normalize();
     const p = { ...stored };
     // Move untouched stock settings to the faster 8-message default; preserve custom choices.
-    if (p.firstByteSec === 60 && p.retries === 1 && p.stallSec === 25 && p.history === 12) p.history = 8;
+    if (p.firstByteSec === 60 && p.retries === 1 && (p.stallSec === 25 || p.stallSec === 90) && p.history === 12) p.history = 8;
     return normalize(p);
   } catch (e) { return normalize(); }
 }
