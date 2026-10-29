@@ -1036,7 +1036,7 @@ async function readVideo(f, p) {
   }
 }
 const EXPLAIN = { audio: null, zip: null, bmp: 'is a BMP image, which is not supported. Use PNG, JPEG or WebP.', gif: null, avi: 'is an AVI video, which browsers cannot decode. Convert it to MP4 or WebM.', unknown: null };
-async async function readAudio(f, p) {
+async function readAudio(f, p) {
   p.msg = 'Encoding audio for secure analysis…'; render();
   const data = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result || '')); r.onerror = () => reject(new Error('could not be read.')); r.readAsDataURL(f); });
   const base64 = data.slice(data.indexOf(',') + 1), ext = (f.name.split('.').pop() || '').toLowerCase(), subtype = ext === 'mp3' ? 'mpeg' : ext;
