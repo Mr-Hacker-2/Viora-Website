@@ -671,7 +671,7 @@ const hide = () => { $('#model-sheet').hidden = true; $('#attach-sheet').hidden 
 const SEND = $('#send').innerHTML;
 const health = new Health();
 function visualFiles(c) {
-  return c && c.page ? c.page.files.filter(f => f.kind === 'video' || f.nativeVideo || (['image', 'file'].includes(f.kind) && (f.ni || 0) > 0)) : [];
+  return c && c.page ? c.page.files.filter(f => f.kind === 'video' || f.kind === 'audio' || f.nativeVideo || (['image', 'file'].includes(f.kind) && (f.ni || 0) > 0)) : [];
 }
 function route(t, c) {
   const files = c && c.page ? c.page.files : [];
@@ -721,11 +721,11 @@ function render() {
   $('#model-list').innerHTML = Object.entries(A).map(([k, v]) => `<li><button type="button" class="model-row" data-model="${k}" role="option" aria-selected="${k === asst}"><span class="row-icon">${icon(v.ic)}</span><span class="row-copy"><span class="row-name">${esc(v.n)}</span><span class="row-blurb">${esc(v.b)}</span></span><span class="row-tick">${k === asst ? ic('check') : ''}</span></button></li>`).join('');
   const pj = D.projects.find(x => x.id === curP); $('#page-chip').hidden = !pj; if (pj) $('#pbar').textContent = 'Project: ' + pj.name;
   const first = (S.name || S.email.split('@')[0]).split(' ')[0], th = $('#thread');
-  const videos = files.filter(f => f.kind === 'video');
-  $('#video-note').hidden = !videos.length;
-  $('#video-note-copy').textContent = videos.length === 1
-    ? (videos[0].nativeVideo ? 'Native video and audio understanding ready.' : `${videos[0].ni || 0} timestamped frames ready. Audio is not analysed in frame-sampling mode.`)
-    : `${videos.length} videos attached. Short eligible MP4 clips include audio; sampled-frame fallback does not.`;
+  const videos = files.filter(f => f.kind === 'video'), audioFiles = files.filter(f => f.kind === 'audio');
+  $('#video-note').hidden = !videos.length && !audioFiles.length;
+  $('#video-note-copy').textContent = videos.length
+    ? videos.length === 1 ? (videos[0].nativeVideo ? 'Native video and embedded audio analysis ready.' : `${videos[0].ni || 0} timestamped frames ready. Sampled frames do not include the video’s audio.`) : `${videos.length} videos attached. Native MP4 clips include audio; sampled frames do not.`
+    : audioFiles.length === 1 ? 'Audio ready for transcription and sound analysis.' : `${audioFiles.length} audio files attached; analyze one recording at a time.`;
   const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 120;
   /* Only messages that have not been on screen yet fade in. The whole thread is rebuilt on every state change, so
      animating every message made the chat flash several times per reply. Opening another chat animates nothing. */
@@ -749,11 +749,11 @@ function render() {
   bindCodeCopy(th);
   if (has) { const fresh = c.messages.filter(m => !painted.has(m)); if (fresh.length) requestAnimationFrame(() => requestAnimationFrame(() => fresh.forEach(m => painted.add(m)))); }
   const chip = f => { const im = IM[f.id] && IM[f.id][0], web = f.kind === 'web' && Src.parseUrl(f.source);
-    const meta = f.kind === 'video' ? `${f.nativeVideo ? 'native video + audio' : (f.ni || 0) + ' frames'}${f.dur ? ' · ' + fmtTime(f.dur) : ''}` : f.kind === 'image' ? 'image' : f.kind === 'web' ? Src.hostOf(f.source) : (f.n ? Math.round(f.n / 1000) + 'k chars' : 'text');
+    const meta = f.kind === 'video' ? `${f.nativeVideo ? 'video + embedded audio' : (f.ni || 0) + ' frames'}${f.dur ? ' · ' + fmtTime(f.dur) : ''}` : f.kind === 'audio' ? 'audio recording' : f.kind === 'image' ? 'image' : f.kind === 'web' ? Src.hostOf(f.source) : (f.n ? Math.round(f.n / 1000) + 'k chars' : 'text');
     return `<span class="attach-chip ready" title="${esc(f.name)}">${im ? `<img src="${im}" alt="">` : web ? `<span class="attach-icon">${Src.iconHtml({ url: f.source }, 20)}</span>` : `<span class="attach-icon">${esc((f.name.split('.').pop() || 'TXT').slice(0, 4).toUpperCase())}</span>`}<span class="attach-name">${esc(f.name)}<small>${f.size ? fmtSize(f.size) + ' · ' : ''}${esc(meta)} · <b class="st-ok">Ready</b></small></span><button type="button" class="page-chip-remove" data-rm="${f.id}" aria-label="Remove ${esc(f.name)}">×</button></span>`; };
   const pend = p => `<span class="attach-chip ${p.err ? 'failed' : 'busy'}" title="${esc(p.name)}" role="status"><span class="attach-icon">${p.err ? '!' : '<i class="spin"></i>'}</span><span class="attach-name">${esc(p.name)}<small>${fmtSize(p.size)} · ${p.err ? `<b class="st-err">Not analysed</b> — ${esc(p.err)}` : `<b>${esc(p.msg || 'Reading…')}</b>`}</small></span><button type="button" class="page-chip-remove" data-pd="${p.id}" aria-label="${p.err ? 'Dismiss' : 'Cancel'} ${esc(p.name)}">×</button></span>`;
   $('#attach-tray').innerHTML = files.map(chip).join('') + pending.map(pend).join(''); $('#attach-tray').hidden = !files.length && !pending.length;
-  $('#sh-filelist').innerHTML = files.map(f => `<div class="sh-sw-row" style="display:flex;gap:8px;align-items:center"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}<small style="display:block;color:var(--faint)">${f.kind === 'video' ? (f.nativeVideo ? 'native video + audio understanding' : 'video, ' + (f.ni || 0) + ' sampled frames') : f.kind === 'image' ? 'image' : f.n ? Math.round(f.n / 1000) + 'k characters, searched in full' : 'text'}</small></span><button type="button" class="sh-collapse" style="margin:0" data-rm="${f.id}" aria-label="Remove">×</button></div>`).join('') || '<span class="sh-empty">Nothing attached yet.</span>';
+  $('#sh-filelist').innerHTML = files.map(f => `<div class="sh-sw-row" style="display:flex;gap:8px;align-items:center"><span style="flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap">${esc(f.name)}<small style="display:block;color:var(--faint)">${f.kind === 'video' ? (f.nativeVideo ? 'video + embedded audio analysis' : 'video, ' + (f.ni || 0) + ' sampled frames') : f.kind === 'audio' ? 'audio recording' : f.kind === 'image' ? 'image' : f.n ? Math.round(f.n / 1000) + 'k characters, searched in full' : 'text'}</small></span><button type="button" class="sh-collapse" style="margin:0" data-rm="${f.id}" aria-label="Remove">×</button></div>`).join('') || '<span class="sh-empty">Nothing attached yet.</span>';
   const list = chats.filter(x => {
     if (curP ? x.pid !== curP : !!x.pid) return false;
     if (!filter) return true;
@@ -800,8 +800,9 @@ async function send(text) {
   try {
     const pp = await pagePayload(c, text);
     const expectsVisualData = !!(c.page && c.page.files.some(f => ((f.ni || 0) > 0 && (f.kind === 'image' || f.kind === 'video' || f.kind === 'file')) || f.nativeVideo));
+    if (c.page && c.page.files.some(f => f.kind === 'audio') && !pp.audio) throw new Error('The audio data did not load. Remove the recording and upload it again.');
     if (expectsVisualData && !pp.images.length && !pp.video) throw new Error('I can see that a picture or video is attached, but its visual data did not load. Please remove it and upload it again, then retry.');
-    m.stage = useWeb ? 'Connecting and preparing web research…' : pp.video ? 'Sending your video to Viora’s video-understanding model…' : expectsVisualData ? 'Sending your image to Viora vision…' : 'Connecting to Viora…'; paint();
+    m.stage = useWeb ? 'Connecting and preparing web research…' : pp.video ? 'Sending your video to Viora’s multimodal model…' : pp.audio ? 'Sending your audio to Viora’s multimodal model…' : expectsVisualData ? 'Sending your image to Viora’s multimodal model…' : 'Connecting to Viora…'; paint();
     timingStart = performance.now(); m.timing = { responseMs: null, sourcesMs: null, firstTokenMs: null, totalMs: null };
     const files = c.page ? c.page.files : [], names = Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])), tries = chain(eff, files, health);
     let r, last;
@@ -810,7 +811,7 @@ async function send(text) {
       const web2 = !!(A[a].web && useWeb);
       try {
         r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '') }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images, video: pp.video }) },
+          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '') }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images, video: pp.video, audio: pp.audio }) },
           { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
         if (m.timing.responseMs == null) m.timing.responseMs = Math.round(performance.now() - timingStart);
       } catch (e) { if (!shouldFallback(0, e)) throw e; health.fail(a); last = e; r = null; if (n < tries.length - 1) continue; throw e; }
@@ -1035,7 +1036,14 @@ async function readVideo(f, p) {
   }
 }
 const EXPLAIN = { audio: null, zip: null, bmp: 'is a BMP image, which is not supported. Use PNG, JPEG or WebP.', gif: null, avi: 'is an AVI video, which browsers cannot decode. Convert it to MP4 or WebM.', unknown: null };
-async function addFiles(fl) {
+async async function readAudio(f, p) {
+  p.msg = 'Encoding audio for secure analysis…'; render();
+  const data = await new Promise((resolve, reject) => { const r = new FileReader(); r.onload = () => resolve(String(r.result || '')); r.onerror = () => reject(new Error('could not be read.')); r.readAsDataURL(f); });
+  const base64 = data.slice(data.indexOf(',') + 1), ext = (f.name.split('.').pop() || '').toLowerCase(), subtype = ext === 'mp3' ? 'mpeg' : ext;
+  if (!base64) throw new Error('could not be read.');
+  return { text: '[Audio attachment: ' + f.name + ']', audio: 'data:audio/' + subtype + ';base64,' + base64 };
+}
+function addFiles(fl) {
   for (const f of [...fl]) {
     if ((chat()?.page?.files.length || 0) + pending.filter(x => !x.err).length >= LIMITS.maxFiles) { toast('You can attach up to ' + LIMITS.maxFiles + ' items per chat.'); break; }
     const p = { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), name: f.name, size: f.size, msg: 'Checking file…' }; pending.push(p); render();
