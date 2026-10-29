@@ -1,6 +1,6 @@
 import test from 'node:test'; import assert from 'node:assert/strict';
 import { DEFAULT_LEVEL, personaFor, withPersona, normLevel } from '../assets/x/persona.js';
-test('default level is plain without forced personality instructions', () => { assert.equal(DEFAULT_LEVEL, 'off'); assert.equal(personaFor('flash'), ''); });
+test('default level is plain without forced personality instructions', () => { assert.equal(DEFAULT_LEVEL, 'off'); assert.equal(personaFor('flash'), ''); assert.match(withPersona('flash'), /Answer the user's actual request/); });
 test('off adds nothing', () => assert.equal(personaFor('flash', 'off'), ''));
 test('rewriting and unknown assistants stay plain', () => { for (const a of ['human', 'humanize', 'legacy']) assert.equal(personaFor(a, 'vivid'), ''); });
 test('code safety rule is always present', () => { for (const l of ['warm', 'vivid']) assert.match(withPersona('math', l), /code blocks/); });
