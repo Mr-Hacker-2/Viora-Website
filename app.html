@@ -1043,7 +1043,7 @@ async function readAudio(f, p) {
   if (!base64) throw new Error('could not be read.');
   return { text: '[Audio attachment: ' + f.name + ']', audio: 'data:audio/' + subtype + ';base64,' + base64 };
 }
-function addFiles(fl) {
+async function addFiles(fl) {
   for (const f of [...fl]) {
     if ((chat()?.page?.files.length || 0) + pending.filter(x => !x.err).length >= LIMITS.maxFiles) { toast('You can attach up to ' + LIMITS.maxFiles + ' items per chat.'); break; }
     const p = { id: 'p' + Date.now() + Math.random().toString(36).slice(2, 6), name: f.name, size: f.size, msg: 'Checking file…' }; pending.push(p); render();
