@@ -674,7 +674,7 @@ function suggestionIcon(text) {
 const stat0 = m => m.wait ? `<span style="color:var(--muted)">${esc(m.wait)}</span>` : m.stage ? `<span style="color:var(--muted)">${esc(m.stage)}</span>` : m.searching ? '<span style="color:var(--muted)">Searching the web…</span>' : '<span style="color:var(--muted)">Preparing your answer…</span>';
 const DOTS = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>', stat = m => stat0(m) + DOTS;
 const greet = () => { const h = new Date().getHours(); return h < 5 ? 'Burning the midnight oil' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
-function mdx(t, srcs) { const safe = Src.cleanSources(srcs || []); if (safe.length) t = t.split(/(```[\s\S]*?(?:```|$)|`[^`\n]*`)/).map((seg, i) => i % 2 ? seg : seg.replace(/\[(\d{1,2})\]\(?!\()/g, (x, n) => safe[n - 1] ? `[${n}](${safe[n - 1].url})` : x)).join(''); return renderMarkdown(t); }
+function mdx(t, srcs) { const safe = Src.cleanSources(srcs || []); if (safe.length) t = t.split(/(```[\s\S]*?(?:```|$)|`[^`\n]*`)/).map((seg, i) => i % 2 ? seg : seg.replace(/\[(\d{1,2})\](?!\()/g, (x, n) => safe[n - 1] ? `[${n}](${safe[n - 1].url})` : x)).join(''); return renderMarkdown(t); }
 function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : stat(m); bindCodeCopy(el); Src.decorateCitations(el, m.src); }
 function msgHtml(m, i, last, enter) {
   if (m.role === 'user') return `<div class="msg user${enter ? ' enter' : ''}">${(m.att || []).length ? `<div class="msg-att">${m.att.map(f => `<span class="msg-att-i" title="${esc(f.name)}">${f.src && Src.parseUrl(f.src) ? Src.iconHtml({ url: f.src }, 14) : ''}${esc(f.name)}</span>`).join('')}</div>` : ''}<div class="user-text">${esc(m.content)}</div></div>`;
