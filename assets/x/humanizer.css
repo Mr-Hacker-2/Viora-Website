@@ -1,5 +1,5 @@
 /* Humanizer split-screen writing studio */
-:root[data-model="humanize"] #humanizer-studio[hidden]{display:none!important}
+:root[data-model="humanize"] #humanizer-studio[hidden],:root[data-model="humanize"] #thread[hidden],:root[data-model="humanize"] #composer[hidden]{display:none!important}
 :root[data-model="humanize"] #humanizer-studio{
   display:flex;flex-direction:column;min-height:0;overflow:auto;overscroll-behavior:contain;
   padding:clamp(18px,3vw,38px);background:
