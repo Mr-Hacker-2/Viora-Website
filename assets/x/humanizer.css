@@ -1,0 +1,55 @@
+/* Humanizer split-screen writing studio */
+:root[data-model="humanize"] #humanizer-studio[hidden]{display:none!important}
+:root[data-model="humanize"] #humanizer-studio{
+  display:flex;flex-direction:column;min-height:0;overflow:auto;overscroll-behavior:contain;
+  padding:clamp(18px,3vw,38px);background:
+    radial-gradient(100% 58% at 50% -8%,color-mix(in srgb,var(--rose) 15%,transparent),transparent 70%),
+    linear-gradient(180deg,color-mix(in srgb,var(--ink-2) 88%,var(--rose)),var(--ink));
+}
+:root[data-model="humanize"] #humanizer-studio .hz-hero,
+:root[data-model="humanize"] #humanizer-studio .hz-grid{width:min(100%,1280px);margin-inline:auto}
+:root[data-model="humanize"] #humanizer-studio .hz-hero{display:flex;align-items:center;justify-content:space-between;gap:24px;margin-bottom:24px}
+:root[data-model="humanize"] #humanizer-studio .hz-eyebrow{display:flex;align-items:center;gap:9px;color:var(--rose);font-size:11px;font-weight:750;letter-spacing:.13em}
+:root[data-model="humanize"] #humanizer-studio .hz-eyebrow i,
+:root[data-model="humanize"] #humanizer-studio .hz-live i{width:7px;height:7px;border-radius:50%;background:var(--rose);box-shadow:0 0 12px color-mix(in srgb,var(--rose) 65%,transparent)}
+:root[data-model="humanize"] #humanizer-studio .hz-hero h2{margin:10px 0 7px;color:var(--paper);font-size:clamp(25px,3vw,38px);line-height:1.08;letter-spacing:-.045em}
+:root[data-model="humanize"] #humanizer-studio .hz-hero p{margin:0;color:var(--muted);font-size:14px;line-height:1.55}
+:root[data-model="humanize"] #humanizer-studio .hz-hero-mark{display:grid;place-items:center;flex:0 0 76px;height:76px;border:1px solid color-mix(in srgb,var(--rose) 35%,var(--line));border-radius:25px;color:var(--rose);background:linear-gradient(145deg,color-mix(in srgb,var(--rose) 18%,var(--raised)),var(--ink-2));box-shadow:0 15px 42px color-mix(in srgb,var(--rose) 12%,transparent);font:700 27px/1 var(--serif)}
+:root[data-model="humanize"] #humanizer-studio .hz-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:stretch}
+:root[data-model="humanize"] #humanizer-studio .hz-card{display:flex;flex-direction:column;min-width:0;min-height:420px;padding:17px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(160deg,color-mix(in srgb,var(--ink-2) 95%,var(--rose)),var(--ink-2));box-shadow:var(--shadow-lg);overflow:hidden}
+:root[data-model="humanize"] #humanizer-studio .hz-input-card{border-top:2px solid color-mix(in srgb,var(--rose) 62%,var(--line))}
+:root[data-model="humanize"] #humanizer-studio .hz-output-card{border-top:2px solid var(--rose);background:linear-gradient(160deg,color-mix(in srgb,var(--rose) 8%,var(--ink-2)),var(--ink-2) 44%)}
+:root[data-model="humanize"] #humanizer-studio .hz-card-head{display:flex;align-items:center;justify-content:space-between;min-height:44px;margin-bottom:10px}
+:root[data-model="humanize"] #humanizer-studio .hz-step{color:var(--faint);font-size:10px;font-weight:750;letter-spacing:.12em}
+:root[data-model="humanize"] #humanizer-studio .hz-card-head h3{margin:4px 0 0;color:var(--paper);font-size:17px;font-weight:650;letter-spacing:-.02em}
+:root[data-model="humanize"] #humanizer-studio .hz-card-icon{color:var(--rose);font-size:22px}
+:root[data-model="humanize"] #humanizer-studio .hz-live{display:flex;align-items:center;gap:7px;color:var(--rose);font-size:9px;font-weight:750;letter-spacing:.1em}
+:root[data-model="humanize"] #humanizer-studio #hz-input,
+:root[data-model="humanize"] #humanizer-studio #hz-output{display:block;flex:1;width:100%;min-height:260px;resize:vertical;border:1px solid var(--line);border-radius:13px;padding:15px;background:color-mix(in srgb,var(--ink) 70%,transparent);color:var(--paper);font:400 14px/1.72 var(--sans);outline:none}
+:root[data-model="humanize"] #humanizer-studio #hz-input:focus{border-color:color-mix(in srgb,var(--rose) 74%,var(--line));box-shadow:0 0 0 3px color-mix(in srgb,var(--rose) 12%,transparent)}
+:root[data-model="humanize"] #humanizer-studio #hz-output{background:color-mix(in srgb,var(--ink) 47%,transparent)}
+:root[data-model="humanize"] #humanizer-studio #hz-output::placeholder,
+:root[data-model="humanize"] #humanizer-studio #hz-input::placeholder{color:var(--faint)}
+:root[data-model="humanize"] #humanizer-studio .hz-tools{display:flex;align-items:center;gap:9px;flex-wrap:wrap;padding-top:13px;color:var(--muted);font-size:11px}
+:root[data-model="humanize"] #humanizer-studio .hz-style{display:flex;align-items:center;gap:8px;margin-left:auto;color:var(--muted);font-size:11px}
+:root[data-model="humanize"] #humanizer-studio .hz-style select{max-width:145px;padding:8px 25px 8px 10px;border:1px solid var(--line);border-radius:10px;background:var(--raised);color:var(--paper);font:inherit}
+:root[data-model="humanize"] #humanizer-studio .hz-run{display:flex;align-items:center;justify-content:center;gap:8px;min-height:38px;padding:0 14px;border:0;border-radius:11px;background:linear-gradient(135deg,var(--rose),color-mix(in srgb,var(--rose) 68%,#7c5bff));color:var(--on-accent,#fff);font:650 12px/1 var(--sans);cursor:pointer;box-shadow:0 5px 16px color-mix(in srgb,var(--rose) 22%,transparent);transition:transform .15s,filter .15s}
+:root[data-model="humanize"] #humanizer-studio .hz-run:hover{transform:translateY(-1px);filter:brightness(1.08)}
+:root[data-model="humanize"] #humanizer-studio .hz-run:disabled{opacity:.7;cursor:wait}
+:root[data-model="humanize"] #humanizer-studio .hz-run.is-stop{background:var(--raised);color:var(--paper);box-shadow:none;border:1px solid var(--line)}
+:root[data-model="humanize"] #humanizer-studio .hz-small{padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--raised);color:var(--paper);font:600 11px/1 var(--sans);cursor:pointer}
+:root[data-model="humanize"] #humanizer-studio .hz-small:disabled{opacity:.45;cursor:not-allowed}
+:root[data-model="humanize"] #humanizer-studio #hz-status{flex:1;min-width:145px}
+@media(max-width:820px){
+  :root[data-model="humanize"] #humanizer-studio{padding:18px 14px}
+  :root[data-model="humanize"] #humanizer-studio .hz-grid{grid-template-columns:minmax(0,1fr)}
+  :root[data-model="humanize"] #humanizer-studio .hz-card{min-height:350px}
+  :root[data-model="humanize"] #humanizer-studio #hz-input,
+  :root[data-model="humanize"] #humanizer-studio #hz-output{min-height:220px}
+}
+@media(max-width:480px){
+  :root[data-model="humanize"] #humanizer-studio .hz-hero-mark{display:none}
+  :root[data-model="humanize"] #humanizer-studio .hz-tools{gap:8px}
+  :root[data-model="humanize"] #humanizer-studio .hz-style{margin-left:0}
+  :root[data-model="humanize"] #humanizer-studio .hz-run{width:100%}
+}
