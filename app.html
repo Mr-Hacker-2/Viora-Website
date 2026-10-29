@@ -725,7 +725,7 @@ function render() {
   $('#video-note').hidden = !videos.length && !audioFiles.length;
   $('#video-note-copy').textContent = videos.length
     ? videos.length === 1 ? (videos[0].nativeVideo ? 'Native video and embedded audio analysis ready.' : `${videos[0].ni || 0} timestamped frames ready. Sampled frames do not include the video’s audio.`) : `${videos.length} videos attached. Native MP4 clips include audio; sampled frames do not.`
-    : audioFiles.length === 1 ? 'Audio ready for transcription and sound analysis.' : `${audioFiles.length} audio files attached; analyze one recording at a time.`;
+    : 'Audio ready for transcription and sound analysis.';
   const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 120;
   /* Only messages that have not been on screen yet fade in. The whole thread is rebuilt on every state change, so
      animating every message made the chat flash several times per reply. Opening another chat animates nothing. */
@@ -1058,6 +1058,7 @@ function addFiles(fl) {
       if (/^audio\//.test(f.type) && !isAud) throw new Error('is not a supported WAV, MP3 or FLAC audio file.');
       if (isImg && /^(pdf|docx|xlsx|pptx|txt|md|csv|json)$/.test(ext)) throw new Error('has a ' + ext + ' name but contains an image.');
       const k = isImg ? 'image' : isVid ? 'video' : isAud ? 'audio' : 'file';
+      if (k === 'audio' && chat()?.page?.files.some(x => x.kind === 'audio')) throw new Error('supports one audio recording per chat request. Remove the existing audio file first.');
       if (f.size > (k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : k === 'audio' ? LIMITS.audio : LIMITS.doc)) throw new Error('is too large (limit ' + fmtSize(k === 'video' ? LIMITS.video : k === 'image' ? LIMITS.image : k === 'audio' ? LIMITS.audio : LIMITS.doc) + ').');
       p.msg = k === 'video' ? 'Extracting frames…' : k === 'image' ? 'Preparing image…' : k === 'audio' ? 'Preparing audio…' : 'Extracting text…'; render();
       let r; if (k === 'image') r = await readImage(f, p); else if (k === 'video') r = await readVideo(f, p); else if (k === 'audio') r = await readAudio(f, p);
