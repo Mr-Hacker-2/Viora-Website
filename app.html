@@ -1140,8 +1140,8 @@ const mdlg = $('#mdlg');
 function rememberPersonalDetails(text) {
   const facts = extractPersonalMemories(text); let added = 0;
   for (const fact of facts) {
-    const normalized = fact.toLowerCase().replace(/\\s+/g, ' ');
-    if (D.memory.some(m => String(m.t || '').toLowerCase().replace(/\\s+/g, ' ') === normalized)) continue;
+    const normalized = fact.toLowerCase().replace(/\s+/g, ' ');
+    if (D.memory.some(m => String(m.t || '').toLowerCase().replace(/\s+/g, ' ') === normalized)) continue;
     D.memory.unshift({ id: 'm' + Date.now() + '_' + added, t: fact, pid: null, auto: true }); added++;
   }
   if (added) { saveD(); }
