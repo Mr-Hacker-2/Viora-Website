@@ -11,11 +11,11 @@ const TEXT = {
 const PLAIN = new Set(['human', 'humanize']);
 const SUPPORTED = new Set(['auto', 'flash', 'search', 'math', 'human', 'humanize']);
 export const normLevel = v => (v in LEVELS ? v : DEFAULT_LEVEL);
-/** Instruction text to prepend to the project instructions ('' when off or not applicable). */
+/** Optional personality instruction ('' when plain, rewriting, or unsupported). */
 export function personaFor(assistant, level) {
   level = normLevel(level);
   if (level === 'off' || PLAIN.has(assistant) || !SUPPORTED.has(assistant)) return '';
-  return TEXT[level] + ' ' + BASE;
+  return TEXT[level];
 }
 const TASK_GUIDES = {
   search: 'Pro Search research standard: behave like a careful research analyst, not a generic chatbot. First identify the exact question and break it into the smallest useful subquestions. Use the live search results supplied in context; prefer primary sources such as official documentation, original studies, government or university material, company announcements, and direct datasets. Use reputable reporting for context and seek independent corroboration for consequential, disputed, or surprising claims when multiple sources are available. Check dates, author/publisher, relevance, and whether each page actually supports the claim. Cite only URLs and source metadata supplied by the search system, with numbered citations placed beside the claims they support; never fabricate a source, quote, statistic, date, or citation. Organize substantial research with a short direct answer, key findings, evidence and source comparisons, important caveats, and a concise conclusion. Distinguish confirmed facts from interpretation, note disagreement between sources, and explain when evidence is limited or outdated. Do not pad answers with generic filler or list sources without explaining their value. If search is disabled, times out, or returns no useful sources, say that clearly and do not imply live verification. Keep the result readable, specific, and transparent about uncertainty.',
@@ -24,4 +24,4 @@ const TASK_GUIDES = {
   flash: 'Answer quality: lead with the direct answer, then add the amount of explanation the question needs. Be concrete, organized, and useful. If a claim depends on current facts and reliable search results are not available, disclose that limitation rather than guessing.'
 };
 const INPUT_GUIDE = 'For attached documents, distinguish extracted text from content you could not read; never imply a scanned page, image, or video was fully understood if only partial OCR or sampled frames were available. For images, describe visible evidence rather than guessing hidden details. For video, use only the provided frames and timestamps; do not infer speech or audio unless audio was actually transcribed.';
-export const withPersona = (assistant, level, projectInstr) => [personaFor(assistant, level), TASK_GUIDES[assistant] || TASK_GUIDES.flash, INPUT_GUIDE, projectInstr].filter(Boolean).join('\n\n');
+export const withPersona = (assistant, level, projectInstr) => [BASE, personaFor(assistant, level), TASK_GUIDES[assistant] || TASK_GUIDES.flash, INPUT_GUIDE, projectInstr].filter(Boolean).join('\n\n');
