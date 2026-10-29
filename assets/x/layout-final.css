@@ -103,3 +103,79 @@
     transition-duration: .01ms !important;
   }
 }
+/* ==========================================================================
+   Layout v3 — one calm surface, one content column.
+   Append to the END of assets/x/layout-final.css.
+
+   Problems this fixes (app.html, desktop):
+   - pro-ui.css paints #thread, .composer and .bar as opaque panels of their own, which cut the
+     background glow into a hard-edged rectangle (the pale box in the middle of the page).
+   - The thread was capped at 850px, so its scrollbar floated inside the page instead of at the edge,
+     and it was a different width from the composer.
+   - Two identical "+" buttons sat in the header (Install app and New chat).
+   - The model picker and user row showed as empty boxes until the script filled them in.
+   - The "Viora on your phone" card floated under an empty history list instead of sitting at the bottom.
+   ========================================================================== */
+:root[data-model] { --col: 860px; --gutter: clamp(14px, 3vw, 28px); --sb: 8px; }
+
+/* 1. The centre card is the only surface; header, thread and composer sit on it. */
+:root[data-model] #sh-center > #thread,
+:root[data-model] #sh-center > #composer {
+  background: transparent !important;
+  box-shadow: none !important;
+  border-color: transparent !important;
+}
+:root[data-model] #sh-center > .bar {
+  background: color-mix(in srgb, var(--ink-2) 72%, transparent) !important;
+  backdrop-filter: blur(14px) saturate(1.25);
+  -webkit-backdrop-filter: blur(14px) saturate(1.25);
+}
+
+/* 2. One content column. The thread spans the card (scrollbar at the edge); padding keeps text in the column. */
+:root[data-model] #sh-center > #thread {
+  width: 100% !important;
+  max-width: none !important;
+  margin: 0 !important;
+  padding-inline: max(var(--gutter), calc((100% - var(--col)) / 2 - var(--sb))) !important;
+  scrollbar-gutter: stable both-edges !important;
+}
+:root[data-model] #thread .msg.assistant { max-width: 100% !important; margin-inline: 0 !important; }
+:root[data-model] #thread .msg.user { margin-left: auto !important; }
+
+/* 3. The composer uses the same column width as the messages. */
+:root[data-model] #composer {
+  width: 100% !important;
+  max-width: calc(var(--col) + 2 * var(--gutter)) !important;
+  margin-inline: auto !important;
+  padding-inline: var(--gutter) !important;
+}
+:root[data-model] #composer .composer-inner { width: 100% !important; max-width: none !important; }
+
+/* 4. Install-app button: a download icon in the accent colour, so it no longer looks like a second "New chat". */
+:root[data-model] .pwa-install:not([hidden]) {
+  font-size: 0 !important;
+  color: var(--accent) !important;
+  border-color: color-mix(in srgb, var(--accent) 35%, var(--line)) !important;
+  background: color-mix(in srgb, var(--accent) 8%, transparent) !important;
+}
+:root[data-model] .pwa-install::before {
+  content: "";
+  display: block;
+  width: 19px;
+  height: 19px;
+  background: currentColor;
+  -webkit-mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12M7 11l5 5 5-5M4 21h16'/%3E%3C/svg%3E") center / contain no-repeat;
+  mask: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='black' stroke-width='1.8' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M12 3v12M7 11l5 5 5-5M4 21h16'/%3E%3C/svg%3E") center / contain no-repeat;
+}
+
+/* 5. No empty boxes before the script fills in the model name and the user's name. */
+:root[data-model] .model-pill:has(.pill-name:empty),
+:root[data-model] .sh-user:has(#nm:empty) { visibility: hidden; }
+
+/* 6. Sidebar: the phone-app card sits at the bottom, with room above it. */
+@media (min-width: 980px) {
+  :root[data-model] #sh-left { display: flex !important; flex-direction: column; }
+  :root[data-model] #sh-left > * { flex: 0 0 auto; }
+  :root[data-model] #sh-left > #sh-hist { margin-bottom: 16px; }
+  :root[data-model] #sh-left > .sh-invite { margin-top: auto !important; }
+}
