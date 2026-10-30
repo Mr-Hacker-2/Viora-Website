@@ -1,0 +1,70 @@
+/* Final layout layer for app.html. Linked after every other stylesheet and inline block, so it wins the cascade. */
+:root[data-model] { --col: 820px; scrollbar-gutter: auto; }
+
+/* Hidden panels stay hidden: viora-layout-repair forces #thread to display:flex, which leaked the
+   welcome screen above the Humanizer studio. */
+:root[data-model] #sh-center > #thread[hidden],
+:root[data-model] #sh-center > #composer[hidden],
+:root[data-model] #sh-center > #humanizer-studio[hidden] { display: none !important; }
+
+/* Messages, welcome prompts and the composer share one centred 820px column. */
+:root[data-model] #thread > .msg.assistant {
+  width: 100% !important;
+  max-width: var(--col) !important;
+  margin-inline: auto !important;
+}
+:root[data-model] #thread > .msg.user {
+  max-width: min(88%, calc(var(--col) * .8)) !important;
+  margin-left: auto !important;
+  margin-right: max(0px, calc((100% - var(--col)) / 2)) !important;
+}
+:root[data-model] #thread .msg.assistant > .body { max-width: none !important; }
+:root[data-model] #thread .welcome-v2 .suggestions { max-width: none !important; }
+
+/* Markdown headings use the UI font with a clear size scale (tab.css set them all to 15px serif). */
+:root[data-model] .msg.assistant .body :is(h1, h2, h3, h4, h5) {
+  margin: 1.2em 0 .45em !important;
+  color: var(--paper);
+  font-family: var(--sans) !important;
+  font-weight: 650 !important;
+  line-height: 1.3 !important;
+  letter-spacing: -.015em;
+}
+:root[data-model] .msg.assistant .body h1 { font-size: 21px !important; }
+:root[data-model] .msg.assistant .body h2 { font-size: 18px !important; }
+:root[data-model] .msg.assistant .body h3 { font-size: 16.5px !important; }
+:root[data-model] .msg.assistant .body :is(h4, h5) { font-size: 15px !important; }
+:root[data-model] .msg.assistant .body > :is(h1, h2, h3, h4, h5):first-child { margin-top: 0 !important; }
+
+/* Code blocks: the inline-code pill style was painting a box behind every line. */
+:root[data-model] .body pre code {
+  padding: 0 !important;
+  border: 0 !important;
+  border-radius: 0 !important;
+  background: none !important;
+  box-shadow: none !important;
+}
+
+/* Screen-reader-only labels (used by the Humanizer textareas) were showing as visible text. */
+.sr-only {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  margin: -1px !important;
+  padding: 0 !important;
+  overflow: hidden !important;
+  clip: rect(0 0 0 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Humanizer: the two cards fill the available height instead of leaving an empty band below them. */
+@media (min-width: 701px) {
+  :root[data-model="humanize"] #humanizer-studio .hz-grid { flex: 1 0 auto; }
+  :root[data-model="humanize"] #humanizer-studio .hz-hero { flex: 0 0 auto; }
+}
+
+/* Tablets: keep the welcome prompts in two columns; one column only on phones. */
+@media (min-width: 620px) and (max-width: 979px) {
+  :root[data-model] #thread .welcome-v2 .suggestions { grid-template-columns: repeat(2, minmax(0, 1fr)) !important; }
+}
