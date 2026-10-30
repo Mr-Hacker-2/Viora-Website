@@ -738,7 +738,7 @@ function render() {
   $('#video-note-copy').textContent = videos.length
     ? videos.length === 1 ? (videos[0].nativeVideo ? `Native video and audio, plus ${videos[0].ni || 0} preview frames, ready.` : `${videos[0].ni || 0} timestamped frames ready. Sampled frames do not include the video’s audio.`) : `${videos.length} videos attached. Native MP4 clips include audio; sampled frames do not.`
     : 'Audio ready for transcription and sound analysis.';
-  const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 120;
+  const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 32;
   /* Only messages that have not been on screen yet fade in. The whole thread is rebuilt on every state change, so
      animating every message made the chat flash several times per reply. Opening another chat animates nothing. */
   if (c && rendered.id !== c.id) c.messages.forEach(m => painted.add(m));
@@ -808,7 +808,7 @@ async function send(text) {
   if (rendered.id !== c.id) rendered = { id: c.id }; /* a brand-new chat: its first messages are new, not "opened" */
   $('#input').value = ''; try { localStorage.removeItem('viora_draft_' + S.email); } catch {} grow(); save(); render();
   const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); let timingStart = 0; busy = ctl; m.stage = 'Starting task…'; sendState(true); syncHumanizer();
-  const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 140, b = $('#b' + idx); if (b) { paintBody(b, m); if (near) th.scrollTop = th.scrollHeight; } if (asst === 'human') syncHumanizer(); };
+  const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 32, b = $('#b' + idx); if (b) { paintBody(b, m); if (near) th.scrollTop = th.scrollHeight; } if (asst === 'human') syncHumanizer(); };
   let eff = asst === 'auto' ? route(text, c) : asst;
   /* capability check: keep the chosen assistant when it can read the attachments, otherwise switch and say why */
   const pk = pickModel(eff, c.page ? c.page.files : [], Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
