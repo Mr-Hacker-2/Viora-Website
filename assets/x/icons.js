@@ -13,6 +13,12 @@ const wrap = (body, viewBox = '0 0 20 20') =>
 
 const ICONS = {
   // ---- the assistants ----
+  // Two sparkles — Viora Auto picks the right assistant for you.
+  auto: wrap(
+    '<path d="M8.5 2.5c.5 3.4 2.1 5 5.5 5.5-3.4.5-5 2.1-5.5 5.5-.5-3.4-2.1-5-5.5-5.5 3.4-.5 5-2.1 5.5-5.5Z"/>' +
+      '<path d="M15 12.5c.25 1.6.9 2.25 2.5 2.5-1.6.25-2.25.9-2.5 2.5-.25-1.6-.9-2.25-2.5-2.5 1.6-.25 2.25-.9 2.5-2.5Z"/>'
+  ),
+
   flash: wrap('<path d="M11 2 5 12h4l-1 8 7-11h-4l1-7Z"/>'),
 
   agent: wrap(

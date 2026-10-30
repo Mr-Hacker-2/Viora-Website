@@ -467,12 +467,12 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 }
 @media(prefers-reduced-motion:reduce){:root[data-model] #thread .welcome-v2 *{animation:none!important}}
 </style>
-<link rel="stylesheet" href="assets/x/app-layout.css?v=20261030-1">
+<link rel="stylesheet" href="assets/x/app-layout.css?v=20261030-2">
 </head>
 <body>
 <div id="shell">
 <aside id="sh-left">
-  <div class="sh-logo"><img src="assets/mark.png" alt="" width="26" height="26"><span>Viora AI</span><button type="button" class="sh-collapse" id="sh-collapse" title="Hide sidebar" aria-label="Hide sidebar" data-ic="panel"></button></div>
+  <div class="sh-logo"><img src="assets/mark.png" alt="" width="26" height="26"><span>Viora AI</span><button type="button" class="sh-collapse sh-new" id="new-thread" title="New conversation" aria-label="New conversation" data-ic="plus"></button><button type="button" class="sh-collapse" id="sh-collapse" title="Hide sidebar" aria-label="Hide sidebar" data-ic="panel"></button></div>
   <div class="sh-user"><span class="sh-av" id="av"></span><span class="sh-uname" id="nm"></span><button type="button" id="sh-gear" class="sh-gear" title="Account" aria-label="Account" data-ic="gear"></button></div>
   <div id="umenu" class="sheet" hidden>
     <a class="sheet-action" href="index.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Viora home</span></span></a>
@@ -501,10 +501,6 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
       <button id="open-full" class="icon-btn" type="button" title="Chats and menu" aria-label="Open navigation" data-ic="panel"></button>
       <h1 class="wordmark">Viora</h1>
       <button id="model-btn" class="model-pill" type="button" aria-expanded="false" aria-controls="model-sheet"><span class="pill-icon" id="pill-icon"></span><span class="pill-name" id="pill-name"></span><svg class="pill-caret" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg></button>
-    </div>
-    <div class="bar-actions">
-      <button id="pwa-install" class="icon-btn pwa-install" type="button" title="Install Viora app" aria-label="Install Viora app" hidden>＋</button>
-      <button id="new-thread" class="icon-btn" type="button" title="New conversation" aria-label="New conversation"><svg viewBox="0 0 20 20" aria-hidden="true"><path d="M10 4v12M4 10h12"/></svg></button>
     </div>
   </header>
   <section id="model-sheet" class="sheet" hidden aria-label="Choose an assistant"><ul id="model-list" class="model-list" role="listbox"></ul><p class="sheet-foot">Viora Auto picks the best assistant for each message.</p></section>
@@ -585,6 +581,8 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
    <label class="np-row" style="display:flex;gap:10px;align-items:center;margin:6px 0 14px"><span style="flex:1">Emotions &amp; emojis<small style="display:block;color:var(--faint)">How expressive Viora is when it answers. Rewrite tools stay plain.</small></span><select id="tone-sel" aria-label="Reply personality"></select></label>
    <h4 class="np-h">Speed &amp; reliability</h4>
   <div id="np-mount"></div>
+  <h4 class="np-h">Install app</h4>
+  <div class="np-row pwa-row" data-pwa-row style="display:flex;gap:10px;align-items:center;margin:6px 0 14px"><span style="flex:1">Viora on this device<small style="display:block;color:var(--faint)">Add Viora to your Home Screen or desktop so it opens like an app.</small></span><button class="btn pwa-get" id="pwa-install" type="button" data-ic="download"> Install</button></div>
   <div class="dl" style="margin-top:12px"><span style="flex:1"></span><button class="btn p" id="s-x" type="button">Done</button></div>
 </dialog>
 <dialog id="pdlg">
@@ -645,7 +643,7 @@ const S = ls.get('viora_session', null);
 if (!S || !S.token) { location.replace('login.html'); return; }
 $$('[data-ic]').forEach(e => e.insertAdjacentHTML('afterbegin', ic(e.dataset.ic)));
 const A = {
-  auto:    { n: 'Viora Auto', ic: 'flash', b: 'Picks the best assistant for each message', web: 1, ph: 'Ask me anything', s: ['What happened in tech news today?', 'Fix this Python: for i in range(5) print(i)', 'Plan a 3-day trip to Lisbon', 'Solve 3x² − 12 = 0'] },
+  auto:    { n: 'Viora Auto', ic: 'auto', b: 'Picks the best assistant for each message', web: 1, ph: 'Ask me anything', s: ['What happened in tech news today?', 'Fix this Python: for i in range(5) print(i)', 'Plan a 3-day trip to Lisbon', 'Solve 3x² − 12 = 0'] },
   flash:   { n: 'Viora Flash', ic: 'flash', b: 'Fast answers for everyday questions', web: 1, ph: 'Ask me anything', s: ['Explain how vaccines work', 'Write a polite deadline-extension email', 'What happened in tech news today?', 'Plan a 3-day trip to Lisbon'] },
   search:  { n: 'Pro Search', ic: 'search', b: 'Research across live web sources with citations', web: 1, ph: 'Ask a research question…', s: ['Compare recent research on renewable energy', 'Find official documentation for a JavaScript API', 'Summarize the latest AI regulation news', 'Compare two viewpoints using reliable sources'] },
   math:    { n: 'Math & Code', ic: 'math', b: 'Step-by-step maths and working code', web: 1, ph: 'Give me a problem or some code', s: ['Solve 3x² − 12 = 0 with steps', 'Why does for(i=0;i<5;i--){} never end?', 'Write a Python palindrome checker', 'Explain Big-O notation simply'] },
