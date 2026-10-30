@@ -802,7 +802,7 @@ async function send(text) {
   text = (text || '').trim(); if (!text || busy) return;
   if (pending.some(p => !p.err)) { toast('Wait for your attachments to finish processing, or cancel them.'); return; }
   let c = chat();
-  if (!c) { c = { id: String(Date.now()), title: text.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
+  if (!c) { c = { id: String(Date.now()), title: text.slice(0, 44), autoTitle: true, assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
   c.assistant = asst; c.updated = Date.now(); chats = [c, ...chats.filter(x => x !== c)];
   c.messages.push({ role: 'user', content: text, att: (c.page ? c.page.files : []).map(f => ({ name: f.name, kind: f.kind, src: f.kind === 'web' ? f.source : '' })) }, { role: 'assistant', content: '' });
   if (rendered.id !== c.id) rendered = { id: c.id }; /* a brand-new chat: its first messages are new, not "opened" */
@@ -901,6 +901,53 @@ async function send(text) {
   }
   if (timingStart && m.timing) m.timing.totalMs = Math.round(performance.now() - timingStart);
   m.searching = false; m.wait = ''; m.stage = ''; busy = null; sendState(false); save(); render();
+  if (c.autoTitle && !c.titleGenerated && c.messages.filter(x => x.role === 'user').length === 1) {
+    c.titlePending = true; save();
+    generateConversationTitle(c).catch(() => { c.titlePending = false; save(); });
+  }
+}
+async function generateConversationTitle(c) {
+  const first = c.messages.find(x => x.role === 'user');
+  if (!first || !first.content) { c.titlePending = false; return; }
+  const attachmentNames = (first.att || []).map(x => x.name).filter(Boolean).slice(0, 4);
+  const starter = first.content.slice(0, 1800) + (attachmentNames.length ? '\nAttached: ' + attachmentNames.join(', ') : '');
+  const response = await fetch(API + '/api/chat', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
+    body: JSON.stringify({
+      assistant: 'flash',
+      web: false,
+      context: { instructions: 'Create a clear conversation title from the user’s first message. Return only a short title of 3 to 7 words, with no quotes, explanation, or ending punctuation.' },
+      messages: [{ role: 'user', content: starter }]
+    }),
+    signal: AbortSignal.timeout(15000)
+  });
+  if (!response.ok || !response.body) throw new Error('Title request failed');
+  const reader = response.body.getReader(), decoder = new TextDecoder();
+  let buffer = '', raw = '', finished = false;
+  while (!finished) {
+    const { done, value } = await reader.read();
+    if (done) break;
+    const split = NP.splitStreamLines(buffer + decoder.decode(value, { stream: true }));
+    buffer = split.rest;
+    for (const line of split.lines) {
+      if (!line.startsWith('data:')) continue;
+      const data = line.slice(5).trim();
+      if (data === '[DONE]') { finished = true; break; }
+      try {
+        const item = JSON.parse(data), text = item.choices?.[0]?.delta?.content;
+        if (text) raw += text;
+      } catch {}
+    }
+  }
+  const title = raw.split(/\r?\n/)[0].replace(/^[\s"'“”‘’`#*]+|[\s"'“”‘’`#*]+$/g, '').replace(/[.!?:]+$/, '').trim().slice(0, 58);
+  if (!title) throw new Error('Title response was empty');
+  c.title = title;
+  c.titleGenerated = true;
+  c.titlePending = false;
+  save();
+  const row = [...$('#sh-hist').querySelectorAll('[data-id]')].find(x => x.dataset.id === c.id);
+  if (row?.firstChild) row.firstChild.textContent = title;
 }
 function grow() { const t = $('#input'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 200) + 'px'; $('#send').disabled = !busy && !t.value.trim(); }
 const newChat = () => { cur = null; hide(); render(); $('#input').focus(); closeSb(); };
