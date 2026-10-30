@@ -473,7 +473,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 <div id="shell">
 <aside id="sh-left">
   <div class="sh-logo"><img src="assets/mark.png" alt="" width="26" height="26"><span>Viora AI</span><button type="button" class="sh-collapse sh-new" id="new-thread" title="New conversation" aria-label="New conversation" data-ic="plus"></button><button type="button" class="sh-collapse" id="sh-collapse" title="Hide sidebar" aria-label="Hide sidebar" data-ic="panel"></button></div>
-  <div class="sh-user"><span class="sh-av" id="av"></span><span class="sh-uname" id="nm"></span><button type="button" id="sh-gear" class="sh-gear" title="Account" aria-label="Account" data-ic="gear"></button></div>
+  <div class="sh-user"><span class="sh-av" id="av" role="button" tabindex="0" title="Account menu" aria-label="Account menu"></span><span class="sh-uname" id="nm"></span><button type="button" id="sh-gear" class="sh-gear" title="Settings" aria-label="Settings" data-ic="gear"></button></div>
   <div id="umenu" class="sheet" hidden>
     <a class="sheet-action" href="index.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Viora home</span></span></a>
     <a class="sheet-action" href="mobile.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Install Viora on phone</span><span class="sheet-sub">Add the website to your Home Screen</span></span></a>
@@ -1136,7 +1136,7 @@ document.addEventListener('click', e => {
   const pd = e.target.closest('[data-pd]'); if (pd) { const p = pending.find(x => x.id === pd.dataset.pd); if (p) { p.cancel = true; const i = pending.indexOf(p); if (p.err) pending.splice(i, 1); render(); } return; }
   const b = e.target.closest('[data-rm]'), c = chat();
   if (b && c && c.page) { c.page.files = c.page.files.filter(f => f.id !== b.dataset.rm); delete FT[b.dataset.rm]; delete IM[b.dataset.rm]; delete VI[b.dataset.rm]; delete AU[b.dataset.rm]; rebuild(c); save(); render(); return; }
-  if (!e.target.closest('.sheet, #model-btn, #attach, #sh-gear')) hide();
+  if (!e.target.closest('.sheet, #model-btn, #attach, #sh-gear, #av')) hide();
   if (document.body.classList.contains('sb') && !e.target.closest('#sh-left, #open-full')) closeSb();
 });
 $('#composer').onsubmit = e => { e.preventDefault(); busy ? busy.abort() : send($('#input').value); };
@@ -1179,7 +1179,10 @@ $('#sh-collapse').onclick = () => wide() ? $('#shell').classList.add('no-left') 
 $('#sh-search').oninput = e => { filter = e.target.value.trim().toLowerCase(); render(); };
 $('#model-btn').onclick = e => { e.stopPropagation(); const o = $('#model-sheet').hidden; hide(); $('#model-sheet').hidden = !o; $('#model-btn').setAttribute('aria-expanded', String(o)); };
 $('#attach').onclick = e => { e.stopPropagation(); const o = $('#attach-sheet').hidden; hide(); $('#attach-sheet').hidden = !o; $('#attach').setAttribute('aria-expanded', String(o)); };
-$('#sh-gear').onclick = e => { e.stopPropagation(); const o = $('#umenu').hidden; hide(); $('#umenu').hidden = !o; };
+$('#sh-gear').onclick = e => { e.stopPropagation(); $('#open-settings').click(); };
+const toggleAccountMenu = e => { e.stopPropagation(); const o = $('#umenu').hidden; hide(); $('#umenu').hidden = !o; };
+$('#av').onclick = toggleAccountMenu;
+$('#av').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleAccountMenu(e); } };
 $('#attach-web').onclick = () => { web = !web; ls.set('viora_web', web); render(); };
 const setAsst = k => { asst = k; ls.set('viora_assistant', k); hide(); render(); $('#input').focus(); };
 $('#model-list').onclick = e => { const b = e.target.closest('[data-model]'); if (b) setAsst(b.dataset.model); };
