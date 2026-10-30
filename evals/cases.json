@@ -13,5 +13,7 @@
 ["Fact-check this Python code against current documentation","search"],
 ["Find peer-reviewed studies and cite the sources","search"],
 ["Verify this claim with citations","search"],
-["Look up current guidance for this SQL error","search"]
+["Look up current guidance for this SQL error","search"],
+["What is the release date of GTA 6?","search"],["How old is Taylor Swift?","search"],["Is it true that the Great Wall is visible from space?","search"],
+["What happened to the Titan submarine?","search"],["Tell me a joke about cats","flash"],["How does photosynthesis work?","flash"]
 ]

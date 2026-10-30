@@ -11,7 +11,7 @@ const R = {
   lang: /\b(python|javascript|typescript|java|c\+\+|c#|rust|golang|sql|regex|html|css|bash|react|node\.?js|json|api)\b/,
   codeIntent: /\b(bug|debug|compile|refactor|algorithm|big-o|unit tests?|my code|this code|the code|source code|write (a |an |some )?(\w+ )?(function|script|program|class|query))\b/,
   math: /\b(solve|equation|integral|derivative|calculate|simplify|factori[sz]e|probability of|prove|evaluate|convert units?)\b|\d\s*[\^*/+\-]\s*\d|\d+\s?% of\b/,
-  fresh: /\b(latest|news|today|tonight|currently|right now|as of|this (week|month|year|weekend)|recent(ly)?|most recent|current version|latest version|current status|price|pricing|costs?|buy(?:ing)?|purchase|worth buying|in stock|availability|best (?:ai )?(?:model|phone|laptop|tablet|camera|tv|headphones?|gpu|monitor|car)|who won|scores?|standings|stocks?|weather|forecast|trending|election|near me|release(?:d| date| notes)?|202\d|research|sources|citations?|fact.?check|verify|verification|evidence|studies|papers?|peer.?reviewed|references|according to|is it true|cross.?check|compare sources|security advisory|service outage|opening hours|travel restrictions|tax rates?|exchange rates?|schedule|fixtures|air quality)\b|\bwho is (the )?(current|new)\b|\bwho is the (ceo|president|prime minister|mayor|coach)\b|\bcompare\b.*\b(newest|best|reviews?|vs|versus)\b|\bnewest\b/,
+  fresh: /\b(latest|news|today|tonight|currently|right now|as of|this (week|month|year|weekend)|recent(ly)?|most recent|current version|latest version|current status|price|pricing|costs?|buy(?:ing)?|purchase|worth buying|in stock|availability|best (?:ai )?(?:model|phone|laptop|tablet|camera|tv|headphones?|gpu|monitor|car)|who won|scores?|standings|stocks?|weather|forecast|trending|election|near me|release date|net worth|how old is|still alive|is it true|what happened to|reviews?|release(?:d| date| notes)?|202\d|research|sources|citations?|fact.?check|verify|verification|evidence|studies|papers?|peer.?reviewed|references|according to|is it true|cross.?check|compare sources|security advisory|service outage|opening hours|travel restrictions|tax rates?|exchange rates?|schedule|fixtures|air quality)\b|\bwho is (the )?(current|new)\b|\bwho is the (ceo|president|prime minister|mayor|coach)\b|\bcompare\b.*\b(newest|best|reviews?|vs|versus)\b|\bnewest\b/,
   explicitWeb: /\b(search|look up|online|on the web|latest news|fact.?check|verify|cross.?check|find sources|with citations|research this)\b/
 };
 
@@ -27,6 +27,19 @@ export function classify(text, { hasPage = false, hasVisual = false } = {}) {
   const aboutFile = hasPage && !R.explicitWeb.test(x);
   if (!aboutFile && R.fresh.test(x)) return { assistant: 'search', reason: 'needs current information' };
   return { assistant: 'flash', reason: 'general conversation' };
+}
+
+const MARK = '[[SEARCH';
+/** Reads a reply that may be Viora's "I'm not sure, search the web" signal: [[SEARCH: query]].
+    'partial' while it could still become the signal (hide it), 'match' once complete, null for a normal reply. */
+export function searchMarker(text) {
+  const t = String(text || '').trimStart(), u = t.toUpperCase();
+  if (!t) return { state: null, query: '' };
+  if (t.length < MARK.length) return MARK.startsWith(u) ? { state: 'partial', query: '' } : { state: null, query: '' };
+  if (!u.startsWith(MARK)) return { state: null, query: '' };
+  const hit = t.match(/^\[\[SEARCH\s*:?\s*([^\]\n]{0,200})\]\]/i);
+  if (hit) return { state: 'match', query: hit[1].trim() };
+  return t.length < 240 && !t.includes(']]') && !t.includes('\n') ? { state: 'partial', query: '' } : { state: null, query: '' };
 }
 
 /** Use web search only for explicit research mode or prompts classified as needing fresh evidence. */

@@ -66,3 +66,16 @@ test('fallback only for server trouble, never for user abort or client errors', 
   assert.equal(shouldFallback(0, new Error('first-byte timeout')), true);
 });
 test('caps.pick still switches when images are not supported', () => assert.equal(pick('human', img).switched, true));
+import { searchMarker } from '../assets/x/router.js';
+test('reads the "not sure, search the web" signal and hides it while it streams', () => {
+  assert.deepEqual(searchMarker('[[SEARCH: GTA 6 release date]]'), { state: 'match', query: 'GTA 6 release date' });
+  assert.equal(searchMarker('  [[search:who is Jane Doe]] ').state, 'match');
+  for (const p of ['[', '[[', '[[SEA', '[[SEARCH', '[[SEARCH: GTA 6 rel']) assert.equal(searchMarker(p).state, 'partial', p);
+  for (const n of ['', 'Hello!', '[1] Paris is the capital', '[[Note]] this', 'The answer is 4.']) assert.equal(searchMarker(n).state, null, n);
+  assert.equal(searchMarker('[[SEARCH: ' + 'x'.repeat(300)).state, null);
+  assert.equal(searchMarker('[[SEARCH: a\nmore text').state, null);
+});
+test('new fresh-fact patterns route to search', () => {
+  for (const t of ['What is the release date of GTA 6?', 'How old is Taylor Swift?', 'What happened to the Titan submarine?']) assert.equal(classify(t).assistant, 'search', t);
+  assert.equal(classify('How does photosynthesis work?').assistant, 'flash');
+});

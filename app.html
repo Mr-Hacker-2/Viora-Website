@@ -634,8 +634,8 @@ import { icon } from './assets/x/icons.js';
 import { ic } from './assets/x/ic.js';
 import * as Src from './assets/x/sources.js';
 import { pick as pickModel } from './assets/x/caps.js';
-import { classify, shouldSearch, chain, Health, shouldFallback } from './assets/x/router.js';
-import { withPersona, normLevel, LEVELS, userProfile } from './assets/x/persona.js';
+import { classify, shouldSearch, chain, Health, shouldFallback, searchMarker } from './assets/x/router.js';
+import { withPersona, normLevel, LEVELS, userProfile, SEARCH_IF_UNSURE } from './assets/x/persona.js';
 import { cleanRewrite } from './assets/x/humanize-post.js';
 import { signalsHtml } from './assets/x/humanize-stats.js';
 import { chatVoiceSample } from './assets/x/voice.js';
@@ -814,10 +814,13 @@ async function send(text) {
   const pk = pickModel(eff, c.page ? c.page.files : [], Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
-  const useWeb = shouldSearch(text, { assistant: eff, enabled: web && !!A[eff].web, hasPage: !!c.page, hasVisual: visualFiles(c).length > 0 }), pj = D.projects.find(x => x.id === c.pid);
+  let useWeb = shouldSearch(text, { assistant: eff, enabled: web && !!A[eff].web, hasPage: !!c.page, hasVisual: visualFiles(c).length > 0 }); const pj = D.projects.find(x => x.id === c.pid);
+  /* When search was not planned, the model may answer [[SEARCH: …]] if it is unsure; Viora then searches and asks again (once). */
+  const canAsk = !useWeb && web && eff !== 'human' && !!A[eff].web && !(c.page && c.page.files.length);
+  const instr = a => withPersona(a, tone, pj ? pj.instr : '', who()) + (canAsk && !useWeb && A[a].web ? '\n\n' + SEARCH_IF_UNSURE : '');
   const remembered = D.autoMem && eff !== 'human' ? rememberPersonalDetails(text) : 0;
   if (remembered) toast('Saved ' + remembered + (remembered === 1 ? ' detail to Memory.' : ' details to Memory.') + ' You can review or remove them in Memory.');
-  const context = { instructions: withPersona(eff, tone, pj ? pj.instr : '', who()), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
+  const context = { instructions: instr(eff), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
   m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
   try {
     const pp = await pagePayload(c, text);
@@ -825,6 +828,7 @@ async function send(text) {
     if (c.page && c.page.files.some(f => f.kind === 'audio') && !pp.audio) throw new Error('The audio data did not load. Remove the recording and upload it again.');
     if (expectsVisualData && !pp.images.length && !pp.video) throw new Error('I can see that a picture or video is attached, but its visual data did not load. Please remove it and upload it again, then retry.');
     m.stage = useWeb ? 'Connecting and preparing web research…' : pp.video ? 'Sending your video to Viora’s multimodal model…' : pp.audio ? 'Sending your audio to Viora’s multimodal model…' : expectsVisualData ? 'Sending your image to Viora’s multimodal model…' : 'Connecting to Viora…'; paint();
+    for (let pass = 0; ; pass++) { let raw = '';
     timingStart = performance.now(); m.timing = { responseMs: null, sourcesMs: null, firstTokenMs: null, totalMs: null };
     const files = c.page ? c.page.files : [], names = Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])), tries = chain(eff, files, health);
     let r, last;
@@ -833,7 +837,7 @@ async function send(text) {
       const web2 = !!(A[a].web && useWeb);
       try {
         r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '', who()) }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images, video: pp.video, audio: pp.audio }) },
+          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: instr(a) }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images, video: pp.video, audio: pp.audio }) },
           { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
         if (m.timing.responseMs == null) m.timing.responseMs = Math.round(performance.now() - timingStart);
       } catch (e) { if (!shouldFallback(0, e)) throw e; health.fail(a); last = e; r = null; if (n < tries.length - 1) continue; throw e; }
@@ -863,17 +867,25 @@ async function send(text) {
           m.model = j.viora_metrics.model || m.model; m.research = { ...m.research, fetchedPages: j.viora_metrics.fetchedPages, totalSources: j.viora_metrics.totalSources, verification: j.viora_metrics.verification, claimSupportVerified: j.viora_metrics.claimSupportVerified };
           m.timing = { ...m.timing, ...j.viora_metrics }; render();
         }
-        else { const t = j.choices?.[0]?.delta?.content; if (t) { if (m.timing.firstTokenMs == null) m.timing.firstTokenMs = Math.round(performance.now() - timingStart); m.content += t; } }
+        else { const t = j.choices?.[0]?.delta?.content; if (t) { if (m.timing.firstTokenMs == null) m.timing.firstTokenMs = Math.round(performance.now() - timingStart); raw += t; const mk = canAsk && !pass ? searchMarker(raw).state : null; m.content = mk ? '' : raw; if (mk) m.stage = 'Thinking…'; } }
       } catch {}
     };
     for (;;) {
       const { done, value, stalled } = await NP.readChunk(rd); if (stalled) { m.note = 'The connection went quiet, so this reply may be cut short. Use Regenerate to try again.'; render(); break; } if (done) break;
       const split = NP.splitStreamLines(buf + dec.decode(value, { stream: true })); buf = split.rest;
       split.lines.forEach(handleLine);
-      if (streamEnded) { try { rd.cancel(); } catch {} break; }
+      if (streamEnded || (canAsk && !pass && searchMarker(raw).state === 'match')) { try { rd.cancel(); } catch {} break; }
       if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); });
     }
     NP.splitStreamLines(buf + dec.decode(), true).lines.forEach(handleLine);
+    const ask = canAsk && !pass ? searchMarker(raw) : { state: null };
+    if (ask.state === 'match' && !ctl.signal.aborted) {
+      useWeb = true; context.instructions = instr(eff); m.content = ''; m.providerError = ''; m.searching = true; m.src = undefined;
+      m.sw = (m.sw ? m.sw + ' ' : '') + 'Viora wasn’t sure, so it checked the web' + (ask.query ? ' for “' + ask.query.slice(0, 80) + '”' : '') + '.';
+      m.stage = 'Not sure, so checking the web…'; paint(); continue;
+    }
+    if (ask.state === 'partial' && !m.content) m.content = raw;
+    break; }
     if (!m.content.trim() && m.providerError) throw new Error('The AI provider returned an error: ' + m.providerError);
     if (m.providerError && m.content.trim()) m.note = 'The AI provider reported an error after starting this reply: ' + m.providerError;
     if (!m.content.trim()) m.content = 'I got an empty reply. Please try again or choose another assistant.';

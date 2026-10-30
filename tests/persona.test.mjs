@@ -33,3 +33,11 @@ test('profile text is cleaned and capped so the prompt stays under the server cu
   for (const a of ['flash', 'search', 'math']) assert.ok(withPersona(a, 'vivid', '', who).length < 8000, a);
 });
 test('without a name the profile still says the user is signed in', () => { assert.match(userProfile({ about: 'I like chess' }), /has not shared their name/); });
+import { SEARCH_IF_UNSURE } from '../assets/x/persona.js';
+test('assistants can ask for a web check instead of guessing, and Pro Search pieces clues together', () => {
+  assert.match(SEARCH_IF_UNSURE, /\[\[SEARCH: a short web search query\]\] and nothing else/); assert.match(SEARCH_IF_UNSURE, /do not guess/);
+  assert.match(SEARCH_IF_UNSURE, /greetings, casual chat/);
+  assert.match(withPersona('search', 'warm', ''), /look for clues/); assert.match(withPersona('flash', 'warm', ''), /piece the answer together from the clues/);
+  const who = userProfile({ name: 'A'.repeat(60), about: 'x'.repeat(600), facts: Array(8).fill('y'.repeat(110)) });
+  for (const a of ['flash', 'math']) assert.ok((withPersona(a, 'vivid', '', who) + '\n\n' + SEARCH_IF_UNSURE).length < 8000, a);
+});
