@@ -13,3 +13,23 @@ test('every chat assistant knows Abdullah Lababidi created Viora', () => { for (
 test('prompts stay well under the server 8000-character cut-off, leaving room for project instructions', () => { for (const a of ['flash', 'search', 'math', 'human']) for (const l of ['off', 'warm', 'vivid']) assert.ok(withPersona(a, l, '').length < 6000, a + '/' + l); });
 test('base prompt is organised into labelled sections and describes the renderable formatting', () => { const t = withPersona('flash', 'warm'); for (const h of ['HOW TO ANSWER:', 'ACCURACY:', 'CODE:', 'FORMAT:', 'ABOUT VIORA:']) assert.ok(t.includes(h), h); assert.match(t, /\$\$\.\.\.\$\$/); });
 test('math assistant is told to write LaTeX and bold the final result', () => { assert.match(withPersona('math', 'warm'), /LaTeX/); assert.match(withPersona('math', 'warm'), /final result on its own line in bold/); });
+
+import { userProfile } from '../assets/x/persona.js';
+test('every chat assistant is told the signed-in user\'s name and profile', () => {
+  const who = userProfile({ name: 'Abdullah', about: 'I am in 10th grade and love robotics.', facts: ['I prefer short answers', 'I prefer short answers', 'I use Python'] });
+  assert.match(who, /^ABOUT THE USER: You are talking with Abdullah/); assert.match(who, /10th grade/); assert.match(who, /I use Python/);
+  assert.equal((who.match(/I prefer short answers/g) || []).length, 1);
+  for (const a of ['flash', 'search', 'math', 'auto']) assert.ok(withPersona(a, 'warm', '', who).includes(who), a);
+});
+test('the Humanizer is not given the user profile', () => { assert.doesNotMatch(withPersona('human', 'warm', '', userProfile({ name: 'Sam' })), /ABOUT THE USER/); });
+test('profile comes before project instructions, and nothing is added when nothing is known', () => {
+  const t = withPersona('flash', 'warm', 'Answer in French.', userProfile({ name: 'Sam' }));
+  assert.ok(t.indexOf('ABOUT THE USER') < t.indexOf('Answer in French.')); assert.ok(t.endsWith('Answer in French.'));
+  assert.equal(userProfile({}), ''); assert.equal(userProfile(), ''); assert.equal(withPersona('flash', 'warm', '', ''), withPersona('flash', 'warm', ''));
+});
+test('profile text is cleaned and capped so the prompt stays under the server cut-off', () => {
+  const who = userProfile({ name: 'A<b>\nB'.repeat(50), about: 'x'.repeat(5000), facts: Array(50).fill(0).map((_, i) => 'fact ' + i + ' ' + 'y'.repeat(400)) });
+  assert.doesNotMatch(who, /[<>\n]/);
+  for (const a of ['flash', 'search', 'math']) assert.ok(withPersona(a, 'vivid', '', who).length < 8000, a);
+});
+test('without a name the profile still says the user is signed in', () => { assert.match(userProfile({ about: 'I like chess' }), /has not shared their name/); });

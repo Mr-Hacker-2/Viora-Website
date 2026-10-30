@@ -23,6 +23,17 @@ export function extractPersonalMemories(input) {
   return found;
 }
 
+const NOT_NAMES = new Set(['not', 'a', 'an', 'the', 'just', 'no', 'kind', 'whatever', 'anything', 'secret', 'private']);
+/** The name the user asked to be called in a saved memory ("Call me Sam", "My name is Sam Lee"), newest first. */
+export function preferredName(memories) {
+  for (const m of memories || []) {
+    const hit = String(m && m.t || '').match(/\b(?:[Cc]all me|[Mm]y (?:preferred )?name is|I'm called|I am called)\s+([\p{L}][\p{L}'’-]*(?:\s+\p{Lu}[\p{L}'’-]*)?)/u);
+    if (!hit || NOT_NAMES.has(hit[1].toLowerCase())) continue;
+    return hit[1].charAt(0).toUpperCase() + hit[1].slice(1);
+  }
+  return '';
+}
+
 /** Pick the saved memories relevant to this question: best matches first, then the newest up to `floor`
     so short standing preferences still apply. Memories are newest-first. Returns at most `max` strings. */
 export function retrieveMemory(memories, query, { max = 12, floor = 4, pid = null } = {}) {
