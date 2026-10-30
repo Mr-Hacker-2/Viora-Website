@@ -54,3 +54,14 @@ test('every Humanizer style and strength option in app.html is described in the 
     for (const [, v] of sel[1].matchAll(/value="([^"]+)"/g)) assert.match(HUMANIZER, new RegExp('\\b' + v + ' ='), v);
   }
 });
+test('Humanizer copies a user voice sample\'s style but never its content', () => {
+  assert.match(HUMANIZER, /VOICE SAMPLE/); assert.match(HUMANIZER, /Copy their style only\. Never copy its content/);
+  assert.match(HUMANIZER, /if it says I or we, keep that voice/);
+});
+test('app sends the saved voice sample with Humanizer requests', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
+  assert.match(html, /id="hz-voice"[^>]*maxlength="1500"/);
+  assert.match(html, /VOICE SAMPLE \(written by me; copy how I write, not what it says\)/);
+  assert.match(html, /ls\.set\('viora_hz_voice'/);
+});
