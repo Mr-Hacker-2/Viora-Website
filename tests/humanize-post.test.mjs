@@ -41,3 +41,16 @@ test('Humanizer prompt covers the main AI tells and keeps facts intact', () => {
 });
 test('Humanizer prompt fits the server limit with room for project instructions', () => { assert.ok(HUMANIZER.length < 4000, String(HUMANIZER.length)); });
 test('project instructions still follow the Humanizer prompt', () => { assert.ok(withPersona('human', 'warm', 'Keep it British.').endsWith('Keep it British.')); });
+test('removes invisible characters', () => { assert.equal(cleanRewrite('in\u200Bvis\u200Dible\uFEFF text\u00AD.'), 'invisible text.'); });
+test('Humanizer prompt explains every style and strength the studio offers', () => {
+  for (const re of [/natural =/, /casual =/, /professional =/, /academic =/, /simple =/, /confident =/, /light =/, /balanced =/, /strong =/]) assert.match(HUMANIZER, re);
+});
+test('every Humanizer style and strength option in app.html is described in the prompt', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
+  for (const id of ['hz-style', 'hz-strength']) {
+    const sel = html.match(new RegExp('<select id="' + id + '">([\\s\\S]*?)</select>'));
+    assert.ok(sel, id);
+    for (const [, v] of sel[1].matchAll(/value="([^"]+)"/g)) assert.match(HUMANIZER, new RegExp('\\b' + v + ' ='), v);
+  }
+});

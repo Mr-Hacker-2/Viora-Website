@@ -50,3 +50,27 @@ test('links that already have a logo, or live in source cards, are not decorated
   const again = link('https://example.com'); decorateLinks(root([again])); decorateLinks(root([again])); assert.equal((again.html.match(/class="vfav"/g) || []).length, 1);
 });
 test('decorateLinks tolerates a missing element', () => { assert.doesNotThrow(() => decorateLinks(null)); assert.doesNotThrow(() => decorateLinks({})); });
+
+import { factCheck, rewriteDepth } from '../assets/x/humanize-stats.js';
+const DRAFT = 'In 2023, Acme Corp grew revenue by 42% to $1,200,000 (Smith, 2021). See https://acme.com/report. It is important to note that NASA helped.';
+test('fact check finds kept facts, ignores formatting changes, and does not treat sentence starts as names', () => {
+  const f = factCheck(DRAFT, 'Acme Corp grew revenue 42% in 2023, reaching $1200000 (Smith, 2021). Details at https://acme.com/report. NASA helped too.');
+  assert.deepEqual(f.missing, []); assert.deepEqual(f.added, []); assert.equal(f.kept, f.total); assert.ok(f.total >= 8, String(f.total));
+});
+test('fact check lists dropped facts and made-up numbers', () => {
+  const f = factCheck(DRAFT, 'Acme Corp grew revenue a lot, by 55%, in 2023. NASA helped.');
+  for (const x of ['42%', '$1,200,000', '(Smith, 2021)', 'https://acme.com/report']) assert.ok(f.missing.includes(x), x + ' missing from ' + f.missing);
+  assert.deepEqual(f.added, ['55%']);
+});
+test('rewrite depth is 0 for identical text, 1 for unrelated text, and in between otherwise', () => {
+  assert.equal(rewriteDepth(DRAFT, DRAFT), 0);
+  assert.equal(rewriteDepth('the cat sat', 'dogs bark loudly'), 1);
+  const d = rewriteDepth('We went to the shop and bought bread.', 'We went to the shop. Bread was bought.');
+  assert.ok(d > 0 && d < 1, String(d));
+  assert.equal(rewriteDepth('', ''), 0);
+});
+test('panel shows words changed and warns about dropped facts', () => {
+  const h = signalsHtml(DRAFT, 'Acme grew a lot, by 55%. That was good. People were happy.');
+  assert.match(h, /Words changed/); assert.match(h, /Facts kept/); assert.match(h, /is-warn/); assert.match(h, /Check before using/); assert.match(h, /New numbers/);
+  assert.doesNotMatch(signalsHtml(DRAFT, 'Acme Corp grew revenue 42% in 2023 to $1,200,000 (Smith, 2021). See https://acme.com/report. NASA helped.'), /Check before using/);
+});
