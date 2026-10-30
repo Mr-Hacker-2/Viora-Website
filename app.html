@@ -510,8 +510,8 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
     <form id="hz-form" class="hz-grid">
       <section class="hz-card hz-input-card"><header class="hz-card-head"><div><span class="hz-step">01 / INPUT</span><h3>Your draft</h3></div><span class="hz-card-icon" aria-hidden="true">✎</span></header>
         <label class="sr-only" for="hz-input">Paste your essay or words here</label><textarea id="hz-input" placeholder="Paste your essay, paragraph, or rough words here…" spellcheck="true"></textarea>
-        <details class="hz-voice" id="hz-voice-box"><summary>Match my voice <span id="hz-voice-state">optional</span></summary><p>Paste a few paragraphs you wrote yourself. Viora copies how you write (word choice, sentence length, tone), never what it says. Saved on this device only.</p><label class="sr-only" for="hz-voice">A sample of your own writing</label><textarea id="hz-voice" maxlength="1500" placeholder="Paste something you wrote yourself, like an old essay, email, or post…" spellcheck="true"></textarea></details>
-        <footer class="hz-tools"><span id="hz-count">0 words</span><label class="hz-style">Style<select id="hz-style"><option value="natural">Natural</option><option value="academic">Academic</option><option value="professional">Professional</option><option value="casual">Casual</option><option value="simple">Simple</option><option value="confident">Confident</option></select></label><label class="hz-style">Strength<select id="hz-strength"><option value="light">Light touch</option><option value="balanced">Balanced</option><option value="strong">Strong rewrite</option></select></label><button class="hz-run" id="hz-run" type="submit">Polish my draft <span aria-hidden="true">↗</span></button></footer>
+        <p class="hz-voice-note" id="hz-voice-note" role="status"></p><details class="hz-voice" id="hz-voice-box" open><summary>My writing sample <span id="hz-voice-state">empty</span></summary><p>Paste a few paragraphs you wrote yourself. Viora copies how you write (word choice, sentence length, tone), never what it says. Saved on this device only.</p><label class="sr-only" for="hz-voice">A sample of your own writing</label><textarea id="hz-voice" maxlength="1500" placeholder="Paste something you wrote yourself, like an old essay, email, or post…" spellcheck="true"></textarea></details>
+        <footer class="hz-tools"><span id="hz-count">0 words</span><label class="hz-style">Style<select id="hz-style"><option value="natural">Natural</option><option value="academic">Academic</option><option value="professional">Professional</option><option value="casual">Casual</option><option value="simple">Simple</option><option value="confident">Confident</option></select></label><label class="hz-style">Voice<select id="hz-voice-mode"><option value="chats">Match my chats</option><option value="natural">Natural human</option><option value="sample">My sample</option></select></label><label class="hz-style">Strength<select id="hz-strength"><option value="light">Light touch</option><option value="balanced">Balanced</option><option value="strong">Strong rewrite</option></select></label><button class="hz-run" id="hz-run" type="submit">Polish my draft <span aria-hidden="true">↗</span></button></footer>
       </section>
       <section class="hz-card hz-output-card"><header class="hz-card-head"><div><span class="hz-step">02 / OUTPUT</span><h3>Viora’s rewrite</h3></div><span class="hz-live" aria-hidden="true"><i></i> <span id="hz-live-text">READY</span></span></header>
         <label class="sr-only" for="hz-output">AI rewritten text</label><div class="hz-progress" aria-hidden="true"><i></i></div><textarea id="hz-output" readonly placeholder="Your polished version will appear here…"></textarea>
@@ -638,6 +638,7 @@ import { classify, shouldSearch, chain, Health, shouldFallback } from './assets/
 import { withPersona, normLevel, LEVELS, userProfile } from './assets/x/persona.js';
 import { cleanRewrite } from './assets/x/humanize-post.js';
 import { signalsHtml } from './assets/x/humanize-stats.js';
+import { chatVoiceSample } from './assets/x/voice.js';
 import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories, preferredName } from './assets/x/memory.js';
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes, validateVisualPayload } from './assets/x/media.js';
 import * as NP from './assets/x/netperf.js';
@@ -718,10 +719,11 @@ function msgHtml(m, i, last, enter) {
   const sw = m.sw ? `<div class="switch-note" role="status">${esc(m.sw)}</div>` : '';
   return `<div class="msg assistant${last && busy ? ' streaming' : ''}${enter ? ' enter' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${evidenceNote}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : stat(m)}</div>${srcs}${timing}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}<button class="msg-act" data-remember="${i}" title="Save the question and context to Memory" aria-label="Save context to Memory">${ic('note')}</button></div></div>`;
 }
-let shown = null, rendered = { id: null }; const painted = new WeakSet();
+let shown = null, rendered = { id: null }, lastAsst = null; const painted = new WeakSet();
 function render() {
   const a = A[asst], c = chat(), has = c && c.messages.length, files = c && c.page ? c.page.files : [];
   document.documentElement.dataset.model = MODEL[asst];
+  if (asst === 'human' && lastAsst !== 'human') queueMicrotask(() => { try { hzVoiceState(); } catch {} }); lastAsst = asst;
   $('#pill-icon').innerHTML = icon(a.ic); $('#pill-name').textContent = a.n; $('#input').placeholder = a.ph;
   $('#hint').textContent = a.web && web ? asst === 'search' ? 'Research mode' : 'Search when needed' : '';
   $('#attach-web .sheet-sub').textContent = web ? 'On: looks things up when a question needs it' : 'Off: answers from what Viora already knows';
@@ -1138,11 +1140,25 @@ document.addEventListener('click', e => {
   if (document.body.classList.contains('sb') && !e.target.closest('#sh-left, #open-full')) closeSb();
 });
 $('#composer').onsubmit = e => { e.preventDefault(); busy ? busy.abort() : send($('#input').value); };
-const hzSend = fresh => { const text = $('#hz-input').value.trim(); if (!text) { $('#hz-input').focus(); toast('Paste the words or essay you want Viora to polish.'); return; } const voice = $('#hz-voice').value.trim().slice(0, 1500); send(text + '\n\nRewrite this text in a ' + $('#hz-style').value + ' style with ' + $('#hz-strength').value + ' strength. Preserve its meaning and all factual details. Return only the rewritten text.' + (fresh ? ' Write a new version that differs from your previous rewrite.' : '') + (voice ? '\n\nVOICE SAMPLE (written by me; copy how I write, not what it says):\n"""\n' + voice.replace(/"""/g, '"') + '\n"""' : '')); };
-const hzVoiceState = () => { const n = $('#hz-voice').value.trim().split(/\s+/).filter(Boolean).length; $('#hz-voice-state').textContent = n ? 'on · ' + n + (n === 1 ? ' word' : ' words') : 'optional'; $('#hz-voice-box').classList.toggle('is-on', !!n); };
-$('#hz-voice').value = ls.get('viora_hz_voice', ''); hzVoiceState();
+const hzVoice = () => {
+  const mode = $('#hz-voice-mode').value;
+  if (mode === 'sample') { const t = $('#hz-voice').value.trim().slice(0, 1500); return t ? { text: t, label: 'written by me' } : null; }
+  if (mode === 'chats') { const v = chatVoiceSample(chats); return v.text ? { text: v.text, label: 'messages I typed in past chats', msgs: v.msgs } : null; }
+  return null;
+};
+const hzSend = fresh => { const text = $('#hz-input').value.trim(); if (!text) { $('#hz-input').focus(); toast('Paste the words or essay you want Viora to polish.'); return; } const voice = hzVoice(); send(text + '\n\nRewrite this text in a ' + $('#hz-style').value + ' style with ' + $('#hz-strength').value + ' strength. Preserve its meaning and all factual details. Return only the rewritten text.' + (fresh ? ' Write a new version that differs from your previous rewrite.' : '') + (voice ? '\n\nVOICE SAMPLE (' + voice.label + '; copy how I write, not what it says):\n"""\n' + voice.text.replace(/"""/g, '"') + '\n"""' : ' Use a natural human voice.')); };
+const hzVoiceState = () => {
+  const mode = $('#hz-voice-mode').value, n = $('#hz-voice').value.trim().split(/\s+/).filter(Boolean).length, note = $('#hz-voice-note');
+  $('#hz-voice-state').textContent = n ? n + (n === 1 ? ' word' : ' words') : 'empty'; $('#hz-voice-box').classList.toggle('is-on', !!n); $('#hz-voice-box').hidden = mode !== 'sample';
+  const v = mode === 'chats' ? chatVoiceSample(chats) : null;
+  note.textContent = mode === 'chats' ? (v.text ? 'Matching how you write in ' + v.msgs + ' past messages.' : 'Not enough past chats yet, so Viora uses a natural human voice. It will learn your style as you chat.')
+    : mode === 'natural' ? 'Natural human voice.' : n ? '' : 'Paste something you wrote, or Viora uses a natural human voice.';
+  note.hidden = !note.textContent; note.classList.toggle('is-on', !!(v && v.text));
+};
+$('#hz-voice').value = ls.get('viora_hz_voice', '');
 $('#hz-voice').addEventListener('input', () => { ls.set('viora_hz_voice', $('#hz-voice').value.slice(0, 1500)); hzVoiceState(); });
-for (const [id, key, def] of [['#hz-style', 'viora_hz_style', 'natural'], ['#hz-strength', 'viora_hz_strength', 'balanced']]) { const el = $(id), v = ls.get(key, def); el.value = [...el.options].some(o => o.value === v) ? v : def; el.onchange = () => ls.set(key, el.value); }
+for (const [id, key, def] of [['#hz-style', 'viora_hz_style', 'natural'], ['#hz-strength', 'viora_hz_strength', 'balanced'], ['#hz-voice-mode', 'viora_hz_voice_mode', ls.get('viora_hz_voice', '').trim() ? 'sample' : 'chats']]) { const el = $(id), v = ls.get(key, def); el.value = [...el.options].some(o => o.value === v) ? v : def; el.onchange = () => { ls.set(key, el.value); hzVoiceState(); }; }
+hzVoiceState();
 $('#hz-form').onsubmit = e => { e.preventDefault(); if (busy) { busy.abort(); return; } hzSend(false); };
 $('#hz-again').onclick = () => { if (!busy) hzSend(true); };
 $('#hz-input').addEventListener('input', () => { const n = $('#hz-input').value.trim().split(/\s+/).filter(Boolean).length; $('#hz-count').textContent = n + (n === 1 ? ' word' : ' words'); });

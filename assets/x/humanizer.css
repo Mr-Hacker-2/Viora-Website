@@ -78,6 +78,9 @@
 :root[data-model="humanize"] #humanizer-studio .hz-voice.is-on summary span{color:var(--rose)}
 :root[data-model="humanize"] #humanizer-studio .hz-voice p{margin:0 0 8px;font-size:11px;line-height:1.45}
 :root[data-model="humanize"] #humanizer-studio #hz-voice{display:block;box-sizing:border-box;width:100%;min-height:96px;max-height:220px;margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--raised);color:var(--paper);font:inherit;font-size:13px;line-height:1.5;resize:vertical}
+:root[data-model="humanize"] #humanizer-studio .hz-voice-note{margin:10px 0 0;padding:8px 11px;border:1px dashed var(--line);border-radius:11px;color:var(--muted);font-size:11px;line-height:1.45}
+:root[data-model="humanize"] #humanizer-studio .hz-voice-note.is-on{border-style:solid;border-color:color-mix(in srgb,var(--rose) 45%,var(--line));color:var(--paper)}
+:root[data-model="humanize"] #humanizer-studio .hz-voice-note.is-on::before{content:"\2713  ";color:var(--rose);font-weight:700}
 @keyframes hz-slide{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
 @keyframes hz-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
 @media (prefers-reduced-motion:reduce){:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-progress i,:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-live i{animation:none;opacity:1;transform:none;width:100%}}
