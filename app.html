@@ -996,11 +996,11 @@ async function full(f) {
 async function addAtt(a) {
   const existing = chat(), count = existing?.page?.files.length || 0;
   const id = 'f' + Date.now() + Math.random().toString(36).slice(2, 8), imgs = a.imgs || [], text = String(a.text || '');
+  FT[id] = text; IM[id] = imgs; VI[id] = a.video || null; AU[id] = a.audio || null;
   const saved = await idbSet(id, { t: text, i: imgs, v: a.video || null, a: a.audio || null });
-  if (!saved) throw new Error('Your browser could not save "' + a.name + '". Check available site storage, then attach it again.');
+  if (!saved) toast('"' + a.name + '" is ready for this session but could not be saved for reload. Reattach it if you refresh the page.');
   let c = existing; if (!c) { c = { id: String(Date.now()), title: a.name.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
   const p = c.page || (c.page = { files: [] });
-  FT[id] = text; IM[id] = imgs; VI[id] = a.video || null; AU[id] = a.audio || null;
   p.files.push({ id, name: a.name, kind: a.kind, source: a.source, n: text.length, ni: imgs.length, size: a.size, dur: a.dur, nativeVideo: !!a.video, nativeAudio: !!a.audio }); rebuild(c); save(); render();
 }
 function rebuild(c) { const p = c.page; if (!p || !p.files.length) { c.page = null; return; } p.title = p.files.length === 1 ? p.files[0].name : p.files.length + ' attachments'; p.source = p.files.length === 1 ? p.files[0].source : 'attachments'; p.text = ''; }
