@@ -71,6 +71,13 @@
 :root[data-model="humanize"] #humanizer-studio .hz-sig.is-warn::before{content:"!";color:#c98a00;font-weight:800}
 :root[data-model="humanize"] #humanizer-studio .hz-sig-warn{margin:9px 0 0;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,#e0a100 12%,transparent);color:var(--paper);font-size:11px;line-height:1.45}
 :root[data-model="humanize"] #humanizer-studio .hz-sig-note{margin:8px 0 0;color:var(--faint);font-size:10.5px;line-height:1.45}
+:root[data-model="humanize"] #humanizer-studio .hz-voice{margin-top:10px;border:1px dashed var(--line);border-radius:13px;padding:0 12px;color:var(--muted);font-size:12px}
+:root[data-model="humanize"] #humanizer-studio .hz-voice.is-on{border-style:solid;border-color:color-mix(in srgb,var(--rose) 45%,var(--line))}
+:root[data-model="humanize"] #humanizer-studio .hz-voice summary{cursor:pointer;padding:10px 0;color:var(--paper);font-weight:600;list-style-position:inside}
+:root[data-model="humanize"] #humanizer-studio .hz-voice summary span{margin-left:6px;color:var(--faint);font-weight:500;font-size:11px}
+:root[data-model="humanize"] #humanizer-studio .hz-voice.is-on summary span{color:var(--rose)}
+:root[data-model="humanize"] #humanizer-studio .hz-voice p{margin:0 0 8px;font-size:11px;line-height:1.45}
+:root[data-model="humanize"] #humanizer-studio #hz-voice{display:block;box-sizing:border-box;width:100%;min-height:96px;max-height:220px;margin:0 0 12px;padding:10px 12px;border:1px solid var(--line);border-radius:10px;background:var(--raised);color:var(--paper);font:inherit;font-size:13px;line-height:1.5;resize:vertical}
 @keyframes hz-slide{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
 @keyframes hz-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
 @media (prefers-reduced-motion:reduce){:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-progress i,:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-live i{animation:none;opacity:1;transform:none;width:100%}}
