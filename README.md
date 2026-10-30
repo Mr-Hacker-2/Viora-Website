@@ -102,3 +102,12 @@ Same palette, type and shapes as the extension's side panel / tab:
 - **Reliability** (`assets/x/netperf.js`) retries transient 408, 425, 429 and common 5xx responses as well as network failures. Stop requests are still not retried; the existing regenerate/retry action remains available.
 - **Phone-to-PC source download**: `download-site.html` links to the repository ZIP and explains how to transfer it from a phone and extract it on Windows. This downloads source code; it does not install the website as an offline application.
 - **Backend boundary**: this repository chooses Viora assistant modes. The underlying provider/model selection, search provider, returned sources and server-side fallback are controlled by the separate chat server. These front-end changes cannot guarantee provider-level routing or make the server's web results more reliable without changes to that server.
+
+---
+## v7 upgrade notes: emoji-forward replies
+
+- **Emojis on by default** (`assets/x/persona.js`): `DEFAULT_LEVEL` is now `warm`. Warm uses roughly 3 to 7 meaningful emojis per answer (opening line, key points and headings, closing line); Very expressive uses roughly 6 to 12. Visitors who already chose Plain in Settings keep it (`viora_tone`).
+- **Guardrails in the prompt**: no emojis inside code blocks, URLs, quotes, citations or numbers, and none when the user is upset or the topic is a serious medical, legal or safety matter. Rewrite tools (Humanizer) stay plain.
+- Removed the "emojis are optional" lines in the base prompt and the Flash guide that worked against the setting.
+- **Model**: the website only sends `context.instructions`; the server (`Viora-auth/server.js`) picks the NVIDIA model and appends these instructions to its system prompt. Pro Search already leads with `nvidia/nemotron-3-ultra-550b-a55b`.
+- Service worker cache bumped to `viora-shell-v5` so returning visitors get the new prompt.
