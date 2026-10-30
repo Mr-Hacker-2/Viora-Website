@@ -1,7 +1,8 @@
 /* Humanizer split-screen writing studio */
 :root[data-model="humanize"] #humanizer-studio[hidden],:root[data-model="humanize"] #thread[hidden],:root[data-model="humanize"] #composer[hidden]{display:none!important}
 :root[data-model="humanize"] #humanizer-studio{
-  display:flex;flex-direction:column;min-height:0;overflow:auto;overscroll-behavior:contain;
+  grid-column:1;grid-row:2;min-width:0;min-height:0;
+  display:flex;flex-direction:column;overflow:auto;overscroll-behavior:contain;
   padding:clamp(18px,3vw,38px);background:
     radial-gradient(100% 58% at 50% -8%,color-mix(in srgb,var(--rose) 15%,transparent),transparent 70%),
     linear-gradient(180deg,color-mix(in srgb,var(--ink-2) 88%,var(--rose)),var(--ink));
@@ -16,7 +17,7 @@
 :root[data-model="humanize"] #humanizer-studio .hz-hero p{margin:0;color:var(--muted);font-size:14px;line-height:1.55}
 :root[data-model="humanize"] #humanizer-studio .hz-hero-mark{display:grid;place-items:center;flex:0 0 76px;height:76px;border:1px solid color-mix(in srgb,var(--rose) 35%,var(--line));border-radius:25px;color:var(--rose);background:linear-gradient(145deg,color-mix(in srgb,var(--rose) 18%,var(--raised)),var(--ink-2));box-shadow:0 15px 42px color-mix(in srgb,var(--rose) 12%,transparent);font:700 27px/1 var(--serif)}
 :root[data-model="humanize"] #humanizer-studio .hz-grid{display:grid;grid-template-columns:minmax(0,1fr) minmax(0,1fr);gap:16px;align-items:stretch}
-:root[data-model="humanize"] #humanizer-studio .hz-card{display:flex;flex-direction:column;min-width:0;min-height:420px;padding:17px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(160deg,color-mix(in srgb,var(--ink-2) 95%,var(--rose)),var(--ink-2));box-shadow:var(--shadow-lg);overflow:hidden}
+:root[data-model="humanize"] #humanizer-studio .hz-card{display:flex;flex-direction:column;min-width:0;min-height:clamp(420px,58vh,700px);padding:17px;border:1px solid var(--line);border-radius:20px;background:linear-gradient(160deg,color-mix(in srgb,var(--ink-2) 95%,var(--rose)),var(--ink-2));box-shadow:var(--shadow-lg);overflow:hidden}
 :root[data-model="humanize"] #humanizer-studio .hz-input-card{border-top:2px solid color-mix(in srgb,var(--rose) 62%,var(--line))}
 :root[data-model="humanize"] #humanizer-studio .hz-output-card{border-top:2px solid var(--rose);background:linear-gradient(160deg,color-mix(in srgb,var(--rose) 8%,var(--ink-2)),var(--ink-2) 44%)}
 :root[data-model="humanize"] #humanizer-studio .hz-card-head{display:flex;align-items:center;justify-content:space-between;min-height:44px;margin-bottom:10px}
@@ -40,10 +41,10 @@
 :root[data-model="humanize"] #humanizer-studio .hz-small{padding:8px 11px;border:1px solid var(--line);border-radius:9px;background:var(--raised);color:var(--paper);font:600 11px/1 var(--sans);cursor:pointer}
 :root[data-model="humanize"] #humanizer-studio .hz-small:disabled{opacity:.45;cursor:not-allowed}
 :root[data-model="humanize"] #humanizer-studio #hz-status{flex:1;min-width:145px}
-@media(max-width:700px){
+@media(max-width:760px){
   :root[data-model="humanize"] #humanizer-studio{padding:18px 14px}
   :root[data-model="humanize"] #humanizer-studio .hz-grid{grid-template-columns:minmax(0,1fr)}
-  :root[data-model="humanize"] #humanizer-studio .hz-card{min-height:340px}
+  :root[data-model="humanize"] #humanizer-studio .hz-card{min-height:320px}
   :root[data-model="humanize"] #humanizer-studio #hz-input,
   :root[data-model="humanize"] #humanizer-studio #hz-output{min-height:200px}
 }
@@ -84,3 +85,19 @@
 @keyframes hz-slide{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
 @keyframes hz-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
 @media (prefers-reduced-motion:reduce){:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-progress i,:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-live i{animation:none;opacity:1;transform:none;width:100%}}
+
+
+/* Keep the Humanizer panels balanced while allowing the studio itself to scroll. */
+:root[data-model="humanize"] #humanizer-studio .hz-grid{min-height:0;grid-template-columns:repeat(2,minmax(0,1fr));gap:clamp(12px,1.5vw,20px)}
+:root[data-model="humanize"] #humanizer-studio .hz-card{min-width:0}
+:root[data-model="humanize"] #humanizer-studio .hz-tools{row-gap:10px}
+:root[data-model="humanize"] #humanizer-studio .hz-status{overflow-wrap:anywhere}
+@media(max-width:760px){
+  :root[data-model="humanize"] #humanizer-studio .hz-grid{grid-template-columns:minmax(0,1fr)}
+  :root[data-model="humanize"] #humanizer-studio .hz-card{min-height:320px}
+}
+@media(max-height:640px) and (min-width:761px){
+  :root[data-model="humanize"] #humanizer-studio .hz-card{min-height:360px}
+  :root[data-model="humanize"] #humanizer-studio #hz-input,
+  :root[data-model="humanize"] #humanizer-studio #hz-output{min-height:180px}
+}
