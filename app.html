@@ -995,7 +995,7 @@ async function full(f) {
 }
 async function addAtt(a) {
   const existing = chat(), count = existing?.page?.files.length || 0;
-  const id = 'f' + Date.now() + count, imgs = a.imgs || [], text = String(a.text || '');
+  const id = 'f' + Date.now() + Math.random().toString(36).slice(2, 8), imgs = a.imgs || [], text = String(a.text || '');
   const saved = await idbSet(id, { t: text, i: imgs, v: a.video || null, a: a.audio || null });
   if (!saved) throw new Error('Your browser could not save "' + a.name + '". Check available site storage, then attach it again.');
   let c = existing; if (!c) { c = { id: String(Date.now()), title: a.name.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
@@ -1190,8 +1190,9 @@ async function addFiles(fl) {
         r = { text: t.slice(0, 2e6), imgs };
       }
       if (p.cancel) throw new Error('cancelled');
-      pending.splice(pending.indexOf(p), 1);
       await addAtt({ name: f.name, text: r.text, imgs: r.imgs, kind: k, source: f.name, size: f.size, dur: r.dur });
+      const pendingIndex = pending.indexOf(p); if (pendingIndex >= 0) pending.splice(pendingIndex, 1);
+      render();
     } catch (e) {
       if (e.message === 'cancelled' || p.cancel) { const i = pending.indexOf(p); if (i >= 0) pending.splice(i, 1); }
       else { p.err = /^(is|has|uses|took|could not|contains)\b/.test(e.message) ? e.message.replace(/^/, '') : 'could not be read (' + (e.message || 'unknown error').slice(0, 80) + ').'; }
