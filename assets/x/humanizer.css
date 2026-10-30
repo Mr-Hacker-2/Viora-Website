@@ -53,3 +53,20 @@
   :root[data-model="humanize"] #humanizer-studio .hz-style{margin-left:0}
   :root[data-model="humanize"] #humanizer-studio .hz-run{width:100%}
 }
+
+/* Live "working" state and the what-changed panel */
+:root[data-model="humanize"] #humanizer-studio .hz-progress{height:3px;margin:-2px 0 10px;border-radius:3px;overflow:hidden;background:transparent}
+:root[data-model="humanize"] #humanizer-studio .hz-progress i{display:block;height:100%;width:38%;border-radius:3px;background:linear-gradient(90deg,transparent,var(--rose),transparent);opacity:0;transform:translateX(-110%)}
+:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-progress i{opacity:1;animation:hz-slide 1.25s ease-in-out infinite}
+:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working{border-color:color-mix(in srgb,var(--rose) 55%,var(--line))}
+:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-live i{animation:hz-pulse 1s ease-in-out infinite}
+:root[data-model="humanize"] #humanizer-studio .hz-signals{margin-top:12px;padding:11px 12px;border:1px solid var(--line);border-radius:13px;background:color-mix(in srgb,var(--ink) 40%,transparent)}
+:root[data-model="humanize"] #humanizer-studio .hz-sig-row{display:flex;flex-wrap:wrap;gap:7px}
+:root[data-model="humanize"] #humanizer-studio .hz-sig{display:inline-flex;align-items:baseline;gap:7px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--raised);color:var(--muted);font-size:11px;white-space:nowrap}
+:root[data-model="humanize"] #humanizer-studio .hz-sig b{color:var(--paper);font-weight:650}
+:root[data-model="humanize"] #humanizer-studio .hz-sig.is-good{border-color:color-mix(in srgb,var(--rose) 45%,var(--line))}
+:root[data-model="humanize"] #humanizer-studio .hz-sig.is-good::before{content:"\2713";color:var(--rose);font-weight:700}
+:root[data-model="humanize"] #humanizer-studio .hz-sig-note{margin:8px 0 0;color:var(--faint);font-size:10.5px;line-height:1.45}
+@keyframes hz-slide{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
+@keyframes hz-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
+@media (prefers-reduced-motion:reduce){:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-progress i,:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-live i{animation:none;opacity:1;transform:none;width:100%}}

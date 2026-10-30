@@ -516,8 +516,9 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
         <label class="sr-only" for="hz-input">Paste your essay or words here</label><textarea id="hz-input" placeholder="Paste your essay, paragraph, or rough words here…" spellcheck="true"></textarea>
         <footer class="hz-tools"><span id="hz-count">0 words</span><label class="hz-style">Writing style<select id="hz-style"><option value="natural">Natural</option><option value="academic">Academic</option><option value="professional">Professional</option><option value="casual">Casual</option></select></label><button class="hz-run" id="hz-run" type="submit">Polish my draft <span aria-hidden="true">↗</span></button></footer>
       </section>
-      <section class="hz-card hz-output-card"><header class="hz-card-head"><div><span class="hz-step">02 / OUTPUT</span><h3>Viora’s rewrite</h3></div><span class="hz-live" aria-hidden="true"><i></i> AI OUTPUT</span></header>
-        <label class="sr-only" for="hz-output">AI rewritten text</label><textarea id="hz-output" readonly placeholder="Your polished version will appear here…"></textarea>
+      <section class="hz-card hz-output-card"><header class="hz-card-head"><div><span class="hz-step">02 / OUTPUT</span><h3>Viora’s rewrite</h3></div><span class="hz-live" aria-hidden="true"><i></i> <span id="hz-live-text">READY</span></span></header>
+        <label class="sr-only" for="hz-output">AI rewritten text</label><div class="hz-progress" aria-hidden="true"><i></i></div><textarea id="hz-output" readonly placeholder="Your polished version will appear here…"></textarea>
+        <div id="hz-signals" class="hz-signals" hidden></div>
         <footer class="hz-tools hz-output-tools"><span id="hz-status" role="status" aria-live="polite">Your rewritten text will appear here.</span><button class="hz-small" id="hz-copy" type="button" disabled>Copy</button><button class="hz-small" id="hz-replace" type="button" disabled>Use this text</button></footer>
       </section>
     </form>
@@ -634,6 +635,7 @@ import { pick as pickModel } from './assets/x/caps.js';
 import { classify, shouldSearch, chain, Health, shouldFallback } from './assets/x/router.js';
 import { withPersona, normLevel, LEVELS } from './assets/x/persona.js';
 import { cleanRewrite } from './assets/x/humanize-post.js';
+import { signalsHtml } from './assets/x/humanize-stats.js';
 import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories } from './assets/x/memory.js';
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes, validateVisualPayload } from './assets/x/media.js';
 import * as NP from './assets/x/netperf.js';
@@ -691,7 +693,7 @@ const stat0 = m => m.wait ? `<span style="color:var(--muted)">${esc(m.wait)}</sp
 const DOTS = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>', stat = m => stat0(m) + DOTS;
 const greet = () => { const h = new Date().getHours(); return h < 5 ? 'Burning the midnight oil' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
 function mdx(t, srcs) { const safe = Src.cleanSources(srcs || []); if (safe.length) t = t.split(/(```[\s\S]*?(?:```|$)|`[^`\n]*`)/).map((seg, i) => i % 2 ? seg : seg.replace(/\[(\d{1,2})\](?!\()/g, (x, n) => safe[n - 1] ? `[${n}](${safe[n - 1].url})` : x)).join(''); return renderMarkdown(t); }
-function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : stat(m); bindCodeCopy(el); Src.decorateCitations(el, m.src); }
+function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : stat(m); bindCodeCopy(el); Src.decorateCitations(el, m.src); Src.decorateLinks(el); }
 function msgHtml(m, i, last, enter) {
   if (m.role === 'user') return `<div class="msg user${enter ? ' enter' : ''}">${(m.att || []).length ? `<div class="msg-att">${m.att.map(f => `<span class="msg-att-i" title="${esc(f.name)}">${f.src && Src.parseUrl(f.src) ? Src.iconHtml({ url: f.src }, 14) : ''}${esc(f.name)}</span>`).join('')}</div>` : ''}<div class="user-text">${esc(m.content)}</div></div>`;
   const safeSrcs = Src.cleanSources(m.src || []);
@@ -775,7 +777,17 @@ function render() {
   jump();
 }
 /* "Latest" button: appears when you have scrolled well above the newest message */
-function syncHumanizer() { const c = chat(), last = c && [...c.messages].reverse().find(m => m.role === 'assistant'); const out = $('#hz-output'); if (!out) return; out.value = cleanRewrite(last && last.content || ''); const active = !!busy && asst === 'human'; $('#hz-run').textContent = active ? 'Stop rewriting' : 'Polish my draft ↗'; $('#hz-run').classList.toggle('is-stop', active); $('#hz-copy').disabled = !out.value.trim(); $('#hz-replace').disabled = !out.value.trim(); $('#hz-status').textContent = active ? (out.value ? 'Viora is still polishing your draft…' : 'Viora is reading your draft…') : out.value ? 'Ready to use or copy.' : 'Your rewritten text will appear here.'; }
+function syncHumanizer() {
+  const c = chat(), last = c && [...c.messages].reverse().find(m => m.role === 'assistant'), out = $('#hz-output'); if (!out) return;
+  out.value = cleanRewrite(last && last.content || '');
+  const active = !!busy && asst === 'human', has = !!out.value.trim(), words = has ? out.value.trim().split(/\s+/).length : 0, card = out.closest('.hz-output-card'), sig = $('#hz-signals');
+  $('#hz-run').textContent = active ? 'Stop rewriting' : 'Polish my draft ↗'; $('#hz-run').classList.toggle('is-stop', active);
+  $('#hz-copy').disabled = !has; $('#hz-replace').disabled = !has;
+  if (card) card.classList.toggle('is-working', active);
+  $('#hz-live-text').textContent = active ? 'WORKING' : has ? 'DONE' : 'READY';
+  $('#hz-status').textContent = active ? (has ? 'Viora is rewriting… ' + words + (words === 1 ? ' word' : ' words') + ' so far' : 'Viora is reading your draft…') : has ? 'Done · ' + words + (words === 1 ? ' word' : ' words') + ' · ready to use or copy.' : 'Your rewritten text will appear here.';
+  if (sig) { const html = !active && has ? signalsHtml($('#hz-input').value, out.value) : ''; sig.innerHTML = html; sig.hidden = !html; }
+}
 function jump() { const th = $('#thread'), c = chat(); $('#to-bottom').classList.toggle('show', !!(c && c.messages.length) && th.scrollHeight - th.scrollTop - th.clientHeight > 240); }
 function sendState(on) { $('#send').innerHTML = on ? ic('stop') : SEND; $('#send').setAttribute('aria-label', on ? 'Stop' : 'Send'); $('#send').disabled = false; }
 async function send(text) {

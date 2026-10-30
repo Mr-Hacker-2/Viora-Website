@@ -118,3 +118,10 @@ Same palette, type and shapes as the extension's side panel / tab:
 - **Own prompt** (`HUMANIZER` in `assets/x/persona.js`): the Humanizer no longer receives the chat base prompt (which asked for tables, bold and emojis). It gets a focused rewriting prompt: keep every fact, vary sentence rhythm, cut stock AI phrases, no em dashes, no tidy summary endings, four named styles.
 - **Clean-up** (`assets/x/humanize-post.js`): removes "Here is the rewritten text:" preambles, wrapping quotes, markdown emphasis and em dashes from the displayed rewrite. It changes no other wording.
 - **No guarantee**: AI detectors disagree with each other and can flag human writing, so no rewriter can promise a fixed score. Test with the detector you care about.
+
+---
+## v9 upgrade notes: link logos and a visible Humanizer
+
+- **Link logos** (`decorateLinks` in `assets/x/sources.js`): every web link in an answer now gets a tiny site logo, not only citations that match the search results. It reuses the existing icon logic (provider icon, then icon service, then a globe), skips unsafe or non-http(s) links, and never decorates a link twice. The privacy note under v2 applies: the icon service sees which domains appear in answers.
+- **Humanizer working state**: the output card shows a moving progress bar, a pulsing WORKING / DONE badge and a live word count while it writes.
+- **Humanizer "what changed" panel** (`assets/x/humanize-stats.js`): after each rewrite, shows length, sentence variety, AI-style phrases and em dashes before and after. These are measurements of the text, not an AI-detector score, and the panel says so.

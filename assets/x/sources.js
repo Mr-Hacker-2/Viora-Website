@@ -131,6 +131,21 @@ export function decorateCitations(el, srcs) {
 }
 
 
+/** Put a tiny site logo in front of every other web link in an answer (links the AI wrote itself, bare URLs).
+    Citations and source cards already have one and are skipped; non-http(s) links are left alone. */
+export function decorateLinks(el) {
+  if (!el || !el.querySelectorAll) return;
+  el.querySelectorAll('a[href]').forEach(a => {
+    if (a.dataset.vc || a.dataset.vl) return;
+    if (a.querySelector('.vfav') || (a.closest && a.closest('.src-card, .src-chip, .src-block'))) return;
+    const x = parseUrl(a.getAttribute('href')); if (!x) return;
+    a.dataset.vl = '1'; a.classList.add('vlink');
+    a.insertAdjacentHTML('afterbegin', iconHtml({ url: x.href }, 14));
+    if (!a.title) a.title = hostOf(x.href);
+    a.target = '_blank'; a.rel = 'noopener noreferrer nofollow';
+  });
+}
+
 /** Keep only source records with safe, usable HTTP(S) links; never repair or invent URLs. */
 export function cleanSources(srcs) {
   if (!Array.isArray(srcs)) return [];
