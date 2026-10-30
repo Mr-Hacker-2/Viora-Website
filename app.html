@@ -966,17 +966,42 @@ const newChat = () => { cur = null; hide(); render(); $('#input').focus(); close
 /* attach a page */
 const dlg = $('#dlg');
 const plain = html => { const d = new DOMParser().parseFromString(html, 'text/html'); d.querySelectorAll('script,style,noscript,svg,template').forEach(n => n.remove()); return { title: (d.title || '').trim().slice(0, 200), text: (d.body?.textContent || html).replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim().slice(0, 24000) }; };
-function setPage(p, source) { addAtt({ name: (p.title || source || 'Page').slice(0, 80), text: p.text, source, kind: 'web' }); }
+async function setPage(p, source) { await addAtt({ name: (p.title || source || 'Page').slice(0, 80), text: p.text, source, kind: 'web' }); }
 const FT = {}, IM = {}, VI = {}, AU = {};
 const idb = () => idb.p || (idb.p = new Promise((ok, no) => { const r = indexedDB.open('viora_files', 1); r.onupgradeneeded = () => r.result.createObjectStore('f'); r.onsuccess = () => ok(r.result); r.onerror = () => no(r.error); }));
-const idbSet = async (k, v) => { try { (await idb()).transaction('f', 'readwrite').objectStore('f').put(v, k); } catch {} };
+const idbSet = async (k, v) => {
+  try {
+    const d = await idb();
+    await new Promise((resolve, reject) => {
+      const tx = d.transaction('f', 'readwrite');
+      tx.objectStore('f').put(v, k);
+      tx.oncomplete = resolve;
+      tx.onerror = () => reject(tx.error || new Error('File storage failed'));
+      tx.onabort = () => reject(tx.error || new Error('File storage failed'));
+    });
+    return true;
+  } catch { return false; }
+};
 const idbGet = async k => { try { const d = await idb(); return await new Promise(ok => { const q = d.transaction('f').objectStore('f').get(k); q.onsuccess = () => ok(q.result); q.onerror = () => ok(null); }); } catch { return null; } };
-async function full(f) { if (FT[f.id] == null) { const v = f.text != null ? { t: f.text, i: [], v: null, a: null } : await idbGet(f.id); FT[f.id] = v?.t || ''; IM[f.id] = v?.i || []; VI[f.id] = v?.v || null; AU[f.id] = v?.a || null; } return FT[f.id]; }
-function addAtt(a) {
-  let c = chat(); if (!c) { c = { id: String(Date.now()), title: a.name.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
-  const p = c.page || (c.page = { files: [] }), id = 'f' + Date.now() + p.files.length, imgs = a.imgs || [];
-  FT[id] = a.text; IM[id] = imgs; VI[id] = a.video || null; AU[id] = a.audio || null; idbSet(id, { t: a.text, i: imgs, v: a.video || null, a: a.audio || null });
-  p.files.push({ id, name: a.name, kind: a.kind, source: a.source, n: a.text.length, ni: imgs.length, size: a.size, dur: a.dur, nativeVideo: !!a.video, nativeAudio: !!a.audio }); rebuild(c); save(); render();
+async function full(f) {
+  if (FT[f.id] == null) {
+    const v = f.text != null ? { t: f.text, i: [], v: null, a: null } : await idbGet(f.id);
+    if (!v) throw new Error('The saved file data for "' + f.name + '" could not be loaded. Remove it and attach the file again.');
+    FT[f.id] = v.t || ''; IM[f.id] = v.i || []; VI[f.id] = v.v || null; AU[f.id] = v.a || null;
+  }
+  const text = FT[f.id] || '';
+  if (Number(f.n) > 0 && text.length < Number(f.n)) throw new Error('The full text for "' + f.name + '" is unavailable. Remove it and attach the file again so Viora can read it.');
+  return text;
+}
+async function addAtt(a) {
+  const existing = chat(), count = existing?.page?.files.length || 0;
+  const id = 'f' + Date.now() + count, imgs = a.imgs || [], text = String(a.text || '');
+  const saved = await idbSet(id, { t: text, i: imgs, v: a.video || null, a: a.audio || null });
+  if (!saved) throw new Error('Your browser could not save "' + a.name + '". Check available site storage, then attach it again.');
+  let c = existing; if (!c) { c = { id: String(Date.now()), title: a.name.slice(0, 44), assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
+  const p = c.page || (c.page = { files: [] });
+  FT[id] = text; IM[id] = imgs; VI[id] = a.video || null; AU[id] = a.audio || null;
+  p.files.push({ id, name: a.name, kind: a.kind, source: a.source, n: text.length, ni: imgs.length, size: a.size, dur: a.dur, nativeVideo: !!a.video, nativeAudio: !!a.audio }); rebuild(c); save(); render();
 }
 function rebuild(c) { const p = c.page; if (!p || !p.files.length) { c.page = null; return; } p.title = p.files.length === 1 ? p.files[0].name : p.files.length + ' attachments'; p.source = p.files.length === 1 ? p.files[0].source : 'attachments'; p.text = ''; }
 /* long files: send the opening plus the passages that best match the question */
@@ -1166,7 +1191,7 @@ async function addFiles(fl) {
       }
       if (p.cancel) throw new Error('cancelled');
       pending.splice(pending.indexOf(p), 1);
-      addAtt({ name: f.name, text: r.text, imgs: r.imgs, kind: k, source: f.name, size: f.size, dur: r.dur });
+      await addAtt({ name: f.name, text: r.text, imgs: r.imgs, kind: k, source: f.name, size: f.size, dur: r.dur });
     } catch (e) {
       if (e.message === 'cancelled' || p.cancel) { const i = pending.indexOf(p); if (i >= 0) pending.splice(i, 1); }
       else { p.err = /^(is|has|uses|took|could not|contains)\b/.test(e.message) ? e.message.replace(/^/, '') : 'could not be read (' + (e.message || 'unknown error').slice(0, 80) + ').'; }
@@ -1183,9 +1208,9 @@ $('#d-ok').onclick = async () => {
   err.textContent = ''; if (!url && !txt) { err.textContent = 'Enter a web address or paste some text.'; return; }
   ok.disabled = true; ok.textContent = 'Reading…';
   try {
-    if (txt) { const p = /<\w+[^>]*>/.test(txt) && /\.html?$|^$/.test(fname) ? plain(txt) : { title: fname || 'Pasted text', text: txt.slice(0, 24000) }; fname = ''; if (!p.text) throw new Error('That page has no readable text.'); setPage(p, 'pasted'); }
+    if (txt) { const p = /<\w+[^>]*>/.test(txt) && /\.html?$|^$/.test(fname) ? plain(txt) : { title: fname || 'Pasted text', text: txt.slice(0, 24000) }; fname = ''; if (!p.text) throw new Error('That page has no readable text.'); await setPage(p, 'pasted'); }
     else { const r = await fetch(API + '/api/read', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token }, body: JSON.stringify({ url }) });
-      const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || 'Could not read that page.'); if (!d.text) throw new Error('That page has no readable text.'); setPage(d, url); }
+      const d = await r.json().catch(() => ({})); if (!r.ok) throw new Error(d.error || 'Could not read that page.'); if (!d.text) throw new Error('That page has no readable text.'); await setPage(d, url); }
     $('#d-url').value = ''; $('#d-txt').value = ''; dlg.close();
   } catch (e) { err.textContent = e.message; }
   ok.disabled = false; ok.textContent = 'Read page';
