@@ -844,7 +844,18 @@ async function send(text) {
     if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(NP.describeHttpFailure(r.status, e.error || '')); }
     m.stage = 'Reading the response…'; paint();
-    const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0, streamEnded = false;
+    const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0, paintTimer = 0, lastPaintAt = 0, streamEnded = false;
+    // Rebuilding rich Markdown and decorating every link is expensive for long answers.
+    // Keep streaming updates responsive without repainting the full reply on every frame.
+    const schedulePaint = () => {
+      if (raf || paintTimer) return;
+      const delay = Math.max(0, 120 - (performance.now() - lastPaintAt));
+      if (delay) {
+        paintTimer = setTimeout(() => { paintTimer = 0; schedulePaint(); }, delay);
+        return;
+      }
+      raf = requestAnimationFrame(() => { raf = 0; lastPaintAt = performance.now(); paint(); });
+    };
     const handleLine = l => {
       if (!l.startsWith('data:')) return;
       const d = l.slice(5).trim(); if (!d) return;
@@ -871,7 +882,7 @@ async function send(text) {
       const split = NP.splitStreamLines(buf + dec.decode(value, { stream: true })); buf = split.rest;
       split.lines.forEach(handleLine);
       if (streamEnded) { try { rd.cancel(); } catch {} break; }
-      if (!raf) raf = requestAnimationFrame(() => { raf = 0; paint(); });
+      schedulePaint();
     }
     NP.splitStreamLines(buf + dec.decode(), true).lines.forEach(handleLine);
     if (!m.content.trim() && m.providerError) throw new Error('The AI provider returned an error: ' + m.providerError);
