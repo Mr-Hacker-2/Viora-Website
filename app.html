@@ -816,7 +816,8 @@ async function send(text) {
   const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 32, b = $('#b' + idx); if (b) { paintBody(b, m); if (near) th.scrollTop = th.scrollHeight; } if (asst === 'human') syncHumanizer(); };
   const autoRoute = asst === 'auto' ? routeDetails(text, c) : null;
   let eff = autoRoute ? autoRoute.assistant : asst;
-  const verifyAnswer = eff === 'search' || eff === 'math';
+  const hasTextAttachment = !!(c.page && c.page.files.some(f => f.kind === 'file' || f.kind === 'web'));
+  const verifyAnswer = eff === 'search' || eff === 'math' || hasTextAttachment;
   /* capability check: keep the chosen assistant when it can read the attachments, otherwise switch and say why */
   const pk = pickModel(eff, c.page ? c.page.files : [], Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
