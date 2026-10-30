@@ -5,13 +5,13 @@
   let promptEvent = null;
   const button = document.getElementById('pwa-install');
   if (!button) return;
-  const mobile = /Android|iPhone|iPad|iPod/i.test(navigator.userAgent);
-  if (mobile) button.hidden = false;
+  const row = button.closest('[data-pwa-row]') || button;
+  if (matchMedia('(display-mode: standalone)').matches) row.hidden = true;
   button.addEventListener('click', async () => {
     if (promptEvent) {
       promptEvent.prompt();
       const result = await promptEvent.userChoice.catch(() => null);
-      if (result?.outcome === 'accepted') button.hidden = true;
+      if (result?.outcome === 'accepted') row.hidden = true;
       promptEvent = null;
     } else {
       location.href = '/mobile.html';
@@ -20,10 +20,10 @@
   window.addEventListener('beforeinstallprompt', event => {
     event.preventDefault();
     promptEvent = event;
-    button.hidden = false;
+    row.hidden = false;
   });
   window.addEventListener('appinstalled', () => {
     promptEvent = null;
-    button.hidden = true;
+    row.hidden = true;
   });
 })();
