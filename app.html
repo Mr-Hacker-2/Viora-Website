@@ -688,10 +688,11 @@ const health = new Health();
 function visualFiles(c) {
   return c && c.page ? c.page.files.filter(f => f.kind === 'video' || f.kind === 'audio' || f.nativeVideo || (['image', 'file'].includes(f.kind) && (f.ni || 0) > 0)) : [];
 }
-function route(t, c) {
+function routeDetails(t, c) {
   const files = c && c.page ? c.page.files : [];
-  return classify(t, { hasPage: files.length > 0, hasVisual: visualFiles(c).length > 0 }).assistant;
+  return classify(t, { hasPage: files.length > 0, hasVisual: visualFiles(c).length > 0 });
 }
+function route(t, c) { return routeDetails(t, c).assistant; }
 function suggestionIcon(text) {
   if (/\b(?:video|frame|scene|visible)\b/i.test(text)) return ic('camera');
   if (/\b(?:python|code|javascript|api|palindrome|loop|big-o)\b/i.test(text)) return ic('terminal');
@@ -813,7 +814,9 @@ async function send(text) {
   $('#input').value = ''; try { localStorage.removeItem('viora_draft_' + S.email); } catch {} grow(); save(); render();
   const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); let timingStart = 0; busy = ctl; m.stage = 'Starting task…'; sendState(true); syncHumanizer();
   const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 32, b = $('#b' + idx); if (b) { paintBody(b, m); if (near) th.scrollTop = th.scrollHeight; } if (asst === 'human') syncHumanizer(); };
-  let eff = asst === 'auto' ? route(text, c) : asst;
+  const autoRoute = asst === 'auto' ? routeDetails(text, c) : null;
+  let eff = autoRoute ? autoRoute.assistant : asst;
+  const verifyAnswer = eff === 'search' || eff === 'math';
   /* capability check: keep the chosen assistant when it can read the attachments, otherwise switch and say why */
   const pk = pickModel(eff, c.page ? c.page.files : [], Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
@@ -837,7 +840,7 @@ async function send(text) {
       const web2 = !!(A[a].web && useWeb);
       try {
         r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '', who()) }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images, video: pp.video, audio: pp.audio }) },
+          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '', who()) }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images, video: pp.video, audio: pp.audio, intelligence: { review: verifyAnswer } }) },
           { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
         if (m.timing.responseMs == null) m.timing.responseMs = Math.round(performance.now() - timingStart);
       } catch (e) { if (!shouldFallback(0, e)) throw e; health.fail(a); last = e; r = null; if (n < tries.length - 1) continue; throw e; }
@@ -868,6 +871,8 @@ async function send(text) {
         const j = JSON.parse(d);
         if (j.viora_meta) { m.model = j.viora_meta.model; m.timing = { ...m.timing, modelHeaderMs: j.viora_meta.modelHeaderMs }; render(); }
         else if (j.error) { m.providerError = String(j.error.message || j.error).slice(0, 500); }
+        else if (j.viora_retry) { m.content = ''; m.note = 'A second model improved this answer after a quality review.'; m.stage = 'Refining the answer…'; }
+        else if (j.viora_quality) { m.note = 'Answer reviewed for completeness and relevance.'; }
         else if (Object.hasOwn(j, 'viora_sources')) {
           m.searching = false; m.stage = 'Checking source links…'; m.src = j.viora_sources;
           m.research = j.viora_research || null; m.timing = { ...m.timing, ...(j.viora_timings || {}) };
