@@ -179,3 +179,11 @@
   :root[data-model] #sh-left > #sh-hist { margin-bottom: 16px; }
   :root[data-model] #sh-left > .sh-invite { margin-top: auto !important; }
 }
+
+/* 7. The shell fills the viewport exactly: no page scroll, even gutters around the cards. */
+@media (min-width: 980px) {
+  :root[data-model] body { padding: 0 !important; margin: 0 !important; }
+  :root[data-model] #shell { height: 100dvh !important; min-height: 0 !important; box-sizing: border-box; }
+  /* The sidebar already shows the brand, so the header doesn't repeat it. */
+  :root[data-model] #shell:not(.no-left) .bar-id .wordmark { display: none !important; }
+}
