@@ -27,6 +27,9 @@
 <style>
 html,body{height:100%;margin:0}
 #sh-left{position:relative}
+.sh-signout{display:flex;align-items:center;gap:10px;width:100%;margin:8px 0 14px;padding:9px 12px;border:1px solid transparent;border-radius:11px;background:transparent;color:var(--muted);font:inherit;text-align:left;cursor:pointer}
+.sh-signout:hover{background:var(--raised);color:var(--paper)}
+.sh-signout:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #umenu{top:84px;left:14px;right:14px;max-height:none}
 .hx{position:absolute;right:6px;top:50%;transform:translateY(-50%);opacity:0;color:var(--faint);padding:0 6px;font-size:16px}
 .sh-hist button{position:relative;padding-right:28px}.sh-hist button:hover .hx{opacity:1}
@@ -474,6 +477,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 <aside id="sh-left">
   <div class="sh-logo"><img src="assets/mark.png" alt="" width="26" height="26"><span>Viora AI</span><button type="button" class="sh-collapse sh-new" id="new-thread" title="New conversation" aria-label="New conversation" data-ic="plus"></button><button type="button" class="sh-collapse" id="sh-collapse" title="Hide sidebar" aria-label="Hide sidebar" data-ic="panel"></button></div>
   <div class="sh-user"><span class="sh-av" id="av" role="button" tabindex="0" title="Account menu" aria-label="Account menu"></span><span class="sh-uname" id="nm"></span><button type="button" id="sh-gear" class="sh-gear" title="Settings" aria-label="Settings" data-ic="gear"></button></div>
+  <button type="button" class="sh-signout" id="side-out" data-ic="logout"> Sign out</button>
   <div id="umenu" class="sheet" hidden>
     <a class="sheet-action" href="index.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Viora home</span></span></a>
     <a class="sheet-action" href="mobile.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Install Viora on phone</span><span class="sheet-sub">Add the website to your Home Screen</span></span></a>
@@ -1263,7 +1267,8 @@ $('#tone-sel').innerHTML = Object.entries(LEVELS).map(([k, v]) => `<option value
 $('#tone-sel').onchange = e => { tone = normLevel(e.target.value); ls.set('viora_tone', tone); };
 $('#open-settings').onclick = () => { $('#tone-sel').value = tone; hide(); VioraPrefs.mount($('#pf-mount')); NP.mount($('#np-mount')); $('#sdlg').showModal(); };
 $('#s-x').onclick = () => $('#sdlg').close();
-$('#out').onclick = () => { localStorage.removeItem('viora_session'); location.href = 'index.html'; };
+const signOut = () => { localStorage.removeItem('viora_session'); location.href = 'index.html'; };
+$('#out').onclick = $('#side-out').onclick = signOut;
 /* projects */
 const pdlg = $('#pdlg');
 function openProj(id) { editP = id; const p = D.projects.find(x => x.id === id) || { name: '', instr: '', notes: '' }; $('#p-h').textContent = id ? 'Edit project' : 'New project'; $('#p-name').value = p.name; $('#p-ins').value = p.instr; $('#p-notes').value = p.notes; $('#p-del').hidden = !id; pdlg.showModal(); }
