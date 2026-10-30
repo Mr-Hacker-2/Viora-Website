@@ -62,7 +62,7 @@ test('app sends the saved voice sample with Humanizer requests', async () => {
   const { readFile } = await import('node:fs/promises');
   const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
   assert.match(html, /id="hz-voice"[^>]*maxlength="1500"/);
-  assert.match(html, /'\\n\\nVOICE SAMPLE \(' \+ voice\.label \+ '; copy how I write, not what it says\)/); assert.match(html, /label: 'written by me'/);
+  assert.match(html, /JSON\.stringify\(\{ draft: text, voice_sample: voice \? voice\.text : '' \}\)/); assert.match(html, /label: 'written by me'/);
   assert.match(html, /ls\.set\('viora_hz_voice'/);
 });
 test('Humanizer Voice option offers chats, natural and sample, and falls back to a natural voice', async () => {
