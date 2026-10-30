@@ -921,29 +921,31 @@ async function generateConversationTitle(c) {
     body: JSON.stringify({
       assistant: 'flash',
       web: false,
-      context: { instructions: 'Create a clear conversation title from the user’s first message. Return only a short title of 3 to 7 words, with no quotes, explanation, or ending punctuation.' },
+      context: { instructions: 'Give this conversation a natural, concise title based on the user’s first message, like “Greetings” or “Trip to Ohio.” Use 1 to 6 words in title case. Return only the title, with no quotes or explanation.' },
       messages: [{ role: 'user', content: starter }]
     }),
-    signal: AbortSignal.timeout(15000)
+    signal: AbortSignal.timeout(45000)
   });
   if (!response.ok || !response.body) throw new Error('Title request failed');
   const reader = response.body.getReader(), decoder = new TextDecoder();
   let buffer = '', raw = '', finished = false;
+  const readTitleLine = line => {
+    if (!line.startsWith('data:')) return;
+    const data = line.slice(5).trim();
+    if (data === '[DONE]') { finished = true; return; }
+    try {
+      const item = JSON.parse(data), text = item.choices?.[0]?.delta?.content;
+      if (text) raw += text;
+    } catch {}
+  };
   while (!finished) {
     const { done, value } = await reader.read();
     if (done) break;
     const split = NP.splitStreamLines(buffer + decoder.decode(value, { stream: true }));
     buffer = split.rest;
-    for (const line of split.lines) {
-      if (!line.startsWith('data:')) continue;
-      const data = line.slice(5).trim();
-      if (data === '[DONE]') { finished = true; break; }
-      try {
-        const item = JSON.parse(data), text = item.choices?.[0]?.delta?.content;
-        if (text) raw += text;
-      } catch {}
-    }
+    split.lines.forEach(readTitleLine);
   }
+  NP.splitStreamLines(buffer + decoder.decode(), true).lines.forEach(readTitleLine);
   const title = raw.split(/\r?\n/)[0].replace(/^[\s"'“”‘’`#*]+|[\s"'“”‘’`#*]+$/g, '').replace(/[.!?:]+$/, '').trim().slice(0, 58);
   if (!title) throw new Error('Title response was empty');
   c.title = title;
