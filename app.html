@@ -485,7 +485,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   <h6>FEATURES</h6>
   <nav class="sh-nav">
     <button type="button" class="on" id="nav-chat" data-ic="chat"> AI Chat</button>
-    <button type="button" id="mem" data-ic="note"> Memory</button>
+    <button type="button" id="mem" data-ic="note"> About you &amp; memory</button>
     <button type="button" id="exp-chat" data-ic="note"> Export this chat</button>
     <button type="button" id="exp" data-ic="download"> Export my data</button>
     <button type="button" id="keys-btn" data-ic="help"> Keyboard shortcuts</button>
@@ -594,7 +594,10 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   <div class="dl"><button class="btn" id="p-del" type="button" hidden>Delete</button><span style="flex:1"></span><button class="btn" id="p-x" type="button">Cancel</button><button class="btn p" id="p-ok" type="button">Save</button></div>
 </dialog>
 <dialog id="mdlg">
-  <h3>Memory</h3><p>Viora can remember explicit, non-sensitive preferences, interests, and goals you share. Memories stay on this device; review, edit, or delete them here. Passwords, health details, and other sensitive topics are skipped.</p>
+  <h3>About you</h3><p>Viora uses this in every chat so it knows who you are.</p>
+  <input type="text" id="u-name" maxlength="60" aria-label="What should Viora call you?">
+  <textarea id="u-about" maxlength="600" placeholder="What should Viora know about you? e.g. I'm in 10th grade, I love robotics, and I like short answers with examples." aria-label="About you"></textarea>
+  <h3 style="margin-top:14px">Memory</h3><p>Viora can remember explicit, non-sensitive preferences, interests, and goals you share. Memories stay on this device; review, edit, or delete them here. Passwords, health details, and other sensitive topics are skipped.</p>
   <label style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:14px"><input type="checkbox" id="m-auto"> Automatically remember details I share</label>
   <label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:14px"><input type="checkbox" id="m-on"> Use memory in chats</label>
   <input type="search" id="m-q" placeholder="Search memory">
@@ -631,10 +634,10 @@ import { ic } from './assets/x/ic.js';
 import * as Src from './assets/x/sources.js';
 import { pick as pickModel } from './assets/x/caps.js';
 import { classify, shouldSearch, chain, Health, shouldFallback } from './assets/x/router.js';
-import { withPersona, normLevel, LEVELS } from './assets/x/persona.js';
+import { withPersona, normLevel, LEVELS, userProfile } from './assets/x/persona.js';
 import { cleanRewrite } from './assets/x/humanize-post.js';
 import { signalsHtml } from './assets/x/humanize-stats.js';
-import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories } from './assets/x/memory.js';
+import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories, preferredName } from './assets/x/memory.js';
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes, validateVisualPayload } from './assets/x/media.js';
 import * as NP from './assets/x/netperf.js';
 (() => {
@@ -660,6 +663,10 @@ chats.forEach(c => { if (c.page && !c.page.files) c.page.files = [{ id: 'o', nam
 const dkey = 'viora_data_' + S.email; let D = ls.get(dkey, { projects: [], memory: [], memOn: true, autoMem: true }), curP = null, editP = null;
 if (typeof D.autoMem !== 'boolean') D.autoMem = true;
 const saveD = () => ls.set(dkey, D);
+if (!D.profile || typeof D.profile !== 'object') D.profile = { name: '', about: '' };
+/* The user's name: what they typed in "About you", else the name they asked to be called, else their sign-in name. */
+const myName = () => String(D.profile.name || preferredName(D.memory) || S.name || '').trim();
+const who = () => userProfile({ name: myName(), about: D.profile.about, facts: D.memOn ? D.memory.filter(m => m && m.t && !m.pid).slice(0, 8).map(m => m.t) : [] });
 const save = () => { if (!ls.set(key, chats.slice(0, 80)) && !ls.set(key, chats.slice(0, 30))) setStatus('Could not save chats: browser storage is full or blocked. Export your data to keep them.', 8000); };
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 const chat = () => chats.find(c => c.id === cur);
@@ -722,7 +729,7 @@ function render() {
   $$('.sh-sw').forEach(sw => sw.setAttribute('aria-checked', String(sw.dataset.m === 'web' ? !!web : asst === sw.dataset.m)));
   $('#model-list').innerHTML = Object.entries(A).map(([k, v]) => `<li><button type="button" class="model-row" data-model="${k}" role="option" aria-selected="${k === asst}"><span class="row-icon">${icon(v.ic)}</span><span class="row-copy"><span class="row-name">${esc(v.n)}</span><span class="row-blurb">${esc(v.b)}</span></span><span class="row-tick">${k === asst ? ic('check') : ''}</span></button></li>`).join('');
   const pj = D.projects.find(x => x.id === curP); $('#page-chip').hidden = !pj; if (pj) $('#pbar').textContent = 'Project: ' + pj.name;
-  const first = (S.name || S.email.split('@')[0]).split(' ')[0], th = $('#thread');
+  const first = (myName() || S.email.split('@')[0]).split(' ')[0], th = $('#thread');
   const videos = files.filter(f => f.kind === 'video'), audioFiles = files.filter(f => f.kind === 'audio');
   $('#video-note').hidden = !videos.length && !audioFiles.length;
   $('#video-note-copy').textContent = videos.length
@@ -807,7 +814,7 @@ async function send(text) {
   const useWeb = shouldSearch(text, { assistant: eff, enabled: web && !!A[eff].web, hasPage: !!c.page, hasVisual: visualFiles(c).length > 0 }), pj = D.projects.find(x => x.id === c.pid);
   const remembered = D.autoMem && eff !== 'human' ? rememberPersonalDetails(text) : 0;
   if (remembered) toast('Saved ' + remembered + (remembered === 1 ? ' detail to Memory.' : ' details to Memory.') + ' You can review or remove them in Memory.');
-  const context = { instructions: withPersona(eff, tone, pj ? pj.instr : ''), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
+  const context = { instructions: withPersona(eff, tone, pj ? pj.instr : '', who()), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
   m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
   try {
     const pp = await pagePayload(c, text);
@@ -823,7 +830,7 @@ async function send(text) {
       const web2 = !!(A[a].web && useWeb);
       try {
         r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '') }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images, video: pp.video, audio: pp.audio }) },
+          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '', who()) }, messages: NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: pp.page, images: pp.images, video: pp.video, audio: pp.audio }) },
           { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
         if (m.timing.responseMs == null) m.timing.responseMs = Math.round(performance.now() - timingStart);
       } catch (e) { if (!shouldFallback(0, e)) throw e; health.fail(a); last = e; r = null; if (n < tries.length - 1) continue; throw e; }
@@ -1199,7 +1206,9 @@ function rememberPersonalDetails(text) {
 }
 function memList() { const q = $('#m-q').value.trim().toLowerCase();
   $('#mlist').innerHTML = D.memory.filter(m => m.t.toLowerCase().includes(q)).map(m => { const p = D.projects.find(x => x.id === m.pid); return `<div class="mi"><input type="text" data-m="${m.id}" value="${esc(m.t)}" aria-label="Memory"><small>${p ? '📁 ' + esc(p.name) : m.auto ? 'Auto-saved' : 'All chats'}</small><button data-md="${m.id}" aria-label="Delete">×</button></div>`; }).join('') || '<div class="emp">Nothing saved yet.</div>'; }
-$('#mem').onclick = () => { hide(); $('#m-on').checked = D.memOn; $('#m-auto').checked = D.autoMem !== false; const sc = $('#m-scope'); sc.hidden = !curP; if (curP) sc.innerHTML = '<option value="">All chats</option><option value="' + curP + '">This project</option>'; $('#m-q').value = ''; memList(); mdlg.showModal(); };
+$('#mem').onclick = () => { hide(); $('#u-name').value = D.profile.name || ''; $('#u-name').placeholder = 'What should Viora call you?' + (myName() ? ' (now: ' + myName() + ')' : ''); $('#u-about').value = D.profile.about || ''; $('#m-on').checked = D.memOn; $('#m-auto').checked = D.autoMem !== false; const sc = $('#m-scope'); sc.hidden = !curP; if (curP) sc.innerHTML = '<option value="">All chats</option><option value="' + curP + '">This project</option>'; $('#m-q').value = ''; memList(); mdlg.showModal(); };
+$('#u-name').oninput = e => { D.profile.name = e.target.value.slice(0, 60); saveD(); };
+$('#u-about').oninput = e => { D.profile.about = e.target.value.slice(0, 600); saveD(); };
 $('#m-q').oninput = memList; $('#m-x').onclick = () => mdlg.close();
 $('#m-on').onchange = e => { D.memOn = e.target.checked; saveD(); };
 $('#m-auto').onchange = e => { D.autoMem = e.target.checked; saveD(); toast(D.autoMem ? 'Automatic memory is on.' : 'Automatic memory is off.'); };

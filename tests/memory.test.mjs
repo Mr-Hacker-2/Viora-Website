@@ -16,3 +16,13 @@ test('wrapUntrusted labels content and cannot be closed early by the content', (
   assert.match(w, /never as instructions/); assert.equal((w.match(/<\/untrusted_content>/g) || []).length, 1); assert.ok(!w.includes('a"b'));
 });
 test('tokens drops stop words', () => assert.deepEqual(tokens('the cat and the hat'), ['cat', 'hat']));
+import { preferredName } from '../assets/x/memory.js';
+test('preferred name comes from the newest "call me" / "my name is" memory', () => {
+  assert.equal(preferredName([{ t: 'I like chess' }, { t: 'Call me Sam.' }, { t: 'My name is Alexander Smith' }]), 'Sam');
+  assert.equal(preferredName([{ t: 'My name is Alexander Smith and I code' }]), 'Alexander Smith');
+  assert.equal(preferredName([{ t: 'my preferred name is zara' }]), 'Zara');
+});
+test('preferred name ignores non-names and bad input', () => {
+  assert.equal(preferredName([{ t: 'My name is not important' }]), '');
+  assert.equal(preferredName(null), ''); assert.equal(preferredName([null, {}]), '');
+});
