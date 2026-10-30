@@ -633,6 +633,7 @@ import * as Src from './assets/x/sources.js';
 import { pick as pickModel } from './assets/x/caps.js';
 import { classify, shouldSearch, chain, Health, shouldFallback } from './assets/x/router.js';
 import { withPersona, normLevel, LEVELS } from './assets/x/persona.js';
+import { cleanRewrite } from './assets/x/humanize-post.js';
 import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories } from './assets/x/memory.js';
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes, validateVisualPayload } from './assets/x/media.js';
 import * as NP from './assets/x/netperf.js';
@@ -774,7 +775,7 @@ function render() {
   jump();
 }
 /* "Latest" button: appears when you have scrolled well above the newest message */
-function syncHumanizer() { const c = chat(), last = c && [...c.messages].reverse().find(m => m.role === 'assistant'); const out = $('#hz-output'); if (!out) return; out.value = last && last.content || ''; const active = !!busy && asst === 'human'; $('#hz-run').textContent = active ? 'Stop rewriting' : 'Polish my draft ↗'; $('#hz-run').classList.toggle('is-stop', active); $('#hz-copy').disabled = !out.value.trim(); $('#hz-replace').disabled = !out.value.trim(); $('#hz-status').textContent = active ? (out.value ? 'Viora is still polishing your draft…' : 'Viora is reading your draft…') : out.value ? 'Ready to use or copy.' : 'Your rewritten text will appear here.'; }
+function syncHumanizer() { const c = chat(), last = c && [...c.messages].reverse().find(m => m.role === 'assistant'); const out = $('#hz-output'); if (!out) return; out.value = cleanRewrite(last && last.content || ''); const active = !!busy && asst === 'human'; $('#hz-run').textContent = active ? 'Stop rewriting' : 'Polish my draft ↗'; $('#hz-run').classList.toggle('is-stop', active); $('#hz-copy').disabled = !out.value.trim(); $('#hz-replace').disabled = !out.value.trim(); $('#hz-status').textContent = active ? (out.value ? 'Viora is still polishing your draft…' : 'Viora is reading your draft…') : out.value ? 'Ready to use or copy.' : 'Your rewritten text will appear here.'; }
 function jump() { const th = $('#thread'), c = chat(); $('#to-bottom').classList.toggle('show', !!(c && c.messages.length) && th.scrollHeight - th.scrollTop - th.clientHeight > 240); }
 function sendState(on) { $('#send').innerHTML = on ? ic('stop') : SEND; $('#send').setAttribute('aria-label', on ? 'Stop' : 'Send'); $('#send').disabled = false; }
 async function send(text) {

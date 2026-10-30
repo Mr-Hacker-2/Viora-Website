@@ -111,3 +111,10 @@ Same palette, type and shapes as the extension's side panel / tab:
 - Removed the "emojis are optional" lines in the base prompt and the Flash guide that worked against the setting.
 - **Model**: the website only sends `context.instructions`; the server (`Viora-auth/server.js`) picks the NVIDIA model and appends these instructions to its system prompt. Pro Search already leads with `nvidia/nemotron-3-ultra-550b-a55b`.
 - Service worker cache bumped to `viora-shell-v5` so returning visitors get the new prompt.
+
+---
+## v8 upgrade notes: Humanizer
+
+- **Own prompt** (`HUMANIZER` in `assets/x/persona.js`): the Humanizer no longer receives the chat base prompt (which asked for tables, bold and emojis). It gets a focused rewriting prompt: keep every fact, vary sentence rhythm, cut stock AI phrases, no em dashes, no tidy summary endings, four named styles.
+- **Clean-up** (`assets/x/humanize-post.js`): removes "Here is the rewritten text:" preambles, wrapping quotes, markdown emphasis and em dashes from the displayed rewrite. It changes no other wording.
+- **No guarantee**: AI detectors disagree with each other and can flag human writing, so no rewriter can promise a fixed score. Test with the detector you care about.
