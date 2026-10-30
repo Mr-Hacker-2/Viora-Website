@@ -66,6 +66,10 @@
 :root[data-model="humanize"] #humanizer-studio .hz-sig b{color:var(--paper);font-weight:650}
 :root[data-model="humanize"] #humanizer-studio .hz-sig.is-good{border-color:color-mix(in srgb,var(--rose) 45%,var(--line))}
 :root[data-model="humanize"] #humanizer-studio .hz-sig.is-good::before{content:"\2713";color:var(--rose);font-weight:700}
+:root[data-model="humanize"] #humanizer-studio .hz-style+.hz-style{margin-left:0}
+:root[data-model="humanize"] #humanizer-studio .hz-sig.is-warn{border-color:color-mix(in srgb,#e0a100 55%,var(--line))}
+:root[data-model="humanize"] #humanizer-studio .hz-sig.is-warn::before{content:"!";color:#c98a00;font-weight:800}
+:root[data-model="humanize"] #humanizer-studio .hz-sig-warn{margin:9px 0 0;padding:8px 10px;border-radius:10px;background:color-mix(in srgb,#e0a100 12%,transparent);color:var(--paper);font-size:11px;line-height:1.45}
 :root[data-model="humanize"] #humanizer-studio .hz-sig-note{margin:8px 0 0;color:var(--faint);font-size:10.5px;line-height:1.45}
 @keyframes hz-slide{0%{transform:translateX(-110%)}100%{transform:translateX(280%)}}
 @keyframes hz-pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.45;transform:scale(.8)}}
