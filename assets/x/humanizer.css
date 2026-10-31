@@ -105,3 +105,19 @@
 :root[data-model="humanize"] #humanizer-studio .hz-output-card.is-incomplete{border-color:color-mix(in srgb,#e0a100 65%,var(--line))}
 :root[data-model="humanize"] #humanizer-studio .hz-output-card.is-incomplete .hz-live{color:#c98a00}
 :root[data-model="humanize"] #humanizer-studio .hz-output-card.is-incomplete #hz-status{color:var(--paper)}
+
+/* Writing studio finish: gentle depth, active focus and a clear live state. */
+:root[data-model="humanize"] #humanizer-studio .hz-hero-mark{animation:hz-mark-float 5s ease-in-out infinite;transition:transform .25s,box-shadow .25s}
+:root[data-model="humanize"] #humanizer-studio .hz-hero-mark:hover{transform:rotate(-5deg) translateY(-3px);box-shadow:0 20px 48px color-mix(in srgb,var(--rose) 20%,transparent)}
+:root[data-model="humanize"] #humanizer-studio .hz-card{position:relative;transition:transform .22s,border-color .22s,box-shadow .22s}
+:root[data-model="humanize"] #humanizer-studio .hz-card:hover{transform:translateY(-2px);box-shadow:0 20px 54px color-mix(in srgb,var(--rose) 10%,#0005)}
+:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working{box-shadow:0 0 0 1px color-mix(in srgb,var(--rose) 18%,transparent),0 20px 56px color-mix(in srgb,var(--rose) 13%,#0005)}
+:root[data-model="humanize"] #humanizer-studio .hz-live{padding:6px 9px;border:1px solid color-mix(in srgb,var(--rose) 26%,var(--line));border-radius:999px;background:color-mix(in srgb,var(--rose) 8%,var(--ink-2))}
+:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-live{animation:hz-live-glow 1.8s ease-in-out infinite}
+:root[data-model="humanize"] #humanizer-studio #hz-output{transition:border-color .2s,box-shadow .2s,background .2s}
+:root[data-model="humanize"] #humanizer-studio .hz-output-card:not(.is-working):not(.is-incomplete) #hz-output:not(:placeholder-shown){border-color:color-mix(in srgb,var(--rose) 26%,var(--line))}
+:root[data-model="humanize"] #humanizer-studio .hz-run:not(:disabled):active,:root[data-model="humanize"] #humanizer-studio .hz-small:not(:disabled):active{transform:scale(.98)}
+@keyframes hz-mark-float{0%,100%{translate:0 0}50%{translate:0 -4px}}
+@keyframes hz-live-glow{0%,100%{box-shadow:0 0 0 0 color-mix(in srgb,var(--rose) 0%,transparent)}50%{box-shadow:0 0 0 4px color-mix(in srgb,var(--rose) 12%,transparent)}}
+@media(prefers-reduced-motion:reduce){:root[data-model="humanize"] #humanizer-studio .hz-hero-mark,:root[data-model="humanize"] #humanizer-studio .hz-card,:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-working .hz-live{animation:none!important;transition:none!important}}
+
