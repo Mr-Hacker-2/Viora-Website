@@ -55,7 +55,7 @@ test('every Humanizer style and strength option in app.html is described in the 
   }
 });
 test('Humanizer copies a user voice sample\'s style but never its content', () => {
-  assert.match(HUMANIZER, /VOICE SAMPLE/); assert.match(HUMANIZER, /Copy their style only\. Never copy its content/);
+  assert.match(HUMANIZER, /VOICE SAMPLE/); assert.match(HUMANIZER, /Copy its style only, never its content/);
   assert.match(HUMANIZER, /Preserve who is speaking, who is being addressed/);
 });
 test('app sends the saved voice sample with Humanizer requests', async () => {
@@ -71,5 +71,5 @@ test('Humanizer Voice option offers chats, natural and sample, and falls back to
   const sel = html.match(/<select id="hz-voice-mode">([\s\S]*?)<\/select>/); assert.ok(sel);
   assert.deepEqual([...sel[1].matchAll(/value="([^"]+)"/g)].map(m => m[1]), ['chats', 'natural', 'sample']);
   assert.match(html, /chatVoiceSample\(chats\)/); assert.match(html, /Use a natural human voice\./);
-  assert.match(HUMANIZER, /requested style still sets how formal/);
+  assert.match(HUMANIZER, /requested style sets formality/);
 });
