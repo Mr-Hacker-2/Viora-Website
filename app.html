@@ -806,7 +806,8 @@ function jump() { const th = $('#thread'), c = chat(); $('#to-bottom').classList
 function sendState(on) { $('#send').innerHTML = on ? ic('stop') : SEND; $('#send').setAttribute('aria-label', on ? 'Stop' : 'Send'); $('#send').disabled = false; }
 async function send(text) {
   text = (text || '').trim(); if (!text || busy) return;
-  const selectedHumanizer = asst === 'human';\n  if (!selectedHumanizer && pending.some(p => !p.err)) { toast('Wait for your attachments to finish processing, or cancel them.'); return; }
+  const selectedHumanizer = asst === 'human';
+  if (!selectedHumanizer && pending.some(p => !p.err)) { toast('Wait for your attachments to finish processing, or cancel them.'); return; }
   let c = chat();
   if (!c) { c = { id: String(Date.now()), title: text.slice(0, 44), autoTitle: true, assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
   c.assistant = asst; c.updated = Date.now(); chats = [c, ...chats.filter(x => x !== c)];
