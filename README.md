@@ -115,8 +115,8 @@ Same palette, type and shapes as the extension's side panel / tab:
 ---
 ## v8 upgrade notes: Humanizer
 
-- **Own prompt** (`HUMANIZER` in `assets/x/persona.js`): the Humanizer no longer receives the chat base prompt (which asked for tables, bold and emojis). It gets a focused rewriting prompt: keep every fact, vary sentence rhythm, cut stock AI phrases, no em dashes, no tidy summary endings, four named styles.
-- **Clean-up** (`assets/x/humanize-post.js`): removes "Here is the rewritten text:" preambles, wrapping quotes, markdown emphasis and em dashes from the displayed rewrite. It changes no other wording.
+- **Own prompt** (`HUMANIZER` in `assets/x/persona.js`): the Humanizer no longer receives the chat base prompt (which asked for tables, bold and emojis). It gets focused editing guidance: preserve facts, qualifications, voice and structure; improve awkward phrasing without forced sentence patterns; support six styles and three rewrite strengths; and return copyable plain text.
+- **Clean-up** (`assets/x/humanize-post.js`): removes preambles, wrapping quotes, markdown emphasis and invisible characters from the displayed plain-text rewrite. It preserves punctuation and changes no other wording.
 - **No guarantee**: AI detectors disagree with each other and can flag human writing, so no rewriter can promise a fixed score. Test with the detector you care about.
 
 ---

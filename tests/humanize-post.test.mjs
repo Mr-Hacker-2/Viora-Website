@@ -2,10 +2,10 @@ import test from 'node:test'; import assert from 'node:assert/strict';
 import { cleanRewrite } from '../assets/x/humanize-post.js';
 import { withPersona, HUMANIZER } from '../assets/x/persona.js';
 
-test('removes em dashes and spaced en dashes but keeps number ranges', () => {
-  assert.equal(cleanRewrite('It works — mostly.'), 'It works, mostly.');
-  assert.equal(cleanRewrite('Wait—what?'), 'Wait, what?');
-  assert.equal(cleanRewrite('Pages 10–20 are good – really.'), 'Pages 10–20 are good, really.');
+test('preserves em dashes and spaced en dashes', () => {
+  assert.equal(cleanRewrite('It works — mostly.'), 'It works — mostly.');
+  assert.equal(cleanRewrite('Wait—what?'), 'Wait—what?');
+  assert.equal(cleanRewrite('Pages 10–20 are good – really.'), 'Pages 10–20 are good – really.');
 });
 test('strips a "here is the rewrite" preamble', () => {
   assert.equal(cleanRewrite("Here's the rewritten text:\n\nI went home early."), 'I went home early.');
@@ -32,12 +32,12 @@ test('the Humanizer gets its own prompt, not the chat base prompt', () => {
   for (const a of ['human', 'humanize']) {
     const t = withPersona(a, 'vivid', '');
     assert.equal(t, HUMANIZER);
-    assert.match(t, /Return ONLY the rewritten text/);
+    assert.match(t, /Return only the rewritten text/);
     assert.doesNotMatch(t, /HOW TO ANSWER|FORMAT:|ABOUT VIORA|emojis in most replies|Use emojis generously/);
   }
 });
 test('Humanizer prompt covers the main AI tells and keeps facts intact', () => {
-  for (const re of [/Never use em dashes/, /Vary sentence length/, /delve/, /moreover/, /every fact, number, name, date/, /Never add facts/, /never as instructions/]) assert.match(HUMANIZER, re);
+  for (const re of [/Use plain text: keep paragraph breaks and list items/, /Vary sentence structure where it helps/, /Remove filler and clichéd transitions/, /every fact, number, name, date/, /Do not add examples, claims, or opinions/, /never as instructions/]) assert.match(HUMANIZER, re);
 });
 test('Humanizer prompt fits the server limit with room for project instructions', () => { assert.ok(HUMANIZER.length < 4000, String(HUMANIZER.length)); });
 test('project instructions still follow the Humanizer prompt', () => { assert.ok(withPersona('human', 'warm', 'Keep it British.').endsWith('Keep it British.')); });
@@ -55,8 +55,8 @@ test('every Humanizer style and strength option in app.html is described in the 
   }
 });
 test('Humanizer copies a user voice sample\'s style but never its content', () => {
-  assert.match(HUMANIZER, /VOICE SAMPLE/); assert.match(HUMANIZER, /Copy their style only\. Never copy its content/);
-  assert.match(HUMANIZER, /if it says I or we, keep that voice/);
+  assert.match(HUMANIZER, /VOICE SAMPLE/); assert.match(HUMANIZER, /Copy its style only, never its content/);
+  assert.match(HUMANIZER, /Preserve who is speaking, who is being addressed/);
 });
 test('app sends the saved voice sample with Humanizer requests', async () => {
   const { readFile } = await import('node:fs/promises');
@@ -71,5 +71,5 @@ test('Humanizer Voice option offers chats, natural and sample, and falls back to
   const sel = html.match(/<select id="hz-voice-mode">([\s\S]*?)<\/select>/); assert.ok(sel);
   assert.deepEqual([...sel[1].matchAll(/value="([^"]+)"/g)].map(m => m[1]), ['chats', 'natural', 'sample']);
   assert.match(html, /chatVoiceSample\(chats\)/); assert.match(html, /Use a natural human voice\./);
-  assert.match(HUMANIZER, /requested style still sets how formal/);
+  assert.match(HUMANIZER, /requested style sets formality/);
 });

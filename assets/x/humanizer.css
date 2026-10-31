@@ -101,3 +101,7 @@
   :root[data-model="humanize"] #humanizer-studio #hz-input,
   :root[data-model="humanize"] #humanizer-studio #hz-output{min-height:180px}
 }
+
+:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-incomplete{border-color:color-mix(in srgb,#e0a100 65%,var(--line))}
+:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-incomplete .hz-live{color:#c98a00}
+:root[data-model="humanize"] #humanizer-studio .hz-output-card.is-incomplete #hz-status{color:var(--paper)}
