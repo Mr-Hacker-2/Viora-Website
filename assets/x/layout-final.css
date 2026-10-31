@@ -316,3 +316,4 @@
   :root[data-model] #thread .msg.user { max-width: 94%; }
   :root[data-model] #composer { padding-bottom: max(10px, env(safe-area-inset-bottom)); }
 }
+
