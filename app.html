@@ -494,6 +494,13 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 :root[data-model] #thread .msg.assistant > .sources-head{padding:7px 10px;border:1px solid color-mix(in srgb,var(--line) 75%,transparent);border-radius:9px;background:color-mix(in srgb,var(--ink-2) 70%,transparent);line-height:1.5}
 :root[data-model] #thread .src-card{box-shadow:0 4px 14px color-mix(in srgb,#171323 7%,transparent)}
 :root[data-model] #thread .src-card:hover{box-shadow:0 9px 22px color-mix(in srgb,var(--accent) 13%,transparent)}
+/* Keep sign-out anchored below the sidebar content and make it read as a deliberate, destructive action. */
+:root[data-model] #sh-left > .sh-invite{margin-top:18px!important}
+:root[data-model] #sh-left > .sh-signout{flex:0 0 auto;margin:auto 0 2px;padding:10px 12px;border:1px solid color-mix(in srgb,#e5484d 30%,var(--line));background:color-mix(in srgb,#e5484d 9%,var(--ink-2));color:color-mix(in srgb,#c92f3b 88%,var(--paper));font-weight:650;transition:background .16s,border-color .16s,transform .16s,box-shadow .16s}
+:root[data-theme="dark"][data-model] #sh-left > .sh-signout{color:#ff8189}
+:root[data-model] #sh-left > .sh-signout:hover{transform:translateY(-1px);border-color:#e5484d;background:color-mix(in srgb,#e5484d 17%,var(--ink-2));box-shadow:0 5px 16px color-mix(in srgb,#e5484d 12%,transparent)}
+:root[data-model] #sh-left > .sh-signout:focus-visible{outline-color:#e5484d}
+@media(max-width:979px){:root[data-model] body.sb #sh-left{display:flex!important;flex-direction:column!important}:root[data-model] body.sb #sh-left > .sh-signout{margin-top:auto!important}}
 @media(max-width:600px){:root[data-model] .dots i{width:6px;height:6px}:root[data-model] .msg.assistant.streaming > .body{animation-duration:4s}}
 @media(prefers-reduced-motion:reduce){:root[data-model] .dots i,:root[data-model] .msg.assistant.enter,:root[data-model] .msg.assistant.streaming::before,:root[data-model] .msg.assistant.streaming > .body,:root[data-model] .msg.streaming .body>p:last-child::after{animation:none!important}:root[data-model] .msg.assistant.streaming > .body{ text-shadow:none!important }}
 </style>
@@ -503,7 +510,6 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 <aside id="sh-left">
   <div class="sh-logo"><img src="assets/mark.png" alt="" width="26" height="26"><span>Viora AI</span><button type="button" class="sh-collapse sh-new" id="new-thread" title="New conversation" aria-label="New conversation" data-ic="plus"></button><button type="button" class="sh-collapse" id="sh-collapse" title="Hide sidebar" aria-label="Hide sidebar" data-ic="panel"></button></div>
   <div class="sh-user"><span class="sh-av" id="av" role="button" tabindex="0" title="Account menu" aria-label="Account menu"></span><span class="sh-uname" id="nm"></span><button type="button" id="sh-gear" class="sh-gear" title="Settings" aria-label="Settings" data-ic="gear"></button></div>
-  <button type="button" class="sh-signout" id="side-out" data-ic="logout"> Sign out</button>
   <div id="umenu" class="sheet" hidden>
     <a class="sheet-action" href="index.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Viora home</span></span></a>
     <a class="sheet-action" href="mobile.html" style="text-decoration:none"><span class="sheet-copy"><span class="sheet-title">Install Viora on phone</span><span class="sheet-sub">Add the website to your Home Screen</span></span></a>
@@ -523,6 +529,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   <h6>CHAT HISTORY</h6>
   <div id="sh-hist" class="sh-hist"></div>
   <div class="sh-invite"><b>Viora on your phone</b><small>Install this website like an app. No browser extension needed.</small><button type="button" id="sh-invite">Set up phone app</button></div>
+  <button type="button" class="sh-signout" id="side-out" data-ic="logout"> Sign out</button>
 </aside>
 <div id="sh-center">
   <header class="bar">
