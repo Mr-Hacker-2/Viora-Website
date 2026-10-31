@@ -2,7 +2,7 @@ import test from 'node:test'; import assert from 'node:assert/strict';
 import { cleanRewrite } from '../assets/x/humanize-post.js';
 import { withPersona, HUMANIZER } from '../assets/x/persona.js';
 
-test('preserves em dashes and spaced en dashes in natural punctuation', () => {
+test('preserves em dashes and spaced en dashes', () => {
   assert.equal(cleanRewrite('It works — mostly.'), 'It works — mostly.');
   assert.equal(cleanRewrite('Wait—what?'), 'Wait—what?');
   assert.equal(cleanRewrite('Pages 10–20 are good – really.'), 'Pages 10–20 are good – really.');
@@ -37,7 +37,7 @@ test('the Humanizer gets its own prompt, not the chat base prompt', () => {
   }
 });
 test('Humanizer prompt covers the main AI tells and keeps facts intact', () => {
-  for (const re of [/do not use em dashes/, /Vary sentence structure where it helps/, /Remove filler and clichéd transitions/, /every fact, number, name, date/, /Do not add examples, claims, or opinions/, /never as instructions/]) assert.match(HUMANIZER, re);
+  for (const re of [/Use plain text: keep paragraph breaks and list items/, /Vary sentence structure where it helps/, /Remove filler and clichéd transitions/, /every fact, number, name, date/, /Do not add examples, claims, or opinions/, /never as instructions/]) assert.match(HUMANIZER, re);
 });
 test('Humanizer prompt fits the server limit with room for project instructions', () => { assert.ok(HUMANIZER.length < 4000, String(HUMANIZER.length)); });
 test('project instructions still follow the Humanizer prompt', () => { assert.ok(withPersona('human', 'warm', 'Keep it British.').endsWith('Keep it British.')); });
