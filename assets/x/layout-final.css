@@ -103,6 +103,7 @@
     transition-duration: .01ms !important;
   }
 }
+
 /* ==========================================================================
    Layout v3 — one calm surface, one content column.
    Append to the END of assets/x/layout-final.css.
@@ -186,4 +187,132 @@
   :root[data-model] #shell { height: 100dvh !important; min-height: 0 !important; box-sizing: border-box; }
   /* The sidebar already shows the brand, so the header doesn't repeat it. */
   :root[data-model] #shell:not(.no-left) .bar-id .wordmark { display: none !important; }
+}
+
+/* Reading and workspace refinement (2026-10-31). Keep the three zones distinct,
+   while giving the answer a clear editorial rhythm and enough breathing room. */
+:root[data-model] {
+  --layout-sidebar: 248px;
+  --layout-inspector: 276px;
+  --layout-gap: 16px;
+  --col: 780px;
+  --gutter: clamp(20px, 3.2vw, 38px);
+}
+:root[data-model] #sh-left,
+:root[data-model] #sh-right {
+  box-shadow: 0 12px 40px color-mix(in srgb, #171323 8%, transparent);
+}
+:root[data-model] #sh-center {
+  border: 1px solid color-mix(in srgb, var(--line) 78%, transparent);
+  border-radius: 18px;
+  background: var(--ink-1, var(--paper));
+  box-shadow: 0 14px 44px color-mix(in srgb, #171323 8%, transparent);
+}
+:root[data-model] #sh-center > .bar {
+  min-height: 66px;
+  padding-inline: clamp(16px, 2vw, 28px);
+  border-bottom: 1px solid color-mix(in srgb, var(--line) 65%, transparent);
+}
+:root[data-model] #sh-center > #thread {
+  padding-block: 28px 38px;
+  scrollbar-gutter: stable;
+}
+:root[data-model] #thread .msg { margin-bottom: 28px; }
+:root[data-model] #thread .msg.assistant {
+  max-width: 780px !important;
+  margin-inline: auto !important;
+  padding: 4px 4px 0 14px;
+}
+:root[data-model] #thread .msg.assistant > .who {
+  margin-bottom: 10px;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: .015em;
+}
+:root[data-model] #thread .msg.assistant > .body {
+  max-width: 74ch;
+  color: var(--paper);
+  font-size: 15px;
+  line-height: 1.78;
+  overflow-wrap: anywhere;
+}
+:root[data-model] #thread .msg.assistant > .body :is(p, ul, ol, blockquote, pre, table) {
+  margin-block: 0 16px;
+}
+:root[data-model] #thread .msg.assistant > .body :is(h1, h2, h3, h4) {
+  margin: 26px 0 10px;
+  color: var(--paper);
+  font-weight: 720;
+  line-height: 1.3;
+  letter-spacing: -.025em;
+}
+:root[data-model] #thread .msg.assistant > .body h1 { font-size: 1.55em; }
+:root[data-model] #thread .msg.assistant > .body h2 { font-size: 1.3em; }
+:root[data-model] #thread .msg.assistant > .body h3 { font-size: 1.12em; }
+:root[data-model] #thread .msg.assistant > .body :is(ul, ol) { padding-left: 1.5em; }
+:root[data-model] #thread .msg.assistant > .body li { padding-left: .2em; margin: 5px 0; }
+:root[data-model] #thread .msg.assistant > .body li::marker { color: var(--accent); }
+:root[data-model] #thread .msg.assistant > .body blockquote {
+  padding: 10px 16px;
+  border-left: 3px solid var(--accent);
+  border-radius: 0 10px 10px 0;
+  background: color-mix(in srgb, var(--accent) 6%, var(--ink-2));
+  color: var(--muted);
+}
+:root[data-model] #thread .msg.assistant > .body :not(pre) > code {
+  padding: .15em .42em;
+  border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
+  border-radius: 6px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--ink-2));
+  font-size: .9em;
+}
+:root[data-model] #thread .msg.assistant > .body pre {
+  margin-block: 18px;
+  padding: 18px 20px;
+  border: 1px solid color-mix(in srgb, var(--line) 88%, transparent);
+  border-radius: 13px;
+  background: color-mix(in srgb, #171323 5%, var(--ink-2));
+  line-height: 1.6;
+}
+:root[data-model] #thread .msg.assistant > .body table { font-size: .92em; line-height: 1.55; }
+:root[data-model] #thread .msg.assistant > .body th {
+  color: var(--paper);
+  font-weight: 700;
+  background: color-mix(in srgb, var(--accent) 8%, var(--ink-2));
+}
+:root[data-model] #thread .msg.assistant > .body :is(th, td) {
+  padding: 9px 12px;
+  border: 1px solid var(--line);
+  text-align: left;
+  vertical-align: top;
+}
+:root[data-model] #thread .msg.assistant > .body a { text-underline-offset: 3px; }
+:root[data-model] #thread .msg.user {
+  max-width: min(82%, 680px);
+  padding: 13px 17px;
+  line-height: 1.65;
+}
+:root[data-model] #composer { padding-top: 10px; padding-bottom: max(16px, env(safe-area-inset-bottom)); }
+:root[data-model] #composer .composer-inner {
+  border: 1px solid color-mix(in srgb, var(--line) 85%, var(--accent));
+  box-shadow: 0 8px 28px color-mix(in srgb, #171323 8%, transparent);
+}
+:root[data-model] .response-metrics { margin-top: 12px; opacity: .72; }
+@media (min-width: 980px) and (max-width: 1179px) {
+  :root[data-model] { --layout-sidebar: 224px; }
+  :root[data-model] #shell { gap: 12px; }
+}
+@media (max-width: 979px) {
+  :root[data-model] #sh-center { border: 0; border-radius: 0; box-shadow: none; }
+  :root[data-model] #sh-center > #thread { padding-top: 20px; padding-bottom: 26px; }
+  :root[data-model] #thread .msg.assistant { padding-left: 10px; }
+}
+@media (max-width: 600px) {
+  :root[data-model] #sh-center > .bar { min-height: 58px; padding-inline: 10px; }
+  :root[data-model] #sh-center > #thread { padding-block: 14px 22px; }
+  :root[data-model] #thread .msg { margin-bottom: 22px; }
+  :root[data-model] #thread .msg.assistant > .body { font-size: 14.5px; line-height: 1.72; }
+  :root[data-model] #thread .msg.assistant > .body pre { padding: 14px; border-radius: 10px; }
+  :root[data-model] #thread .msg.user { max-width: 94%; }
+  :root[data-model] #composer { padding-bottom: max(10px, env(safe-area-inset-bottom)); }
 }
