@@ -6,7 +6,7 @@
 <link rel="stylesheet" href="assets/x/prefs.css">
 <link rel="stylesheet" href="assets/style.css">
 <link rel="stylesheet" href="assets/v5.css"><script>try{document.documentElement.dataset.theme=localStorage.getItem("viora_theme")||"light"}catch(e){}</script>
-<title>Sign in or sign up — Viora</title>
+<title>Sign in to Viora</title>
 <meta name="robots" content="noindex">
 </head>
 <body data-page="login">
@@ -18,15 +18,11 @@
     </div>
     <div class="auth-body">
       <h1 id="auth-title">Sign in to Viora</h1>
-      <div class="auth-choice" role="group" aria-label="Choose sign-in or sign-up">
-        <button class="btn btn-ghost" id="auth-signin" type="button" aria-pressed="true">Sign in</button>
-        <button class="btn btn-ghost" id="auth-signup" type="button" aria-pressed="false">Sign up</button>
-      </div>
       <p class="sub" id="auth-sub">Sign in with Google to return to your account. Your chats, agents and settings sync across devices.</p>
       <div class="alert err" id="auth-err" role="alert"></div>
       <button class="btn btn-google btn-block btn-lg" id="google" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>Continue with Google</button>
-      <p class="terms">New here? Signing in creates your account. By continuing you agree to our <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</p>
+      <p class="terms">New to Viora? Continue with Google to create your account. Already have one? Use the same Google account to sign in. By continuing you agree to our <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</p>
       <p class="hint" style="margin-top:18px">Already use the Viora extension? Open <b>Settings → Account</b> and sign in with the same Google account to sync.</p>
     </div>
   </div>
@@ -44,27 +40,6 @@
     </div>
   </aside>
 </div>
-<script>
-  (() => {
-    const title = document.getElementById('auth-title');
-    const sub = document.getElementById('auth-sub');
-    const google = document.getElementById('google');
-    const signin = document.getElementById('auth-signin');
-    const signup = document.getElementById('auth-signup');
-    const setMode = (mode) => {
-      const creating = mode === 'signup';
-      title.textContent = creating ? 'Create your Viora account' : 'Sign in to Viora';
-      sub.textContent = creating
-        ? 'Create an account with Google. Use the same Google account whenever you come back.'
-        : 'Sign in with Google to return to your account. Your chats, agents and settings sync across devices.';
-      google.lastChild.textContent = creating ? 'Create account with Google' : 'Continue with Google';
-      signin.setAttribute('aria-pressed', String(!creating));
-      signup.setAttribute('aria-pressed', String(creating));
-    };
-    signin.addEventListener('click', () => setMode('signin'));
-    signup.addEventListener('click', () => setMode('signup'));
-  })();
-</script>
 <script src="assets/app.js"></script>
 </body>
 </html>
