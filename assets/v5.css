@@ -524,3 +524,53 @@ details.q{border-radius:15px}
   .assist,.prompts{grid-template-columns:1fr}
   .prompt:nth-child(5){grid-column:auto}
 }
+
+
+/* ---------- login layout ---------- */
+.auth{
+  min-height:100vh;
+  min-height:100svh;
+  grid-template-columns:minmax(0,1fr) minmax(0,1fr);
+}
+.auth-form{min-width:0}
+.auth-body{max-width:440px}
+.auth-choice{
+  display:grid;
+  grid-template-columns:repeat(2,minmax(0,1fr));
+  gap:4px;
+  padding:4px;
+  margin:0 0 20px;
+  border:1px solid var(--line);
+  border-radius:14px;
+  background:var(--card);
+}
+.auth-choice .btn{
+  min-width:0;
+  min-height:42px;
+  border:0;
+  border-radius:10px;
+  color:var(--muted);
+  background:transparent;
+  font-weight:600;
+  transition:background .2s,color .2s,box-shadow .2s;
+}
+.auth-choice .btn[aria-pressed="true"]{
+  color:var(--text);
+  background:var(--bg);
+  box-shadow:var(--shadow);
+}
+.auth-choice .btn:focus-visible{
+  outline:2px solid var(--accent);
+  outline-offset:2px;
+}
+@media (max-width:900px){
+  .auth{grid-template-columns:minmax(0,1fr)}
+  .auth-form{min-height:100vh;min-height:100svh}
+}
+@media (max-width:480px){
+  .auth-form{padding:20px 22px}
+  .auth-body{padding:32px 0}
+  .auth-body h1{font-size:clamp(30px,9vw,36px)}
+  .auth-top{gap:12px}
+  .auth-top .btn{padding-inline:12px}
+}
