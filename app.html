@@ -819,7 +819,7 @@ async function send(text) {
   const autoRoute = asst === 'auto' ? routeDetails(text, c) : null;
   let eff = autoRoute ? autoRoute.assistant : asst;
   const humanizerOnly = eff === 'human';
-  const hasTextAttachment = !!(c.page && c.page.files.some(f => f.kind === 'file' || f.kind === 'web'));
+  const hasTextAttachment = !selectedHumanizer && !!(c.page && c.page.files.some(f => f.kind === 'file' || f.kind === 'web'));
   const verifyAnswer = eff === 'search' || eff === 'math' || hasTextAttachment;
   /* capability check: the Humanizer panel rewrites its text draft; unrelated chat attachments do not switch its model */
   const pk = pickModel(eff, selectedHumanizer ? [] : (c.page ? c.page.files : []), Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
