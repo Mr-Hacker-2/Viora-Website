@@ -819,10 +819,10 @@ async function send(text) {
   const autoRoute = asst === 'auto' ? routeDetails(text, c) : null;
   let eff = autoRoute ? autoRoute.assistant : asst;
   const humanizerOnly = eff === 'human';
-  const hasTextAttachment = !humanizerOnly && !!(c.page && c.page.files.some(f => f.kind === 'file' || f.kind === 'web'));
+  const hasTextAttachment = !!(c.page && c.page.files.some(f => f.kind === 'file' || f.kind === 'web'));
   const verifyAnswer = eff === 'search' || eff === 'math' || hasTextAttachment;
-  /* capability check: keep the chosen assistant when it can read the attachments, otherwise switch and say why */
-  const pk = pickModel(eff, humanizerOnly ? [] : (c.page ? c.page.files : []), Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
+  /* capability check: the Humanizer panel rewrites its text draft; unrelated chat attachments do not switch its model */
+  const pk = pickModel(eff, selectedHumanizer ? [] : (c.page ? c.page.files : []), Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
   const useWeb = shouldSearch(text, { assistant: eff, enabled: web && !!A[eff].web, hasPage: !!c.page, hasVisual: visualFiles(c).length > 0 }), pj = D.projects.find(x => x.id === c.pid);
@@ -831,20 +831,20 @@ async function send(text) {
   const context = humanizerOnly ? { instructions: withPersona(eff, 'off', ''), notes: '', memory: [] } : { instructions: withPersona(eff, tone, pj ? pj.instr : '', who()), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
   m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
   try {
-    const pp = humanizerOnly ? { page: null, images: [], video: null, audio: null } : await pagePayload(c, text);
-    const expectsVisualData = !humanizerOnly && !!(c.page && c.page.files.some(f => ((f.ni || 0) > 0 && (f.kind === 'image' || f.kind === 'video' || f.kind === 'file')) || f.nativeVideo));
-    if (!humanizerOnly && c.page && c.page.files.some(f => f.kind === 'audio') && !pp.audio) throw new Error('The audio data did not load. Remove the recording and upload it again.');
+    const pp = selectedHumanizer ? { page: null, images: [], video: null, audio: null } : await pagePayload(c, text);
+    const expectsVisualData = !selectedHumanizer && !!(c.page && c.page.files.some(f => ((f.ni || 0) > 0 && (f.kind === 'image' || f.kind === 'video' || f.kind === 'file')) || f.nativeVideo));
+    if (!selectedHumanizer && c.page && c.page.files.some(f => f.kind === 'audio') && !pp.audio) throw new Error('The audio data did not load. Remove the recording and upload it again.');
     if (expectsVisualData && !pp.images.length && !pp.video) throw new Error('I can see that a picture or video is attached, but its visual data did not load. Please remove it and upload it again, then retry.');
     m.stage = useWeb ? 'Connecting and preparing web research…' : pp.video ? 'Sending your video to Viora’s multimodal model…' : pp.audio ? 'Sending your audio to Viora’s multimodal model…' : expectsVisualData ? 'Sending your image to Viora’s multimodal model…' : 'Connecting to Viora…'; paint();
     timingStart = performance.now(); m.timing = { responseMs: null, sourcesMs: null, firstTokenMs: null, totalMs: null };
-    const files = humanizerOnly ? [] : (c.page ? c.page.files : []), names = Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])), tries = chain(eff, files, health);
+    const files = selectedHumanizer ? [] : (c.page ? c.page.files : []), names = Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])), tries = chain(eff, files, health);
     let r, last;
     for (const [n, a] of tries.entries()) {
       m.stage = (n ? 'Retrying with ' : 'Trying ') + A[a].n + '…'; paint();
       const web2 = !!(A[a].web && useWeb);
       try {
         r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff || humanizerOnly ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '', who()) }, messages: humanizerOnly ? c.messages.slice(-2, -1).map(x => ({ role: x.role, content: x.content })) : NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: humanizerOnly ? null : pp.page, images: humanizerOnly ? [] : pp.images, video: humanizerOnly ? null : pp.video, audio: humanizerOnly ? null : pp.audio, intelligence: { review: verifyAnswer } }) },
+          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff || humanizerOnly ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '', who()) }, messages: humanizerOnly ? c.messages.slice(-2, -1).map(x => ({ role: x.role, content: x.content })) : NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: selectedHumanizer ? null : pp.page, images: selectedHumanizer ? [] : pp.images, video: selectedHumanizer ? null : pp.video, audio: selectedHumanizer ? null : pp.audio, intelligence: { review: verifyAnswer } }) },
           { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
         if (m.timing.responseMs == null) m.timing.responseMs = Math.round(performance.now() - timingStart);
       } catch (e) { if (!shouldFallback(0, e)) throw e; health.fail(a); last = e; r = null; if (n < tries.length - 1) continue; throw e; }
