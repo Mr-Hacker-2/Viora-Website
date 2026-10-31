@@ -483,6 +483,26 @@ details.q{border-radius:15px}
   .nav-right .icon-btn{width:38px;height:38px}
   .burger{width:38px;height:38px}
 }
+
+/* ---------- direct contact ---------- */
+.contact-section{padding-top:36px!important}
+.contact-panel{position:relative;display:grid;grid-template-columns:minmax(0,1fr) minmax(340px,.9fr);gap:clamp(28px,6vw,76px);align-items:center;padding:clamp(28px,5vw,58px);border:1px solid var(--line-soft);border-radius:28px;background:linear-gradient(135deg,color-mix(in srgb,var(--accent) 9%,var(--card)),var(--card) 68%);box-shadow:var(--shadow-lg);overflow:hidden}
+.contact-panel::after{content:"";position:absolute;width:240px;height:240px;right:-100px;top:-120px;border-radius:50%;background:radial-gradient(circle,color-mix(in srgb,var(--accent) 18%,transparent),transparent 70%);pointer-events:none}
+.contact-copy,.contact-links{position:relative;z-index:1}
+.contact-copy h2{max-width:13ch;margin:14px 0;font-size:clamp(30px,4vw,46px);line-height:1.08;letter-spacing:-.045em;text-wrap:balance}
+.contact-copy p{max-width:43ch;color:var(--muted);font-size:16px;line-height:1.65}
+.contact-links{display:grid;gap:10px}
+.contact-link{display:flex;align-items:center;gap:14px;min-width:0;padding:16px;border:1px solid var(--line-soft);border-radius:16px;background:color-mix(in srgb,var(--card) 86%,transparent);color:var(--text);text-decoration:none;transition:transform .18s,border-color .18s,box-shadow .18s}
+.contact-link:hover{transform:translateY(-2px);border-color:color-mix(in srgb,var(--accent) 45%,var(--line));box-shadow:var(--shadow)}
+.contact-icon{display:grid;place-items:center;flex:0 0 42px;width:42px;height:42px;border-radius:13px;background:color-mix(in srgb,var(--accent) 13%,var(--card));color:var(--accent-ink)}
+.contact-icon .i{width:19px;height:19px}
+.contact-link>span:nth-child(2){display:grid;gap:4px;min-width:0}
+.contact-link small{font-size:11px;font-weight:700;letter-spacing:.1em;text-transform:uppercase;color:var(--faint)}
+.contact-link b{font-size:clamp(13px,1.2vw,15px);font-weight:650;overflow-wrap:anywhere}
+.contact-arrow{margin-left:auto;color:var(--accent);transition:transform .18s}
+.contact-link:hover .contact-arrow{transform:translateX(4px)}
+@media(max-width:760px){.contact-section{padding-top:12px!important}.contact-panel{grid-template-columns:1fr;gap:24px;padding:26px 20px;border-radius:22px}.contact-copy h2{max-width:18ch}.contact-link{padding:13px}.contact-icon{flex-basis:38px;width:38px;height:38px}}
+@media(prefers-reduced-motion:reduce){.contact-link,.contact-arrow{transition:none}}
 @media (max-width:560px){
   .hero-badge>span[data-i]{display:none}
   .f-card{padding:22px}
@@ -524,3 +544,4 @@ details.q{border-radius:15px}
   .assist,.prompts{grid-template-columns:1fr}
   .prompt:nth-child(5){grid-column:auto}
 }
+
