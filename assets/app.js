@@ -84,7 +84,21 @@ const LS = {
 };
 const session = () => LS.get('viora_session', null);
 const Auth = {
-  googleUrl() { return VIORA.authApi + '/auth/google?site=1'; },
+  googleUrl(mode) { return VIORA.authApi + '/auth/google?site=1&mode=' + (mode === 'signup' ? 'signup' : 'signin'); },
+  /** The account record in Backblaze (via the auth server): the sign-up questions plus this person's saved answers. */
+  async profile(token, answers) {
+    let r;
+    try {
+      r = await fetch(VIORA.authApi + '/api/profile', {
+        method: answers ? 'POST' : 'GET',
+        headers: { Authorization: 'Bearer ' + token, ...(answers ? { 'Content-Type': 'application/json' } : {}) },
+        body: answers ? JSON.stringify({ answers }) : undefined
+      });
+    } catch { throw Object.assign(new Error('Could not reach the Viora server. It may be waking up, so try again in 30 seconds.'), { status: 0 }); }
+    const d = await r.json().catch(() => ({}));
+    if (!r.ok) throw Object.assign(new Error(d.error || 'Something went wrong. Please try again.'), { status: r.status });
+    return d;
+  },
   /** Ask the server to confirm the token, and trust ITS answer, not the URL. */
   async finish(token) {
     let r;
@@ -150,17 +164,36 @@ $$('.rv').forEach(el => io ? io.observe(el) : el.classList.add('in'));
 /* ================= page: login ================= */
 if (page === 'login') {
   const err = $('#auth-err'), btn = $('#google');
-  const fail = msg => { err.textContent = msg; err.classList.add('show'); btn.disabled = false; };
+  const mode = () => document.body.dataset.mode === 'signup' ? 'signup' : 'signin';
+  const label = () => mode() === 'signup' ? 'Create account with Google' : 'Continue with Google';
+  const fail = msg => { err.textContent = msg; err.classList.add('show'); btn.disabled = false; btn.lastChild.textContent = label(); };
   const hp = new URLSearchParams(location.hash.slice(1));
   history.replaceState(null, '', location.pathname);
+
+  // After Google: accounts that have not answered the 5 questions yet see the popup. Answers are saved to Backblaze by the auth server.
+  async function finishLogin(sess) {
+    btn.disabled = true; btn.lastChild.textContent = 'Setting up your account…';
+    let p;
+    try { p = await Auth.profile(sess.token); }
+    catch (ex) {
+      if (ex.status === 401) { Auth.signOut(); return fail('Your sign-in expired. Please sign in again.'); }
+      if (ex.status === 503) return location.replace('app.html'); // the server has no Backblaze keys yet, so there is nowhere to save answers
+      return fail(ex.message);
+    }
+    if (!p.onboarded) await window.VioraOnboarding.ask(p.questions, a => Auth.profile(sess.token, a));
+    location.replace('app.html');
+  }
+
   (async () => {
     if (hp.get('error')) return fail(hp.get('error') === 'access_denied' ? 'Google sign-in was cancelled, or this Google account is not allowed yet.' : 'Google sign-in failed (' + hp.get('error') + '). Please try again.');
     if (hp.get('token')) {
       btn.disabled = true; btn.lastChild.textContent = 'Signing you in…';
-      try { await Auth.finish(hp.get('token')); location.replace('app.html'); } catch (ex) { btn.lastChild.textContent = 'Continue with Google'; fail(ex.message); }
-    } else if (s) location.replace('app.html');
+      let sess;
+      try { sess = await Auth.finish(hp.get('token')); } catch (ex) { return fail(ex.message); }
+      finishLogin(sess);
+    } else if (s) finishLogin(s);
   })();
-  btn.onclick = () => { btn.disabled = true; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(); };
+  btn.onclick = () => { btn.disabled = true; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode()); };
 }
 
 /* ================= page: account ================= */

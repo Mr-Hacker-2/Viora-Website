@@ -125,3 +125,13 @@ Same palette, type and shapes as the extension's side panel / tab:
 - **Link logos** (`decorateLinks` in `assets/x/sources.js`): every web link in an answer now gets a tiny site logo, not only citations that match the search results. It reuses the existing icon logic (provider icon, then icon service, then a globe), skips unsafe or non-http(s) links, and never decorates a link twice. The privacy note under v2 applies: the icon service sees which domains appear in answers.
 - **Humanizer working state**: the output card shows a moving progress bar, a pulsing WORKING / DONE badge and a live word count while it writes.
 - **Humanizer "what changed" panel** (`assets/x/humanize-stats.js`): after each rewrite, shows length, sentence variety, AI-style phrases and em dashes before and after. These are measurements of the text, not an AI-detector score, and the panel says so.
+
+---
+## Accounts and sign-up questions (Backblaze B2)
+Sign in and Sign up both go through Google, and every account is saved in a private Backblaze B2 bucket by the
+auth server (`Viora-auth` repo). The website never holds Backblaze keys. After Google, any account that has not
+answered the sign-up questions sees a required popup with 5 multiple-choice questions
+(`assets/x/onboarding.js`, `onboarding.css`). The questions live in `Viora-auth/profile.js` and are sent to the site,
+so change them in one place. Answers are saved to B2 and given to the AI as background about the person.
+`login.html?mode=signup` opens the page on the Sign up tab.
+Setup is on the auth server: see `Viora-auth/README.md` for the `B2_*` environment variables.

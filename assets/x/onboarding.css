@@ -1,0 +1,28 @@
+/* Sign-up questions popup (assets/x/onboarding.js). Uses the site tokens, so it follows theme and accent. */
+.ob-overlay{position:fixed;inset:0;z-index:200;display:flex;align-items:center;justify-content:center;padding:16px;background:rgba(10,8,18,.62);-webkit-backdrop-filter:blur(6px);backdrop-filter:blur(6px);animation:ob-fade .18s ease-out}
+.ob-dialog{width:100%;max-width:520px;max-height:min(92vh,720px);overflow:auto;background:var(--card);color:var(--text);border:1px solid var(--line);border-radius:var(--r-lg);box-shadow:var(--shadow-lg,var(--shadow));padding:26px 26px 22px;animation:ob-rise .22s ease-out}
+.ob-eyebrow{display:flex;justify-content:space-between;gap:12px;font-size:13px;color:var(--muted);font-weight:600;letter-spacing:.02em}
+.ob-bar{height:5px;border-radius:99px;background:var(--line);margin:10px 0 20px;overflow:hidden}
+.ob-bar>span{display:block;height:100%;width:0;background:var(--accent);border-radius:99px;transition:width .25s ease}
+.ob-title{font-size:21px;line-height:1.3;margin:0 0 4px;font-weight:700}
+.ob-hint{margin:0 0 14px;color:var(--muted);font-size:14px}
+.ob-opts{display:grid;gap:9px;margin:14px 0 6px}
+.ob-opt{display:flex;align-items:center;gap:12px;width:100%;text-align:left;padding:13px 14px;border-radius:12px;border:1px solid var(--line);background:var(--card2);color:var(--text);font:inherit;font-size:15.5px;cursor:pointer;transition:border-color .15s,background .15s}
+.ob-opt:hover{border-color:color-mix(in srgb,var(--accent) 55%,transparent)}
+.ob-opt:focus-visible,.ob-dialog .btn:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+.ob-opt .ob-mark{flex:none;width:20px;height:20px;border:2px solid var(--faint);display:grid;place-items:center;transition:border-color .15s,background .15s}
+.ob-opt[role="radio"] .ob-mark{border-radius:50%}
+.ob-opt[role="checkbox"] .ob-mark{border-radius:6px}
+.ob-opt[aria-checked="true"]{border-color:var(--accent);background:color-mix(in srgb,var(--accent) 13%,var(--card))}
+.ob-opt[aria-checked="true"] .ob-mark{border-color:var(--accent);background:var(--accent)}
+.ob-opt[aria-checked="true"] .ob-mark::after{content:"";width:6px;height:10px;margin-top:-2px;border:solid var(--on-accent);border-width:0 2px 2px 0;transform:rotate(45deg)}
+.ob-opt[role="radio"][aria-checked="true"] .ob-mark::after{width:8px;height:8px;margin:0;border:0;border-radius:50%;background:var(--on-accent);transform:none}
+.ob-err{display:none;margin:12px 0 0;padding:11px 13px;border-radius:12px;border:1px solid #ff5d7355;background:#ff5d7318;color:#ff9aa8;font-size:14.5px}
+:root[data-theme="light"] .ob-err{color:#c4264a}
+.ob-err.show{display:block}
+.ob-foot{display:flex;justify-content:space-between;align-items:center;gap:10px;margin-top:20px}
+.ob-foot .btn[disabled]{opacity:.5;cursor:not-allowed}
+@keyframes ob-fade{from{opacity:0}to{opacity:1}}
+@keyframes ob-rise{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+@media (prefers-reduced-motion:reduce){.ob-overlay,.ob-dialog{animation:none}.ob-bar>span{transition:none}}
+@media (max-width:480px){.ob-dialog{padding:20px 18px 16px}.ob-title{font-size:19px}}
