@@ -13,14 +13,14 @@ export const DEFAULTS = Object.freeze({
   firstByteSec: 60,   // allow cold starts; retrying early can make slow hosts slower
   retries: 1,         // one retry for transient failures instead of repeated long waits
   stallSec: 90,       // allow slow reasoning and research between streamed tokens (0 = never)
-  history: 8,         // send fewer recent messages by default to reduce prompt processing (0 = all)
+  history: 4,         // keep prompts shorter for faster processing (0 = all)
   keepWarm: true,     // ping the server every ~8 minutes while the app is open
   restoreOnFail: true,// put your message back in the box if it could not be sent
   saveDraft: true     // remember what you were typing if the page is closed or reloads
 });
 
 export const PRESETS = Object.freeze({
-  fast: { firstByteSec: 45, retries: 0, stallSec: 60, history: 8, keepWarm: true },
+  fast: { firstByteSec: 45, retries: 0, stallSec: 60, history: 4, keepWarm: true },
   balanced: { ...DEFAULTS },
   reliable: { firstByteSec: 90, retries: 4, stallSec: 120, history: 40, keepWarm: true, restoreOnFail: true, saveDraft: true }
 });

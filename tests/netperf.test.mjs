@@ -29,6 +29,15 @@ test('trimHistory keeps the newest messages and starts on a user message', () =>
   assert.equal(trimHistory(messages, 0), messages);
 });
 
+test('default history sends only the latest four messages', () => {
+  const messages = Array.from({ length: 12 }, (_, index) => ({
+    role: index % 2 ? 'assistant' : 'user',
+    content: String(index)
+  }));
+  assert.equal(DEFAULTS.history, 4);
+  assert.deepEqual(trimHistory(messages), messages.slice(8));
+});
+
 test('preset matching recognizes the shipped presets', () => {
   assert.equal(matchPreset(DEFAULTS), 'balanced');
   assert.equal(matchPreset({ ...DEFAULTS, retries: 0 }), '');
