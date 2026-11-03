@@ -504,6 +504,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 @media(max-width:600px){:root[data-model] .dots i{width:6px;height:6px}:root[data-model] .msg.assistant.streaming > .body{animation-duration:4s}}
 @media(prefers-reduced-motion:reduce){:root[data-model] .dots i,:root[data-model] .msg.assistant.enter,:root[data-model] .msg.assistant.streaming::before,:root[data-model] .msg.assistant.streaming > .body,:root[data-model] .msg.streaming .body>p:last-child::after{animation:none!important}:root[data-model] .msg.assistant.streaming > .body{ text-shadow:none!important }}
 </style>
+<link rel="stylesheet" href="assets/x/viora-think.css?v=20261102-1">
 </head>
 <body>
 <div id="shell">
@@ -679,6 +680,7 @@ import { chatVoiceSample } from './assets/x/voice.js';
 import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories, preferredName } from './assets/x/memory.js';
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes, validateVisualPayload } from './assets/x/media.js';
 import * as NP from './assets/x/netperf.js';
+import * as T from './assets/x/think.js';
 (() => {
 'use strict';
 const API = 'https://viora-auth-website.onrender.com';
@@ -699,6 +701,13 @@ const pending = [];
 let tone = normLevel(ls.get('viora_tone', null)), chats = ls.get(key, []), cur = null, asst = ls.get('viora_assistant', 'auto'), web = ls.get('viora_web', true), busy = null, filter = '';
 if (!A[asst]) asst = 'auto';
 chats.forEach(c => { if (c.page && !c.page.files) c.page.files = [{ id: 'o', name: c.page.title || c.page.source || 'Page', text: c.page.text || '', source: c.page.source }]; });
+/* A reply that was still running when the page closed can never finish. Say so once, instead of showing an
+   indicator that would spin forever: it gets a short note (and Regenerate), and its activity record is closed. */
+chats.forEach(c => (Array.isArray(c.messages) ? c.messages : []).forEach((m, i, all) => {
+  if (!m || m.role !== 'assistant') return;
+  if (m.trace && m.trace.t1 == null) T.finish(m.trace, 'failed', m.trace.t0 + Math.max(0, ...m.trace.steps.map(s => s.e != null ? s.e : s.s)));
+  if (!m.content && i === all.length - 1) { m.err = true; m.content = '⚠️ This reply was interrupted before it finished. Use Regenerate to try again.'; }
+}));
 const dkey = 'viora_data_' + S.email; let D = ls.get(dkey, { projects: [], memory: [], memOn: true, autoMem: true }), curP = null, editP = null;
 if (typeof D.autoMem !== 'boolean') D.autoMem = true;
 const saveD = () => ls.set(dkey, D);
@@ -734,12 +743,15 @@ function suggestionIcon(text) {
   if (/\b(?:write|email|rewrite|text)\b/i.test(text)) return ic('edit');
   return ic('search');
 }
-const stat0 = m => m.wait ? `<span style="color:var(--muted)">${esc(m.wait)}</span>` : m.stage ? `<span style="color:var(--muted)">${esc(m.stage)}</span>` : m.searching ? '<span style="color:var(--muted)">Searching the web…</span>' : '<span style="color:var(--muted)">Preparing your answer…</span>';
-const DOTS = '<span class="dots" aria-hidden="true"><i></i><i></i><i></i></span>', stat = m => stat0(m) + DOTS;
+/* The thinking panel (assets/x/think.js). m.trace is the activity record of one reply; send() adds a step only when
+   that step really happens. thinkOpen remembers which panels the person expanded, across re-renders. */
+const thinkOpen = new WeakSet();
+const thinkPhase = (m, live) => T.phaseOf(live, !!m.content);
+const thinkSync = (idx, m, live) => { const el = document.getElementById('t' + idx); if (el && m.trace) T.sync(el, m.trace, { phase: thinkPhase(m, live), open: thinkOpen.has(m) }); };
 const greet = () => { const h = new Date().getHours(); return h < 5 ? 'Burning the midnight oil' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
 function mdx(t, srcs) { const safe = Src.cleanSources(srcs || []); if (safe.length) t = t.split(/(```[\s\S]*?(?:```|$)|`[^`\n]*`)/).map((seg, i) => i % 2 ? seg : seg.replace(/\[(\d{1,2})\](?!\()/g, (x, n) => safe[n - 1] ? `[${n}](${safe[n - 1].url})` : x)).join(''); return renderMarkdown(t); }
-function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : stat(m); bindCodeCopy(el); Src.decorateCitations(el, m.src); Src.decorateLinks(el); }
-function msgHtml(m, i, last, enter) {
+function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : ''; bindCodeCopy(el); Src.decorateCitations(el, m.src); Src.decorateLinks(el); }
+function msgHtml(m, i, last, enter, live) {
   if (m.role === 'user') return `<div class="msg user${enter ? ' enter' : ''}">${(m.att || []).length ? `<div class="msg-att">${m.att.map(f => `<span class="msg-att-i" title="${esc(f.name)}">${f.src && Src.parseUrl(f.src) ? Src.iconHtml({ url: f.src }, 14) : ''}${esc(f.name)}</span>`).join('')}</div>` : ''}<div class="user-text">${esc(m.content)}</div></div>`;
   const safeSrcs = Src.cleanSources(m.src || []);
   const srcs = Src.sourcesBlock(safeSrcs);
@@ -755,7 +767,7 @@ function msgHtml(m, i, last, enter) {
     .filter(([, ms]) => Number.isFinite(ms)).map(([label, ms]) => `${label} ${(ms / 1000).toFixed(1)}s`) : [];
   const timing = timingParts.length ? `<div class="response-metrics" title="Server timings come from the API; browser timings cover the client request lifecycle.">${esc(timingParts.join(' · '))}</div>` : '';
   const sw = m.sw ? `<div class="switch-note" role="status">${esc(m.sw)}</div>` : '';
-  return `<div class="msg assistant${last && busy ? ' streaming' : ''}${enter ? ' enter' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${evidenceNote}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : stat(m)}</div>${srcs}${timing}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}<button class="msg-act" data-remember="${i}" title="Save the question and context to Memory" aria-label="Save context to Memory">${ic('note')}</button></div></div>`;
+  return `<div class="msg assistant${last && busy ? ' streaming' : ''}${live && !m.content ? ' thinking' : ''}${enter ? ' enter' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${evidenceNote}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}${m.trace ? T.thinkHtml(m.trace, { id: 't' + i, phase: thinkPhase(m, live), open: thinkOpen.has(m) }) : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : ''}</div>${srcs}${timing}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}<button class="msg-act" data-remember="${i}" title="Save the question and context to Memory" aria-label="Save context to Memory">${ic('note')}</button></div></div>`;
 }
 let shown = null, rendered = { id: null }, lastAsst = null; const painted = new WeakSet();
 function render() {
@@ -783,7 +795,7 @@ function render() {
   rendered = { id: c ? c.id : null };
   const humanizer = asst === 'human'; th.hidden = humanizer; $('#humanizer-studio').hidden = !humanizer; $('#composer').hidden = humanizer; syncHumanizer();
   const prompts = videos.length ? ['Summarize this video in order', 'Describe the main actions and scene changes', 'What is visible near the beginning and end?', 'Read any text visible in the frames'] : a.s;
-  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy, !painted.has(m))).join('') : `<section id="welcome" class="welcome welcome-v2">
+  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy, !painted.has(m), !!busy && i === c.messages.length - 1 && m.role === 'assistant')).join('') : `<section id="welcome" class="welcome welcome-v2">
   <div class="welcome-glow" aria-hidden="true"></div>
   <div class="welcome-main">
     <div class="welcome-eyebrow"><span class="welcome-live-dot"></span> ${esc(greet())}, ${esc(first)}</div>
@@ -797,6 +809,9 @@ function render() {
   <p class="welcome-footnote">Viora can make mistakes. Check important details and cited sources.</p>
 </section>`;
   bindCodeCopy(th);
+  /* One shared 1 s timer keeps the elapsed time moving, only while a reply is live and a panel is on screen. */
+  if (busy && has) T.startTicker(() => { const m = chat()?.messages.at(-1); if (m && m.trace && busy) { const i = chat().messages.length - 1; thinkSync(i, m, true); } });
+  else T.stopTicker();
   if (has) { const fresh = c.messages.filter(m => !painted.has(m)); if (fresh.length) requestAnimationFrame(() => requestAnimationFrame(() => fresh.forEach(m => painted.add(m)))); }
   const chip = f => { const im = IM[f.id] && IM[f.id][0], web = f.kind === 'web' && Src.parseUrl(f.source);
     const meta = f.kind === 'video' ? `${f.nativeVideo ? 'video + audio + ' + (f.ni || 0) + ' frames' : (f.ni || 0) + ' frames'}${f.dur ? ' · ' + fmtTime(f.dur) : ''}` : f.kind === 'audio' ? 'audio recording' : f.kind === 'image' ? 'image' : f.kind === 'web' ? Src.hostOf(f.source) : (f.n ? Math.round(f.n / 1000) + 'k chars' : 'text');
@@ -848,7 +863,9 @@ async function send(text) {
   if (rendered.id !== c.id) rendered = { id: c.id }; /* a brand-new chat: its first messages are new, not "opened" */
   $('#input').value = ''; try { localStorage.removeItem('viora_draft_' + S.email); } catch {} grow(); save(); render();
   const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); let timingStart = 0; busy = ctl; m.stage = 'Starting task…'; sendState(true); syncHumanizer();
-  const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 32, b = $('#b' + idx); if (b) { paintBody(b, m); if (near) th.scrollTop = th.scrollHeight; } if (asst === 'human') syncHumanizer(); };
+  /* Activity record for the thinking panel: a step is added only where that thing really happens below. */
+  const tr = m.trace = T.createTrace(); let outcome = 'done'; T.begin(tr, 'understand', 'Understanding your question');
+  const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 32, b = $('#b' + idx); if (b) { paintBody(b, m); if (busy === ctl) thinkSync(idx, m, true); /* a paint queued during streaming can fire after the reply ended: it must never put the panel back into a live state */ if (near) th.scrollTop = th.scrollHeight; } if (asst === 'human') syncHumanizer(); };
   const autoRoute = asst === 'auto' ? routeDetails(text, c) : null;
   let eff = autoRoute ? autoRoute.assistant : asst;
   const humanizerOnly = eff === 'human';
@@ -862,9 +879,22 @@ async function send(text) {
   const remembered = D.autoMem && eff !== 'human' ? rememberPersonalDetails(text) : 0;
   if (remembered) toast('Saved ' + remembered + (remembered === 1 ? ' detail to Memory.' : ' details to Memory.') + ' You can review or remove them in Memory.');
   const context = humanizerOnly ? { instructions: withPersona(eff, 'off', ''), notes: '', memory: [] } : { instructions: withPersona(eff, tone, pj ? pj.instr : '', who()), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
-  m.searching = useWeb; m.stage = 'Preparing your files and context…'; paint();
+  m.searching = useWeb; m.stage = 'Preparing your files and context…';
+  { /* what Viora is working with, said plainly: routing and the context that was actually attached */
+    const parts = [asst === 'auto' ? 'Routed to ' + A[eff].n : 'Using ' + A[eff].n];
+    if (context.memory.length) parts.push(context.memory.length + (context.memory.length === 1 ? ' saved memory' : ' saved memories'));
+    if (context.notes) parts.push('project notes');
+    T.detail(tr, 'understand', parts.join(' · '));
+  }
+  paint();
+  const attFiles = selectedHumanizer ? [] : (c.page ? c.page.files : []);
+  const codeFiles = attFiles.filter(f => f.kind === 'file' && /\.(?:jsx?|tsx?|mjs|cjs|py|java|c|h|cpp|hpp|cs|go|rs|rb|php|swift|kt|sh|sql|html?|css|json|ya?ml|toml|lua)$/i.test(f.name || ''));
+  const fileNames = attFiles.slice(0, 3).map(f => f.name).join(', ') + (attFiles.length > 3 ? ' +' + (attFiles.length - 3) + ' more' : '');
+  const prepKey = codeFiles.length ? 'code' : 'files';
   try {
+    if (attFiles.length) { T.begin(tr, prepKey, codeFiles.length ? 'Processing code' : 'Processing files', fileNames); paint(); }
     const pp = selectedHumanizer ? { page: null, images: [], video: null, audio: null } : await pagePayload(c, text);
+    if (attFiles.length) { const prep = [pp.images.length && pp.images.length + (pp.images.length === 1 ? ' image' : ' images'), pp.video && 'video', pp.audio && 'audio'].filter(Boolean); T.end(tr, prepKey, prep.length ? 'Prepared ' + prep.join(', ') : ''); }
     const expectsVisualData = !selectedHumanizer && !!(c.page && c.page.files.some(f => ((f.ni || 0) > 0 && (f.kind === 'image' || f.kind === 'video' || f.kind === 'file')) || f.nativeVideo));
     if (!selectedHumanizer && c.page && c.page.files.some(f => f.kind === 'audio') && !pp.audio) throw new Error('The audio data did not load. Remove the recording and upload it again.');
     if (expectsVisualData && !pp.images.length && !pp.video) throw new Error('I can see that a picture or video is attached, but its visual data did not load. Please remove it and upload it again, then retry.');
@@ -873,12 +903,12 @@ async function send(text) {
     const files = selectedHumanizer ? [] : (c.page ? c.page.files : []), names = Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])), tries = chain(eff, files, health);
     let r, last;
     for (const [n, a] of tries.entries()) {
-      m.stage = (n ? 'Retrying with ' : 'Trying ') + A[a].n + '…'; paint();
+      m.stage = (n ? 'Retrying with ' : 'Trying ') + A[a].n + '…'; T.begin(tr, 'connect', (n ? 'Retrying with ' : 'Connecting to ') + A[a].n); paint();
       const web2 = !!(A[a].web && useWeb);
       try {
         r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
           body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff || humanizerOnly ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '', who()) }, messages: humanizerOnly ? c.messages.slice(-2, -1).map(x => ({ role: x.role, content: x.content })) : NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: selectedHumanizer ? null : pp.page, images: selectedHumanizer ? [] : pp.images, video: selectedHumanizer ? null : pp.video, audio: selectedHumanizer ? null : pp.audio, intelligence: { review: verifyAnswer } }) },
-          { signal: ctl.signal, onWait: t => { m.wait = t; paint(); } });
+          { signal: ctl.signal, onWait: t => { m.wait = t; T.detail(tr, 'connect', t); paint(); } });
         if (m.timing.responseMs == null) m.timing.responseMs = Math.round(performance.now() - timingStart);
       } catch (e) { if (!shouldFallback(0, e)) throw e; health.fail(a); last = e; r = null; if (n < tries.length - 1) continue; throw e; }
       if (r.ok || !shouldFallback(r.status) || n === tries.length - 1) { if (r.ok) health.ok(a); else if (shouldFallback(r.status)) health.fail(a); if (a !== eff) { m.sw = (m.sw ? m.sw + ' ' : '') + A[eff].n + ' did not respond, so ' + A[a].n + ' answered.'; m.eff = a; } break; }
@@ -887,8 +917,23 @@ async function send(text) {
     m.wait = '';
     if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
     if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(NP.describeHttpFailure(r.status, e.error || '')); }
-    m.stage = 'Reading the response…'; paint();
-    const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0, paintTimer = 0, lastPaintAt = 0, streamEnded = false;
+    m.stage = 'Reading the response…';
+    /* The request was accepted. What Viora is doing now depends on what it was actually given, never on guesswork. */
+    const modelName = A[m.eff || eff].n, searchAsked = !!(A[m.eff || eff].web && useWeb), plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
+    const waitStep = () => {
+      const nImg = pp.images.length, others = attFiles.filter(f => !codeFiles.includes(f));
+      if (nImg || pp.video || pp.audio) return T.begin(tr, pp.video ? 'video' : nImg ? 'image' : 'audio', pp.video ? 'Analyzing video' : nImg ? 'Analyzing images' : 'Analyzing audio', 'Sent ' + [nImg && plural(nImg, 'image'), pp.video && 'a video', pp.audio && 'an audio clip'].filter(Boolean).join(' and ') + ' to ' + modelName);
+      if (codeFiles.length) return T.begin(tr, 'code', 'Processing code', 'Sent ' + plural(codeFiles.length, 'code file') + ' to ' + modelName);
+      const used = [others.length && plural(others.length, 'attached file'), context.notes && 'project notes', context.memory.length && plural(context.memory.length, 'saved memory').replace('memorys', 'memories'), Array.isArray(m.src) && m.src.length && plural(m.src.length, 'web source')].filter(Boolean);
+      return used.length ? T.begin(tr, 'analyze', 'Analyzing information', used.join(' · ')) : T.begin(tr, 'prepare', 'Preparing your response', 'Waiting for ' + modelName);
+    };
+    T.end(tr, 'connect');
+    if (searchAsked) T.begin(tr, 'search', 'Searching the web', 'Waiting for Viora’s server to return sources', { tool: 1 }); else waitStep();
+    paint();
+    const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0, paintTimer = 0, lastPaintAt = 0, streamEnded = false, wrote = 0;
+    /* Stop must work after the reply has started too: netperf drops its abort link once the headers arrive, so the
+       reader is cancelled here and the loop below ends instead of carrying on to the end of the answer. */
+    ctl.signal.addEventListener('abort', () => { try { rd.cancel(); } catch {} }, { once: true });
     // Rebuilding rich Markdown and decorating every link is expensive for long answers.
     // Keep streaming updates responsive without repainting the full reply on every frame.
     const schedulePaint = () => {
@@ -908,32 +953,39 @@ async function send(text) {
         const j = JSON.parse(d);
         if (j.viora_meta) { m.model = j.viora_meta.model; m.timing = { ...m.timing, modelHeaderMs: j.viora_meta.modelHeaderMs }; render(); }
         else if (j.error) { m.providerError = String(j.error.message || j.error).slice(0, 500); }
-        else if (j.viora_retry) { m.model = j.viora_retry.model || m.model; m.content = ''; m.note = [m.note, 'A second model improved this answer after a quality review.'].filter(Boolean).join(' · '); m.stage = 'Refining the answer…'; }
-        else if (j.viora_quality) { m.note = [m.note, 'Answer reviewed for completeness and relevance.'].filter(Boolean).join(' · '); }
+        else if (j.viora_retry) { m.model = j.viora_retry.model || m.model; m.content = ''; m.note = [m.note, 'A second model improved this answer after a quality review.'].filter(Boolean).join(' · '); m.stage = 'Refining the answer…'; T.begin(tr, 'refine', 'Refining the answer', 'A second model is improving the draft after a quality review'); }
+        else if (j.viora_quality) { m.note = [m.note, 'Answer reviewed for completeness and relevance.'].filter(Boolean).join(' · '); T.note(tr, 'review', 'Checked for completeness and relevance', '', { keep: 1 }); }
         else if (Object.hasOwn(j, 'viora_sources')) {
           m.searching = false; m.stage = 'Checking source links…'; m.src = j.viora_sources;
           m.research = j.viora_research || null; m.timing = { ...m.timing, ...(j.viora_timings || {}) };
           if (!m.src.length) m.note = 'Web search returned no source links. Treat live claims as unverified.';
+          /* the server has now told us what the search found, so these steps carry real numbers */
+          T.end(tr, 'search', m.src.length ? plural(m.src.length, 'result') + ' found' : 'No source links were returned');
+          if (m.src.length) { const rs = m.research, ok = rs && Number.isFinite(rs.fetchedPages) && Number.isFinite(rs.totalSources); T.note(tr, 'sources', 'Reading sources', ok ? 'Read ' + rs.fetchedPages + ' of ' + rs.totalSources + ' source pages' : 'Checking source links', { tool: 1, dur: m.timing && m.timing.sourceFetchMs }); }
+          if (!m.content) waitStep();
           render();
         }
         else if (j.viora_metrics) {
           m.model = j.viora_metrics.model || m.model; m.research = { ...m.research, fetchedPages: j.viora_metrics.fetchedPages, totalSources: j.viora_metrics.totalSources, verification: j.viora_metrics.verification, claimSupportVerified: j.viora_metrics.claimSupportVerified };
           m.timing = { ...m.timing, ...j.viora_metrics }; render();
         }
-        else { const t = j.choices?.[0]?.delta?.content; if (t) { if (m.timing.firstTokenMs == null) m.timing.firstTokenMs = Math.round(performance.now() - timingStart); m.content += t; } }
+        else { const t = j.choices?.[0]?.delta?.content; if (t) { if (m.timing.firstTokenMs == null) m.timing.firstTokenMs = Math.round(performance.now() - timingStart);
+          if (!m.content) { const cur = T.current(tr); if (cur && cur.k === 'search') T.end(tr, 'search', 'The reply started without a source list'); if (!cur || cur.k !== 'write') T.begin(tr, 'write', wrote++ ? 'Writing the improved answer' : 'Writing the response'); }
+          m.content += t; } }
       } catch {}
     };
     for (;;) {
-      const { done, value, stalled } = await NP.readChunk(rd); if (stalled) { m.note = 'The connection went quiet, so this reply may be cut short. Use Regenerate to try again.'; render(); break; } if (done) break;
+      const { done, value, stalled } = await NP.readChunk(rd); if (stalled) { m.note = 'The connection went quiet, so this reply may be cut short. Use Regenerate to try again.'; T.end(tr, 'write', 'The connection went quiet, so the reply may be cut short'); render(); break; } if (done) break;
       const split = NP.splitStreamLines(buf + dec.decode(value, { stream: true })); buf = split.rest;
       split.lines.forEach(handleLine);
       if (streamEnded) { try { rd.cancel(); } catch {} break; }
       schedulePaint();
     }
+    if (ctl.signal.aborted) throw Object.assign(new Error('Stopped'), { name: 'AbortError' }); /* keep what arrived; the catch below marks it stopped */
     NP.splitStreamLines(buf + dec.decode(), true).lines.forEach(handleLine);
     if (!m.content.trim() && m.providerError) throw new Error('The AI provider returned an error: ' + m.providerError);
     if (m.providerError && m.content.trim()) m.note = 'The AI provider reported an error after starting this reply: ' + m.providerError;
-    if (!m.content.trim()) m.content = 'I got an empty reply. Please try again or choose another assistant.';
+    if (!m.content.trim()) { outcome = 'failed'; m.content = 'I got an empty reply. Please try again or choose another assistant.'; }
     // The frontend can request web search, but only the chat backend can actually perform it.
     // Make a missing search result explicit instead of letting a model imply it browsed.
     if (useWeb && !Array.isArray(m.src)) {
@@ -942,10 +994,11 @@ async function send(text) {
       m.note = 'Web search returned no source links. Treat live claims as unverified.';
     }
   } catch (e) {
-    if (e.name === 'AbortError') { if (!m.content) m.content = '_Stopped._'; }
-    else { if (!m.content && NP.get().restoreOnFail && !$('#input').value) { $('#input').value = text; grow(); } m.err = true; m.content = (m.content ? m.content + '\n\n' : '') + '⚠️ ' + (/fetch|network/i.test(e.message) ? 'Could not reach Viora. The server may be waking up, so try again in 30 seconds.' : e.message); }
+    if (e.name === 'AbortError') { outcome = 'stopped'; if (!m.content) m.content = '_Stopped._'; }
+    else { outcome = 'failed'; if (!m.content && NP.get().restoreOnFail && !$('#input').value) { $('#input').value = text; grow(); } m.err = true; m.content = (m.content ? m.content + '\n\n' : '') + '⚠️ ' + (/fetch|network/i.test(e.message) ? 'Could not reach Viora. The server may be waking up, so try again in 30 seconds.' : e.message); }
   }
   if (timingStart && m.timing) m.timing.totalMs = Math.round(performance.now() - timingStart);
+  T.finish(tr, outcome); /* always runs: whatever was still active is closed, so no indicator can be left running */
   m.searching = false; m.wait = ''; m.stage = ''; busy = null; sendState(false); save(); render();
   if (c.autoTitle && !c.titleGenerated && c.messages.filter(x => x.role === 'user').length === 1) {
     c.titlePending = true; save();
@@ -1340,6 +1393,12 @@ $('#sh-hist').onclick = e => {
   const it = e.target.closest('[data-id]'); if (it) { cur = it.dataset.id; const a = chat().assistant; if (a && A[a]) asst = a; render(); closeSb(); }
 };
 $('#thread').onclick = e => {
+  const tg = e.target.closest('[data-vt-toggle]');
+  if (tg) { /* expand or collapse the thinking panel in place, so its animation never restarts */
+    const root = tg.closest('.vt'), c = chat(), i = root ? +root.id.slice(1) : -1, m = c && c.messages[i];
+    if (m) { thinkOpen.has(m) ? thinkOpen.delete(m) : thinkOpen.add(m); thinkSync(i, m, !!busy && i === c.messages.length - 1); }
+    return;
+  }
   const sg = e.target.closest('.suggestion'); if (sg) { send(sg.querySelector('.suggestion-text')?.textContent || sg.textContent); return; }
   const cp = e.target.closest('[data-copy]'); if (cp) { navigator.clipboard?.writeText(chat().messages[+cp.dataset.copy].content); cp.innerHTML = ic('check'); setTimeout(() => { cp.innerHTML = ic('copy'); }, 1200); return; } const rm = e.target.closest('[data-remember]'); if (rm) { if (!D.memOn) { toast('Turn on Memory in the Memory panel before saving context.'); return; } const c = chat(), at = +rm.dataset.remember; let u = null; for (let j = at - 1; j >= 0; j--) if (c.messages[j].role === 'user') { u = c.messages[j]; break; } if (!u || !u.content.trim()) { toast('There is no question to save for this reply.'); return; } const t = ('Context: ' + u.content.trim()).slice(0, 300); if (D.memory.some(x => x.t.toLowerCase() === t.toLowerCase() && (x.pid || null) === (c.pid || null))) { toast('That context is already saved in Memory.'); return; } D.memory.unshift({ id: 'm' + Date.now(), t, pid: c.pid || null }); saveD(); toast(c.pid ? 'Saved to this project’s Memory.' : 'Saved to Memory for future chats.'); return; }
   const ar = e.target.closest('[data-art]'); if (ar) { const mm = /```(\w*)\n?([\s\S]*?)(```|$)/.exec(chat().messages[+ar.dataset.art].content); if (mm) openArt(mm[2].replace(/\n$/, ''), mm[1] || 'text'); return; }
