@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULTS, normalize, matchPreset, trimHistory, describeHttpFailure, splitStreamLines } from '../assets/x/netperf.js';
+import { DEFAULTS, normalize, matchPreset, trimHistory, summarizeHistory, describeHttpFailure, splitStreamLines } from '../assets/x/netperf.js';
 
 test('normalize clamps numeric settings and rejects invalid values', () => {
   assert.equal(normalize({ retries: 99 }).retries, 6);
@@ -36,6 +36,15 @@ test('default history sends only the latest four messages', () => {
   }));
   assert.equal(DEFAULTS.history, 4);
   assert.deepEqual(trimHistory(messages), messages.slice(8));
+});
+
+test('summarizeHistory preserves older conversation turns in a bounded extract', () => {
+  const messages = Array.from({ length: 12 }, (_, index) => ({ role: index % 2 ? 'assistant' : 'user', content: 'turn-' + index }));
+  const summary = summarizeHistory(messages, 4, 1000);
+  assert.match(summary, /User: turn-0/);
+  assert.match(summary, /Viora: turn-7/);
+  assert.ok(summary.length <= 1000);
+  assert.equal(summarizeHistory(messages, 0), '');
 });
 
 test('preset matching recognizes the shipped presets', () => {

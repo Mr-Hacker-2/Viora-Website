@@ -3,7 +3,14 @@ import { retrieveMemory, retrieveNotes, wrapUntrusted, tokens } from '../assets/
 const mem = [{ t: 'I prefer answers in French', pid: null }, { t: 'My dog is called Biscuit', pid: null }, { t: 'Project uses PostgreSQL 15', pid: 'p1' }, { t: 'Budget is 5000 euros', pid: 'p2' }, { t: 'I work night shifts', pid: null }, { t: 'Allergic to peanuts', pid: null }];
 test('relevant memory ranks first', () => assert.equal(retrieveMemory(mem, 'what database does the project use postgres', { pid: 'p1', floor: 0 })[0], 'Project uses PostgreSQL 15'));
 test('project memories never leak across projects', () => assert.ok(!retrieveMemory(mem, 'budget euros', { pid: 'p1', floor: 6 }).includes('Budget is 5000 euros')));
-test('unrelated question gets only a small bounded set, not everything', () => assert.equal(retrieveMemory(mem, 'zebra quantum', { floor: 3 }).length, 3));
+test('unrelated question does not inject unrelated personal facts', () => {
+  const selected = retrieveMemory(mem, 'zebra quantum');
+  assert.deepEqual(selected, ['I prefer answers in French']);
+  assert.ok(!selected.includes('My dog is called Biscuit'));
+});
+test('standing response preferences remain available without pulling unrelated personal facts', () => {
+  assert.deepEqual(retrieveMemory(mem, 'explain photosynthesis'), ['I prefer answers in French']);
+});
 test('empty and malformed input is safe', () => { assert.deepEqual(retrieveMemory(null, 'x'), []); assert.deepEqual(retrieveMemory([null, {}], 'x'), []); });
 test('long notes are cut to the budget and keep the matching part', () => {
   const notes = Array.from({ length: 40 }, (_, i) => i === 25 ? 'The deployment password rotation policy is quarterly.' : 'Filler paragraph number ' + i + ' ' + 'lorem '.repeat(40)).join('\n\n');

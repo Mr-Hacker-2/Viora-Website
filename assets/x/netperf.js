@@ -142,6 +142,29 @@ export function trimHistory(messages, n = current.history) {
   return out;
 }
 
+/* Keep a compact, clearly labeled extract of older turns when the active context window is short.
+   This is deliberately extractive: it preserves user wording without inventing a model summary. */
+export function summarizeHistory(messages, keepLast = current.history, maxChars = 1800) {
+  if (!keepLast || messages.length <= keepLast) return '';
+  const older = messages.slice(0, messages.length - keepLast);
+  while (older.length > 1 && older[0].role !== 'user') older.shift();
+  const rows = [];
+  for (let i = 0; i < older.length; i++) {
+    const item = older[i];
+    if (item.role !== 'user' && item.role !== 'assistant') continue;
+    const text = String(item.content || '').replace(/\s+/g, ' ').trim();
+    if (!text) continue;
+    rows.push(`${item.role === 'user' ? 'User' : 'Viora'}: ${text.slice(0, 260)}`);
+  }
+  let out = '';
+  for (const row of rows.slice(-10)) {
+    const next = out ? out + '\n' + row : row;
+    if (next.length > maxChars) break;
+    out = next;
+  }
+  return out;
+}
+
 /* Ping the server while the app is open and visible so a free host does not go to sleep. Returns a stop function. */
 export function keepWarm(url) {
   let last = Date.now();

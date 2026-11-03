@@ -4,6 +4,7 @@ const STOP = new Set('the and for you that with this have from are was but not w
 export const tokens = s => [...new Set((String(s).toLowerCase().match(/[\p{L}\p{N}]{3,}/gu) || []).filter(w => !STOP.has(w)))];
 const stem = w => w.replace(/(ing|ed|es|s)$/, '');
 const score = (qs, text) => { const t = new Set(tokens(text).map(stem)); return qs.reduce((n, w) => n + (t.has(stem(w)) ? 1 : 0), 0); };
+const STANDING_PREFERENCE = /\b(?:i prefer|i like|i want to learn|call me|my (?:preferred )?name is)\b/i;
 
 /* Extract only explicit, low-risk facts the user states about themself. Never infer from tone,
    uploaded material, or questions. Sensitive topics are deliberately excluded. */
@@ -34,13 +35,16 @@ export function preferredName(memories) {
   return '';
 }
 
-/** Pick the saved memories relevant to this question: best matches first, then the newest up to `floor`
-    so short standing preferences still apply. Memories are newest-first. Returns at most `max` strings. */
-export function retrieveMemory(memories, query, { max = 12, floor = 4, pid = null } = {}) {
+/** Pick strong question matches plus explicit standing response preferences. Memories are newest-first.
+    Unrelated personal details are omitted. Returns at most `max` strings. */
+export function retrieveMemory(memories, query, { max = 12, pid = null } = {}) {
   const pool = (memories || []).filter(m => m && m.t && (!m.pid || m.pid === pid)), qs = tokens(query);
   const ranked = pool.map((m, i) => ({ m, i, v: score(qs, m.t) })).filter(x => x.v > 0).sort((a, b) => b.v - a.v || a.i - b.i);
   const out = ranked.slice(0, max).map(x => x.m);
-  for (const m of pool) { if (out.length >= Math.min(floor, max)) break; if (!out.includes(m)) out.push(m); }
+  for (const m of pool) {
+    if (out.length >= max) break;
+    if (STANDING_PREFERENCE.test(m.t) && !out.includes(m)) out.push(m);
+  }
   return out.map(m => m.t);
 }
 

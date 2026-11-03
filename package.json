@@ -1,1 +1,1 @@
-{"type":"module","private":true,"scripts":{"test":"node --test tests/*.test.mjs","eval":"node evals/run.mjs"}}
+{"type":"module","private":true,"scripts":{"test":"node --test tests/*.test.mjs","eval":"node evals/run.mjs","eval:ai":"node evals/ai.mjs"}}
