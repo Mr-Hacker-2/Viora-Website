@@ -1821,6 +1821,11 @@ body.gated #composer { display: none; }
 
 .msg-actions { display: flex; gap: 2px; margin-top: 6px; opacity: 0.55; transition: opacity 0.15s; }
 .msg.assistant:hover .msg-actions, .msg-actions:focus-within { opacity: 1; }
+.msg.user .msg-actions { justify-content: flex-end; }
+.msg.user:hover .msg-actions { opacity: 1; }
+.edit-banner { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin: 0 2px 8px; padding: 8px 11px; border: 1px solid color-mix(in srgb, var(--accent) 32%, var(--line)); border-radius: 11px; background: color-mix(in srgb, var(--accent) 9%, var(--ink-2)); color: var(--muted); font-size: 12px; line-height: 1.4; }
+.edit-banner button { flex: 0 0 auto; border: 0; border-radius: 7px; padding: 5px 8px; background: transparent; color: var(--accent-ink, var(--accent)); font: inherit; font-weight: 600; cursor: pointer; }
+.edit-banner button:hover { background: color-mix(in srgb, var(--accent) 12%, transparent); }
 .msg-act {
   width: 26px; height: 26px; display: grid; place-items: center; padding: 0; border: none; border-radius: 6px;
   background: transparent; color: var(--muted); cursor: pointer;

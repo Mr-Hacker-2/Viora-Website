@@ -58,3 +58,18 @@ test('chat history supports manual names, persistence, switching, and title sear
   assert.match(html, /JSON\.stringify\(\{ chats, data: D \}/);
   assert.match(html, /const titleMatch = String\(x\.title \|\| ''\)\.toLowerCase\(\)\.includes\(filter\)/);
 });
+
+test('message editing has a cancel state and replaces only the selected latest turn', async () => {
+  const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
+  assert.match(html, /data-edit-user=/);
+  assert.match(html, /historyBeforeEditedTurn\(c\.messages, edited\.index\)/);
+  assert.match(html, /id="edit-banner"[^>]*hidden/);
+  assert.match(html, /#edit-cancel'\)\.onclick/);
+});
+
+test('response copy does not intercept code-block copy buttons and has a clipboard fallback', async () => {
+  const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
+  assert.match(html, /e\.target\.closest\('\.msg-act\[data-copy\]'\)/);
+  assert.match(html, /async function copyText\(text\)/);
+  assert.match(html, /document\.execCommand\('copy'\)/);
+});

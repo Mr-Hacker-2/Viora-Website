@@ -572,6 +572,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
       <div id="page-chip" class="page-chip" hidden><span class="page-chip-icon" data-ic="folder"></span><span class="page-chip-title" id="pbar" style="cursor:pointer"></span><button type="button" id="page-chip-remove" class="page-chip-remove" aria-label="Leave this project">×</button></div>
       <div id="attach-tray" class="attach-chips" hidden></div>
       <div id="video-note" class="video-note" hidden role="status"><span data-ic="camera"></span><span id="video-note-copy"></span></div>
+      <div id="edit-banner" class="edit-banner" hidden><span>Editing your last message. Sending replaces its current reply.</span><button id="edit-cancel" type="button" aria-label="Cancel editing">Cancel</button></div>
       <textarea id="input" rows="1" aria-label="Message" autocomplete="off" spellcheck="true"></textarea>
       <div id="research-mode-wrap" class="research-mode" hidden>
         <label for="research-mode">Research depth</label>
@@ -694,6 +695,7 @@ import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes, vali
 import * as NP from './assets/x/netperf.js';
 import * as T from './assets/x/think.js';
 import { fallbackTitle, shouldGenerateTitle, renameConversation, finishTitleGeneration } from './assets/x/chat-title.js';
+import { editableUserIndex, historyBeforeEditedTurn } from './assets/x/chat-edit.js';
 (() => {
 'use strict';
 const API = 'https://viora-auth-website.onrender.com';
@@ -711,7 +713,7 @@ const A = {
 };
 const key = 'viora_chats_' + S.email;
 const pending = [];
-let tone = normLevel(ls.get('viora_tone', null)), chats = ls.get(key, []), cur = null, asst = ls.get('viora_assistant', 'auto'), web = ls.get('viora_web', true), researchDepth = ls.get('viora_research_depth', 'quick') === 'deep' ? 'deep' : 'quick', busy = null, filter = '';
+let tone = normLevel(ls.get('viora_tone', null)), chats = ls.get(key, []), cur = null, asst = ls.get('viora_assistant', 'auto'), web = ls.get('viora_web', true), researchDepth = ls.get('viora_research_depth', 'quick') === 'deep' ? 'deep' : 'quick', busy = null, filter = '', editingTurn = null;
 if (!A[asst]) asst = 'auto';
 chats.forEach(c => { if (c.page && !c.page.files) c.page.files = [{ id: 'o', name: c.page.title || c.page.source || 'Page', text: c.page.text || '', source: c.page.source }]; });
 /* A reply that was still running when the page closed can never finish. Say so once, instead of showing an
@@ -732,7 +734,21 @@ if (!D.profile || typeof D.profile !== 'object') D.profile = { name: '', about: 
 const myName = () => String(D.profile.name || preferredName(D.memory) || S.name || '').trim();
 const who = () => userProfile({ name: myName(), about: D.profile.about, facts: [] });
 const save = () => { if (!ls.set(key, chats.slice(0, 80)) && !ls.set(key, chats.slice(0, 30))) setStatus('Could not save chats: browser storage is full or blocked. Export your data to keep them.', 8000); };
+function clearEditingTurn(clearInput = false) {
+  editingTurn = null; $('#edit-banner').hidden = true;
+  if (clearInput) { $('#input').value = ''; grow(); }
+}
 const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+async function copyText(text) {
+  try { if (navigator.clipboard?.writeText) { await navigator.clipboard.writeText(text); return true; } } catch {}
+  let field;
+  try {
+    field = document.createElement('textarea'); field.value = text; field.setAttribute('readonly', '');
+    field.style.cssText = 'position:fixed;left:-9999px;top:0;opacity:0'; document.body.append(field); field.select();
+    return document.execCommand('copy');
+  } catch { return false; }
+  finally { field?.remove(); }
+}
 const chat = () => chats.find(c => c.id === cur);
 const host = u => { try { return new URL(u).hostname.replace(/^www\./, ''); } catch { return u; } };
 const MODEL = { auto: 'flash', flash: 'flash', search: 'search', math: 'math', human: 'humanize' };
@@ -789,8 +805,8 @@ function researchReport(c, index) {
     '', '## Evidence limits', 'Source ranking uses topic match and broad source-type hints. These are not reliability guarantees. Claim support was not independently verified.');
   return lines.join('\n');
 }
-function msgHtml(m, i, last, enter, live) {
-  if (m.role === 'user') return `<div class="msg user${enter ? ' enter' : ''}">${(m.att || []).length ? `<div class="msg-att">${m.att.map(f => `<span class="msg-att-i" title="${esc(f.name)}">${f.src && Src.parseUrl(f.src) ? Src.iconHtml({ url: f.src }, 14) : ''}${esc(f.name)}</span>`).join('')}</div>` : ''}<div class="user-text">${esc(m.content)}</div></div>`;
+function msgHtml(m, i, last, enter, live, editable = false) {
+  if (m.role === 'user') return `<div class="msg user${enter ? ' enter' : ''}">${(m.att || []).length ? `<div class="msg-att">${m.att.map(f => `<span class="msg-att-i" title="${esc(f.name)}">${f.src && Src.parseUrl(f.src) ? Src.iconHtml({ url: f.src }, 14) : ''}${esc(f.name)}</span>`).join('')}</div>` : ''}<div class="user-text">${esc(m.content)}</div>${editable ? `<div class="msg-actions"><button class="msg-act" type="button" data-edit-user="${i}" title="Edit and resend this message" aria-label="Edit your last message">${ic('edit')}</button></div>` : ''}</div>`;
   const safeSrcs = Src.cleanSources(m.src || []);
   const srcs = Src.sourcesBlock(safeSrcs);
   const citationAudit = Src.auditCitations(m.content || '', safeSrcs, (m.eff || m.mode) === 'search');
@@ -836,7 +852,9 @@ function render() {
   rendered = { id: c ? c.id : null };
   const humanizer = asst === 'human'; th.hidden = humanizer; $('#humanizer-studio').hidden = !humanizer; $('#composer').hidden = humanizer; syncHumanizer();
   const prompts = videos.length ? ['Summarize this video in order', 'Describe the main actions and scene changes', 'What is visible near the beginning and end?', 'Read any text visible in the frames'] : a.s;
-  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy, !painted.has(m), !!busy && i === c.messages.length - 1 && m.role === 'assistant')).join('') : `<section id="welcome" class="welcome welcome-v2">
+  const editHasAttachments = !!(c?.page?.files?.length || pending.some(p => !p.err));
+  const editableIndex = c ? editableUserIndex(c.messages, { busy: !!busy, hasChatAttachments: editHasAttachments }) : -1;
+  th.innerHTML = has ? c.messages.map((m, i) => msgHtml(m, i, i === c.messages.length - 1 && !busy, !painted.has(m), !!busy && i === c.messages.length - 1 && m.role === 'assistant', i === editableIndex)).join('') : `<section id="welcome" class="welcome welcome-v2">
   <div class="welcome-glow" aria-hidden="true"></div>
   <div class="welcome-main">
     <div class="welcome-eyebrow"><span class="welcome-live-dot"></span> ${esc(greet())}, ${esc(first)}</div>
@@ -925,6 +943,12 @@ async function send(text) {
   const selectedHumanizer = asst === 'human';
   if (!selectedHumanizer && pending.some(p => !p.err)) { toast('Wait for your attachments to finish processing, or cancel them.'); return; }
   let c = chat();
+  if (editingTurn) {
+    const edited = editingTurn, prefix = c && c.id === edited.chatId ? historyBeforeEditedTurn(c.messages, edited.index) : null;
+    clearEditingTurn();
+    if (prefix) c.messages = prefix;
+    else toast('That message can no longer be edited. Your text was sent as a new message.');
+  }
   if (!c) { c = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), title: fallbackTitle(text), autoTitle: true, titleManual: false, titleGenerated: false, titleGenerationStarted: false, assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
   c.assistant = asst; c.updated = Date.now(); chats = [c, ...chats.filter(x => x !== c)];
   c.messages.push({ role: 'user', content: text, att: (c.page ? c.page.files : []).map(f => ({ name: f.name, kind: f.kind, src: f.kind === 'web' ? f.source : '' })) }, { role: 'assistant', content: '' });
@@ -1160,7 +1184,7 @@ async function generateConversationTitle(c) {
   }
 }
 function grow() { const t = $('#input'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 200) + 'px'; $('#send').disabled = !busy && !t.value.trim(); }
-const newChat = () => { cur = null; hide(); render(); $('#input').focus(); closeSb(); };
+const newChat = () => { if (editingTurn) clearEditingTurn(true); cur = null; hide(); render(); $('#input').focus(); closeSb(); };
 /* attach a page */
 const dlg = $('#dlg');
 const plain = html => { const d = new DOMParser().parseFromString(html, 'text/html'); d.querySelectorAll('script,style,noscript,svg,template').forEach(n => n.remove()); return { title: (d.title || '').trim().slice(0, 200), text: (d.body?.textContent || html).replace(/[ \t]+/g, ' ').replace(/\n\s*\n+/g, '\n\n').trim().slice(0, 24000) }; };
@@ -1497,7 +1521,8 @@ $('#sh-model').onchange = e => setAsst(e.target.value);
 $('#sh-modes').onclick = e => { const sw = e.target.closest('.sh-sw'); if (!sw) return; const k = sw.dataset.m; if (k === 'web') { web = !web; ls.set('viora_web', web); render(); } else setAsst(asst === k ? 'auto' : k); };
 $('.sh-tabs').onclick = e => { const b = e.target.closest('button[data-tab]'); if (!b) return; $$('.sh-tabs button').forEach(x => x.classList.toggle('on', x === b)); $('#sh-tools').hidden = b.dataset.tab !== 'tools'; $('#sh-files').hidden = b.dataset.tab !== 'files'; };
 $('#sh-invite').onclick = () => { window.location.href = 'mobile.html'; };
-$('#page-chip-remove').onclick = () => { curP = null; cur = null; render(); };
+$('#page-chip-remove').onclick = () => { if (editingTurn) clearEditingTurn(); curP = null; cur = null; render(); };
+$('#edit-cancel').onclick = () => { clearEditingTurn(true); $('#input').focus(); };
 $('#sh-hist').onclick = e => {
   const rn = e.target.closest('[data-rename]'); if (rn) {
     e.stopPropagation(); const c = chats.find(x => x.id === rn.dataset.rename); if (!c) return;
@@ -1506,9 +1531,18 @@ $('#sh-hist').onclick = e => {
     save(); render(); return;
   }
   const d = e.target.closest('[data-del]'); if (d) { e.stopPropagation(); chats = chats.filter(c => c.id !== d.dataset.del); if (cur === d.dataset.del) cur = null; save(); render(); return; }
-  const it = e.target.closest('.sh-chat[data-id]'); if (it) { cur = it.dataset.id; const a = chat().assistant; if (a && A[a]) asst = a; render(); closeSb(); }
+  const it = e.target.closest('.sh-chat[data-id]'); if (it) { if (editingTurn) clearEditingTurn(true); cur = it.dataset.id; const a = chat().assistant; if (a && A[a]) asst = a; render(); closeSb(); }
 };
-$('#thread').onclick = e => {
+$('#thread').onclick = async e => {
+  const edit = e.target.closest('[data-edit-user]');
+  if (edit) {
+    const c = chat(), index = Number(edit.dataset.editUser), message = c?.messages[index];
+    const editHasAttachments = !!(c?.page?.files?.length || pending.some(p => !p.err));
+    if (c && editableUserIndex(c.messages, { busy: !!busy, hasChatAttachments: editHasAttachments }) === index && message) {
+      editingTurn = { chatId: c.id, index }; $('#input').value = message.content || ''; $('#edit-banner').hidden = false; grow(); $('#input').focus();
+    }
+    return;
+  }
   const tg = e.target.closest('[data-vt-toggle]');
   if (tg) { /* expand or collapse the thinking panel in place, so its animation never restarts */
     const root = tg.closest('.vt'), c = chat(), i = root ? +root.id.slice(1) : -1, m = c && c.messages[i];
@@ -1517,7 +1551,7 @@ $('#thread').onclick = e => {
   }
   const sg = e.target.closest('.suggestion'); if (sg) { send(sg.querySelector('.suggestion-text')?.textContent || sg.textContent); return; }
   const ex = e.target.closest('[data-export]'); if (ex) { const c = chat(), md = researchReport(c, +ex.dataset.export); if (!md) return; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown;charset=utf-8' })); a.download = 'viora-research-report.md'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); return; }
-  const cp = e.target.closest('[data-copy]'); if (cp) { const c = chat(), i = +cp.dataset.copy, m = c.messages[i]; navigator.clipboard?.writeText(m.research ? researchReport(c, i) : m.content); cp.innerHTML = ic('check'); setTimeout(() => { cp.innerHTML = ic('copy'); }, 1200); return; } const rm = e.target.closest('[data-remember]'); if (rm) { if (!D.memOn) { toast('Turn on Memory in the Memory panel before saving context.'); return; } const c = chat(), at = +rm.dataset.remember; let u = null; for (let j = at - 1; j >= 0; j--) if (c.messages[j].role === 'user') { u = c.messages[j]; break; } if (!u || !u.content.trim()) { toast('There is no question to save for this reply.'); return; } const t = ('Context: ' + u.content.trim()).slice(0, 300); if (D.memory.some(x => x.t.toLowerCase() === t.toLowerCase() && (x.pid || null) === (c.pid || null))) { toast('That context is already saved in Memory.'); return; } D.memory.unshift({ id: 'm' + Date.now(), t, pid: c.pid || null }); saveD(); toast(c.pid ? 'Saved to this project’s Memory.' : 'Saved to Memory for future chats.'); return; }
+  const cp = e.target.closest('.msg-act[data-copy]'); if (cp) { const c = chat(), i = Number(cp.dataset.copy), m = c?.messages[i]; if (!m) return; const value = m.research ? researchReport(c, i) : m.content; if (await copyText(value)) { cp.innerHTML = ic('check'); setTimeout(() => { cp.innerHTML = ic('copy'); }, 1200); } else toast('Could not copy automatically. Select the response and copy it.'); return; } const rm = e.target.closest('[data-remember]'); if (rm) { if (!D.memOn) { toast('Turn on Memory in the Memory panel before saving context.'); return; } const c = chat(), at = +rm.dataset.remember; let u = null; for (let j = at - 1; j >= 0; j--) if (c.messages[j].role === 'user') { u = c.messages[j]; break; } if (!u || !u.content.trim()) { toast('There is no question to save for this reply.'); return; } const t = ('Context: ' + u.content.trim()).slice(0, 300); if (D.memory.some(x => x.t.toLowerCase() === t.toLowerCase() && (x.pid || null) === (c.pid || null))) { toast('That context is already saved in Memory.'); return; } D.memory.unshift({ id: 'm' + Date.now(), t, pid: c.pid || null }); saveD(); toast(c.pid ? 'Saved to this project’s Memory.' : 'Saved to Memory for future chats.'); return; }
   const ar = e.target.closest('[data-art]'); if (ar) { const mm = /```(\w*)\n?([\s\S]*?)(```|$)/.exec(chat().messages[+ar.dataset.art].content); if (mm) openArt(mm[2].replace(/\n$/, ''), mm[1] || 'text'); return; }
   if (e.target.closest('[data-regen]')) { const c = chat(); c.messages.pop(); const u = c.messages.pop(); send(u.content); }
 };
