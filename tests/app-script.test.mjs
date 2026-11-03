@@ -16,3 +16,23 @@ test('the app inline module parses before the chat UI can initialize', async () 
   const AsyncFunction = Object.getPrototypeOf(async function () {}).constructor;
   assert.doesNotThrow(() => new AsyncFunction(body.slice(iife)));
 });
+
+test('Pro Search exposes real Quick and Deep modes and streams server activity into progress', async () => {
+  const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
+  assert.match(html, /id="research-mode"[^>]*aria-label="Research depth"/);
+  assert.match(html, /<option value="quick">Quick Search<\/option><option value="deep">Deep Research<\/option>/);
+  assert.match(html, /researchMode: a === 'search' \? researchDepth : 'quick'/);
+  assert.match(html, /researchRequestId: web2 \? researchRequestId : undefined/);
+  assert.match(html, /API \+ '\/api\/progress\?id='/);
+  assert.match(html, /m\.research\.queryCount/);
+});
+
+test('research report copy and Markdown export include source status and evidence limits', async () => {
+  const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
+  assert.match(html, /function researchReport\(c, index\)/);
+  assert.match(html, /Page retrieved/);
+  assert.match(html, /Search snippet only/);
+  assert.match(html, /Claim support was not independently verified/);
+  assert.match(html, /data-export/);
+  assert.match(html, /text\/markdown;charset=utf-8/);
+});

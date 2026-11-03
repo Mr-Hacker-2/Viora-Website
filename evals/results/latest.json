@@ -1,9 +1,9 @@
 {
-  "at": "2026-10-25T20:15:49.671Z",
+  "at": "2026-11-03T22:12:00.201Z",
   "legacy": {
-    "accuracy": 0.828,
-    "correct": 24,
-    "total": 29,
+    "accuracy": 0.758,
+    "correct": 25,
+    "total": 33,
     "misses": [
       {
         "t": "Explain Big-O notation simply",
@@ -29,13 +29,39 @@
         "t": "What is the dress code at a wedding?",
         "want": "flash",
         "got": "math"
+      },
+      {
+        "t": "Fact-check this Python code against current documentation",
+        "want": "search",
+        "got": "math"
+      },
+      {
+        "t": "Verify this claim with citations",
+        "want": "search",
+        "got": "flash"
+      },
+      {
+        "t": "Look up current guidance for this SQL error",
+        "want": "search",
+        "got": "math"
       }
     ]
   },
   "current": {
-    "accuracy": 1,
-    "correct": 29,
-    "total": 29,
-    "misses": []
+    "accuracy": 0.939,
+    "correct": 31,
+    "total": 33,
+    "misses": [
+      {
+        "t": "Plan how to fill this form",
+        "want": "automate",
+        "got": "flash"
+      },
+      {
+        "t": "Which button submits this page?",
+        "want": "automate",
+        "got": "flash"
+      }
+    ]
   }
 }

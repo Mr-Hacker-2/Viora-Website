@@ -146,6 +146,9 @@ body.sb:after{content:"";position:fixed;inset:0;background:#11142666;z-index:100
 #input{display:block;width:100%;min-height:32px!important;max-height:168px!important;border:0!important;background:transparent!important;color:var(--paper)!important;font:15px/1.5 var(--sans)!important;resize:none;outline:none}
 #input::placeholder{color:var(--faint)}
 .composer-row{display:flex;align-items:center;justify-content:space-between;gap:8px;margin-top:7px}
+.research-mode{display:flex;align-items:center;gap:8px;flex-wrap:wrap;padding:2px 2px 8px;color:var(--muted);font-size:12px}
+.research-mode select{max-width:180px;padding:6px 10px;border:1px solid var(--line);border-radius:999px;background:var(--raised);color:var(--paper);font:inherit}
+.research-mode small{color:var(--faint)}
 .composer-left{display:flex;align-items:center;gap:8px;min-width:0}
 .composer-right{display:flex;align-items:center;gap:8px}
 .attach-btn{width:30px!important;height:30px!important}
@@ -566,6 +569,11 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
       <div id="attach-tray" class="attach-chips" hidden></div>
       <div id="video-note" class="video-note" hidden role="status"><span data-ic="camera"></span><span id="video-note-copy"></span></div>
       <textarea id="input" rows="1" aria-label="Message" autocomplete="off" spellcheck="true"></textarea>
+      <div id="research-mode-wrap" class="research-mode" hidden>
+        <label for="research-mode">Research depth</label>
+        <select id="research-mode" aria-label="Research depth"><option value="quick">Quick Search</option><option value="deep">Deep Research</option></select>
+        <small id="research-mode-hint">One search pass · faster</small>
+      </div>
       <div class="composer-row">
         <div class="composer-left">
           <div class="attach-wrap">
@@ -698,7 +706,7 @@ const A = {
 };
 const key = 'viora_chats_' + S.email;
 const pending = [];
-let tone = normLevel(ls.get('viora_tone', null)), chats = ls.get(key, []), cur = null, asst = ls.get('viora_assistant', 'auto'), web = ls.get('viora_web', true), busy = null, filter = '';
+let tone = normLevel(ls.get('viora_tone', null)), chats = ls.get(key, []), cur = null, asst = ls.get('viora_assistant', 'auto'), web = ls.get('viora_web', true), researchDepth = ls.get('viora_research_depth', 'quick') === 'deep' ? 'deep' : 'quick', busy = null, filter = '';
 if (!A[asst]) asst = 'auto';
 chats.forEach(c => { if (c.page && !c.page.files) c.page.files = [{ id: 'o', name: c.page.title || c.page.source || 'Page', text: c.page.text || '', source: c.page.source }]; });
 /* A reply that was still running when the page closed can never finish. Say so once, instead of showing an
@@ -751,6 +759,28 @@ const thinkSync = (idx, m, live) => { const el = document.getElementById('t' + i
 const greet = () => { const h = new Date().getHours(); return h < 5 ? 'Burning the midnight oil' : h < 12 ? 'Good morning' : h < 18 ? 'Good afternoon' : 'Good evening'; };
 function mdx(t, srcs) { const safe = Src.cleanSources(srcs || []); if (safe.length) t = t.split(/(```[\s\S]*?(?:```|$)|`[^`\n]*`)/).map((seg, i) => i % 2 ? seg : seg.replace(/\[(\d{1,2})\](?!\()/g, (x, n) => safe[n - 1] ? `[${n}](${safe[n - 1].url})` : x)).join(''); return renderMarkdown(t); }
 function paintBody(el, m) { el.innerHTML = m.content ? mdx(m.content, m.src) : ''; bindCodeCopy(el); Src.decorateCitations(el, m.src); Src.decorateLinks(el); }
+function researchReport(c, index) {
+  const m = c && c.messages[index]; if (!m) return '';
+  let question = '';
+  for (let j = index - 1; j >= 0; j--) if (c.messages[j].role === 'user') { question = c.messages[j].content || ''; break; }
+  const sources = Src.cleanSources(m.src || []);
+  const lines = ['# ' + (c.title || 'Viora research report'), '', '## Research question', question || 'Not recorded', '', '## Findings', m.content || 'No report text was returned.'];
+  if (sources.length) {
+    lines.push('', '## Sources');
+    sources.forEach((s, i) => {
+      const state = s.pageFetched === true ? 'Page retrieved' : s.pageFetched === false ? 'Search snippet only' : 'Retrieval status unavailable';
+      lines.push('', (i + 1) + '. **' + (s.title || Src.hostOf(s.url)) + '**' + (s.publishedAt ? ' · ' + s.publishedAt : ''), '   ' + s.url,
+        '   ' + [s.sourceType && s.sourceType !== 'other' ? s.sourceType + ' source type' : '', s.relevance ? s.relevance + ' topic match' : '', state].filter(Boolean).join(' · '));
+      if (s.snippet) lines.push('   > ' + String(s.snippet).replace(/\s+/g, ' ').trim());
+      if (s.pageExcerpt) lines.push('   > Retrieved page excerpt: ' + String(s.pageExcerpt).replace(/\s+/g, ' ').trim());
+    });
+  }
+  if (m.research) lines.push('', '## Research details', 'Mode: ' + (m.research.mode === 'deep' ? 'Deep Research' : 'Quick Search'),
+    'Search queries: ' + (Number.isFinite(m.research.queryCount) ? m.research.queryCount : 'not reported'),
+    'Pages retrieved: ' + (Number.isFinite(m.research.fetchedPages) ? m.research.fetchedPages : 0) + ' of ' + (Number.isFinite(m.research.totalSources) ? m.research.totalSources : sources.length),
+    '', '## Evidence limits', 'Source ranking uses topic match and broad source-type hints. These are not reliability guarantees. Claim support was not independently verified.');
+  return lines.join('\n');
+}
 function msgHtml(m, i, last, enter, live) {
   if (m.role === 'user') return `<div class="msg user${enter ? ' enter' : ''}">${(m.att || []).length ? `<div class="msg-att">${m.att.map(f => `<span class="msg-att-i" title="${esc(f.name)}">${f.src && Src.parseUrl(f.src) ? Src.iconHtml({ url: f.src }, 14) : ''}${esc(f.name)}</span>`).join('')}</div>` : ''}<div class="user-text">${esc(m.content)}</div></div>`;
   const safeSrcs = Src.cleanSources(m.src || []);
@@ -761,7 +791,7 @@ function msgHtml(m, i, last, enter, live) {
     : (citationAudit.missingResearchSources
       ? '<div class="switch-note" role="status">This research-style reply included numbered citations, but no valid source links were provided. The citations could not be checked.</div>'
       : '');
-  const researchNote = m.research ? `Fetched ${m.research.fetchedPages} of ${m.research.totalSources} source pages; claim support was not independently verified.` : '';
+  const researchNote = m.research ? `${m.research.mode === 'deep' ? 'Deep Research' : 'Quick Search'} · ${m.research.queryCount || 1} search quer${m.research.queryCount === 1 ? 'y' : 'ies'} · fetched ${m.research.fetchedPages} of ${m.research.totalSources} source pages · claim support not independently verified.` : '';
   const note = [m.mode ? 'Auto chose ' + A[m.mode].n : '', m.model ? 'Model ' + m.model : '', researchNote, m.note || ''].filter(Boolean).join(' · ');
   const timingParts = m.timing ? [['Search', m.timing.searchMs], ['Page fetch', m.timing.sourceFetchMs], ['Model headers', m.timing.modelHeaderMs], ['Browser first text', m.timing.firstTokenMs], ['Server first chunk', m.timing.firstStreamChunkMs], ['Server total', m.timing.totalServerMs], ['Browser total', m.timing.totalMs]]
     .filter(([, ms]) => Number.isFinite(ms)).map(([label, ms]) => `${label} ${(ms / 1000).toFixed(1)}s`) : [];
@@ -775,6 +805,9 @@ function render() {
   document.documentElement.dataset.model = MODEL[asst];
   if (asst === 'human' && lastAsst !== 'human') queueMicrotask(() => { try { hzVoiceState(); } catch {} }); lastAsst = asst;
   $('#pill-icon').innerHTML = icon(a.ic); $('#pill-name').textContent = a.n; $('#input').placeholder = a.ph;
+  $('#research-mode-wrap').hidden = asst !== 'search' || !web;
+  $('#research-mode').value = researchDepth;
+  $('#research-mode-hint').textContent = researchDepth === 'deep' ? 'Up to 3 focused searches · reads up to 6 pages' : 'One search pass · faster';
   $('#hint').textContent = a.web && web ? asst === 'search' ? 'Research mode' : 'Search when needed' : '';
   $('#attach-web .sheet-sub').textContent = web ? 'On: looks things up when a question needs it' : 'Off: answers from what Viora already knows';
   $('#attach-web').hidden = !a.web;
@@ -809,6 +842,16 @@ function render() {
   <p class="welcome-footnote">Viora can make mistakes. Check important details and cited sources.</p>
 </section>`;
   bindCodeCopy(th);
+  if (has) c.messages.forEach((m, i) => {
+    if (!m.research) return;
+    const cp = th.querySelector('[data-copy="' + i + '"]'), actions = cp && cp.parentElement;
+    if (cp) { cp.title = 'Copy report'; cp.setAttribute('aria-label', 'Copy report'); }
+    if (actions && !actions.querySelector('[data-export="' + i + '"]')) {
+      const button = document.createElement('button'); button.type = 'button'; button.className = 'msg-act';
+      button.dataset.export = String(i); button.title = 'Export research report'; button.setAttribute('aria-label', 'Export research report');
+      button.innerHTML = ic('download'); cp.after(button);
+    }
+  });
   /* One shared 1 s timer keeps the elapsed time moving, only while a reply is live and a panel is on screen. */
   if (busy && has) T.startTicker(() => { const m = chat()?.messages.at(-1); if (m && m.trace && busy) { const i = chat().messages.length - 1; thinkSync(i, m, true); } });
   else T.stopTicker();
@@ -852,6 +895,23 @@ function syncHumanizer() {
 }
 function jump() { const th = $('#thread'), c = chat(); $('#to-bottom').classList.toggle('show', !!(c && c.messages.length) && th.scrollHeight - th.scrollTop - th.clientHeight > 240); }
 function sendState(on) { $('#send').innerHTML = on ? ic('stop') : SEND; $('#send').setAttribute('aria-label', on ? 'Stop' : 'Send'); $('#send').disabled = false; }
+async function monitorResearch(id, signal, onUpdate) {
+  while (!signal.aborted) {
+    try {
+      const response = await fetch(API + '/api/progress?id=' + encodeURIComponent(id), {
+        headers: { Authorization: 'Bearer ' + S.token }, cache: 'no-store', signal
+      });
+      if (response.ok) {
+        const state = await response.json(); onUpdate(state);
+        if (state.step === 'complete' || state.step === 'cancelled') return;
+      } else if (response.status === 401) return;
+    } catch (error) { if (signal.aborted) return; }
+    await new Promise(resolve => setTimeout(resolve, 900));
+  }
+}
+const beginSearchStep = (trace, detail) => {
+  if (T.current(trace)?.k !== 'search') T.begin(trace, 'search', 'Searching the web', detail, { tool: 1 });
+};
 async function send(text) {
   text = (text || '').trim(); if (!text || busy) return;
   const selectedHumanizer = asst === 'human';
@@ -876,6 +936,7 @@ async function send(text) {
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
   const useWeb = shouldSearch(text, { assistant: eff, enabled: web && !!A[eff].web, hasPage: !!c.page, hasVisual: visualFiles(c).length > 0 }), pj = D.projects.find(x => x.id === c.pid);
+  const researchRequestId = useWeb ? 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12) : '';
   const remembered = D.autoMem && eff !== 'human' ? rememberPersonalDetails(text) : 0;
   if (remembered) toast('Saved ' + remembered + (remembered === 1 ? ' detail to Memory.' : ' details to Memory.') + ' You can review or remove them in Memory.');
   const context = humanizerOnly ? { instructions: withPersona(eff, 'off', ''), notes: '', memory: [] } : { instructions: withPersona(eff, tone, pj ? pj.instr : '', who()), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [] };
@@ -905,12 +966,38 @@ async function send(text) {
     for (const [n, a] of tries.entries()) {
       m.stage = (n ? 'Retrying with ' : 'Trying ') + A[a].n + '…'; T.begin(tr, 'connect', (n ? 'Retrying with ' : 'Connecting to ') + A[a].n); paint();
       const web2 = !!(A[a].web && useWeb);
+      if (web2 && T.current(tr)?.k !== 'search') { T.end(tr, 'connect'); beginSearchStep(tr, 'Starting a bounded research pass'); paint(); }
+      const progressCtl = new AbortController(), stopProgress = () => progressCtl.abort();
+      ctl.signal.addEventListener('abort', stopProgress, { once: true });
+      const progressTask = web2 ? monitorResearch(researchRequestId, progressCtl.signal, state => {
+        const step = state.step, detail = String(state.detail || '').slice(0, 140);
+        m.stage = detail || 'Researching…';
+        const active = T.current(tr);
+        if (step === 'pages') {
+          if (active && active.k === 'search') T.end(tr, 'search', 'Search results collected');
+          if (!T.current(tr) || T.current(tr).k !== 'sources') T.begin(tr, 'sources', 'Reading relevant pages', detail, { tool: 1 });
+          else T.detail(tr, 'sources', detail);
+        } else if (step === 'sources') {
+          if (active && active.k === 'search') { T.end(tr, 'search', 'Search results collected'); T.begin(tr, 'sources', 'Reviewing sources', detail, { tool: 1 }); }
+          else if (active && active.k === 'sources') T.detail(tr, 'sources', detail);
+        } else if (step === 'search' && active && active.k === 'search') T.detail(tr, 'search', detail);
+        paint();
+      }).catch(() => {}) : null;
       try {
-        r = await NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, context: a === eff || humanizerOnly ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '', who()) }, messages: humanizerOnly ? c.messages.slice(-2, -1).map(x => ({ role: x.role, content: x.content })) : NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: selectedHumanizer ? null : pp.page, images: selectedHumanizer ? [] : pp.images, video: selectedHumanizer ? null : pp.video, audio: selectedHumanizer ? null : pp.audio, intelligence: { review: verifyAnswer } }) },
+        const request = NP.request(API + '/api/chat', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
+          body: JSON.stringify({ assistant: a === 'human' ? 'humanize' : a, web: web2, researchMode: a === 'search' ? researchDepth : 'quick', researchRequestId: web2 ? researchRequestId : undefined, context: a === eff || humanizerOnly ? context : { ...context, instructions: withPersona(a, tone, pj ? pj.instr : '', who()) }, messages: humanizerOnly ? c.messages.slice(-2, -1).map(x => ({ role: x.role, content: x.content })) : NP.trimHistory(c.messages.slice(0, -1)).map(x => ({ role: x.role, content: x.content })), page: selectedHumanizer ? null : pp.page, images: selectedHumanizer ? [] : pp.images, video: selectedHumanizer ? null : pp.video, audio: selectedHumanizer ? null : pp.audio, intelligence: { review: verifyAnswer } }) },
           { signal: ctl.signal, onWait: t => { m.wait = t; T.detail(tr, 'connect', t); paint(); } });
-        if (m.timing.responseMs == null) m.timing.responseMs = Math.round(performance.now() - timingStart);
-      } catch (e) { if (!shouldFallback(0, e)) throw e; health.fail(a); last = e; r = null; if (n < tries.length - 1) continue; throw e; }
+        r = await request;
+      } catch (e) {
+        if (!shouldFallback(0, e)) throw e;
+        health.fail(a); last = e; r = null;
+        if (n < tries.length - 1) continue;
+        throw e;
+      } finally {
+        progressCtl.abort(); ctl.signal.removeEventListener('abort', stopProgress);
+        if (progressTask) await progressTask;
+      }
+      if (m.timing.responseMs == null) m.timing.responseMs = Math.round(performance.now() - timingStart);
       if (r.ok || !shouldFallback(r.status) || n === tries.length - 1) { if (r.ok) health.ok(a); else if (shouldFallback(r.status)) health.fail(a); if (a !== eff) { m.sw = (m.sw ? m.sw + ' ' : '') + A[eff].n + ' did not respond, so ' + A[a].n + ' answered.'; m.eff = a; } break; }
       health.fail(a);
     }
@@ -928,7 +1015,7 @@ async function send(text) {
       return used.length ? T.begin(tr, 'analyze', 'Analyzing information', used.join(' · ')) : T.begin(tr, 'prepare', 'Preparing your response', 'Waiting for ' + modelName);
     };
     T.end(tr, 'connect');
-    if (searchAsked) T.begin(tr, 'search', 'Searching the web', 'Waiting for Viora’s server to return sources', { tool: 1 }); else waitStep();
+    if (searchAsked) beginSearchStep(tr, 'Waiting for Viora’s server to return sources'); else waitStep();
     paint();
     const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0, paintTimer = 0, lastPaintAt = 0, streamEnded = false, wrote = 0;
     /* Stop must work after the reply has started too: netperf drops its abort link once the headers arrive, so the
@@ -952,6 +1039,14 @@ async function send(text) {
       try {
         const j = JSON.parse(d);
         if (j.viora_meta) { m.model = j.viora_meta.model; m.timing = { ...m.timing, modelHeaderMs: j.viora_meta.modelHeaderMs }; render(); }
+        else if (j.viora_progress) {
+          const step = j.viora_progress.step, detail = String(j.viora_progress.detail || '').slice(0, 140);
+          m.stage = detail || 'Researching…';
+          if (step === 'pages') { T.end(tr, 'search', detail); T.begin(tr, 'sources', 'Reading relevant pages', detail, { tool: 1 }); }
+          else if (step === 'sources') T.detail(tr, 'sources', detail);
+          else T.detail(tr, 'search', detail);
+          render();
+        }
         else if (j.error) { m.providerError = String(j.error.message || j.error).slice(0, 500); }
         else if (j.viora_retry) { m.model = j.viora_retry.model || m.model; m.content = ''; m.note = [m.note, 'A second model improved this answer after a quality review.'].filter(Boolean).join(' · '); m.stage = 'Refining the answer…'; T.begin(tr, 'refine', 'Refining the answer', 'A second model is improving the draft after a quality review'); }
         else if (j.viora_quality) { m.note = [m.note, 'Answer reviewed for completeness and relevance.'].filter(Boolean).join(' · '); T.note(tr, 'review', 'Checked for completeness and relevance', '', { keep: 1 }); }
@@ -1381,6 +1476,7 @@ const toggleAccountMenu = e => { e.stopPropagation(); const o = $('#umenu').hidd
 $('#av').onclick = toggleAccountMenu;
 $('#av').onkeydown = e => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); toggleAccountMenu(e); } };
 $('#attach-web').onclick = () => { web = !web; ls.set('viora_web', web); render(); };
+$('#research-mode').onchange = e => { researchDepth = e.target.value === 'deep' ? 'deep' : 'quick'; ls.set('viora_research_depth', researchDepth); render(); };
 const setAsst = k => { asst = k; ls.set('viora_assistant', k); hide(); render(); $('#input').focus(); };
 $('#model-list').onclick = e => { const b = e.target.closest('[data-model]'); if (b) setAsst(b.dataset.model); };
 $('#sh-model').onchange = e => setAsst(e.target.value);
@@ -1400,7 +1496,8 @@ $('#thread').onclick = e => {
     return;
   }
   const sg = e.target.closest('.suggestion'); if (sg) { send(sg.querySelector('.suggestion-text')?.textContent || sg.textContent); return; }
-  const cp = e.target.closest('[data-copy]'); if (cp) { navigator.clipboard?.writeText(chat().messages[+cp.dataset.copy].content); cp.innerHTML = ic('check'); setTimeout(() => { cp.innerHTML = ic('copy'); }, 1200); return; } const rm = e.target.closest('[data-remember]'); if (rm) { if (!D.memOn) { toast('Turn on Memory in the Memory panel before saving context.'); return; } const c = chat(), at = +rm.dataset.remember; let u = null; for (let j = at - 1; j >= 0; j--) if (c.messages[j].role === 'user') { u = c.messages[j]; break; } if (!u || !u.content.trim()) { toast('There is no question to save for this reply.'); return; } const t = ('Context: ' + u.content.trim()).slice(0, 300); if (D.memory.some(x => x.t.toLowerCase() === t.toLowerCase() && (x.pid || null) === (c.pid || null))) { toast('That context is already saved in Memory.'); return; } D.memory.unshift({ id: 'm' + Date.now(), t, pid: c.pid || null }); saveD(); toast(c.pid ? 'Saved to this project’s Memory.' : 'Saved to Memory for future chats.'); return; }
+  const ex = e.target.closest('[data-export]'); if (ex) { const c = chat(), md = researchReport(c, +ex.dataset.export); if (!md) return; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown;charset=utf-8' })); a.download = 'viora-research-report.md'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); return; }
+  const cp = e.target.closest('[data-copy]'); if (cp) { const c = chat(), i = +cp.dataset.copy, m = c.messages[i]; navigator.clipboard?.writeText(m.research ? researchReport(c, i) : m.content); cp.innerHTML = ic('check'); setTimeout(() => { cp.innerHTML = ic('copy'); }, 1200); return; } const rm = e.target.closest('[data-remember]'); if (rm) { if (!D.memOn) { toast('Turn on Memory in the Memory panel before saving context.'); return; } const c = chat(), at = +rm.dataset.remember; let u = null; for (let j = at - 1; j >= 0; j--) if (c.messages[j].role === 'user') { u = c.messages[j]; break; } if (!u || !u.content.trim()) { toast('There is no question to save for this reply.'); return; } const t = ('Context: ' + u.content.trim()).slice(0, 300); if (D.memory.some(x => x.t.toLowerCase() === t.toLowerCase() && (x.pid || null) === (c.pid || null))) { toast('That context is already saved in Memory.'); return; } D.memory.unshift({ id: 'm' + Date.now(), t, pid: c.pid || null }); saveD(); toast(c.pid ? 'Saved to this project’s Memory.' : 'Saved to Memory for future chats.'); return; }
   const ar = e.target.closest('[data-art]'); if (ar) { const mm = /```(\w*)\n?([\s\S]*?)(```|$)/.exec(chat().messages[+ar.dataset.art].content); if (mm) openArt(mm[2].replace(/\n$/, ''), mm[1] || 'text'); return; }
   if (e.target.closest('[data-regen]')) { const c = chat(); c.messages.pop(); const u = c.messages.pop(); send(u.content); }
 };

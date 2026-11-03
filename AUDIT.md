@@ -47,3 +47,18 @@ Server planner with verification → audio/PDF-page/video-audio support → serv
 - Chat history search now checks both conversation titles and message content, while preserving project scope.
 - `Ctrl+K` / `Cmd+K` focuses and selects the chat search field; existing `Ctrl+Shift+O` / `Cmd+Shift+O` new-chat shortcut remains available.
 - These are client-side changes. They do not improve backend model intelligence or search-provider quality by themselves.
+
+## 9. Pro Search 2.0 slice (2026-11-03)
+- Added per-device Quick Search / Deep Research selection in `app.html`; the backend honors the selected mode.
+- Added bounded query planning, parallel provider passes for Deep Research, URL deduplication, relevance ranking, and broad government/academic/documentation source-type hints in `Viora-auth/research.js`.
+- Deep mode: up to 3 queries, 10 distinct result URLs, and 6 guarded page fetches; Quick mode: 1 query, 6 results, and 4 page fetches.
+- Added authenticated owner-scoped progress polling at `GET /api/progress?id=...`, short-lived in-memory status, and cancellation of search/page/provider fetches when the chat connection closes.
+- Added expandable retrieved-page excerpts, plus research report copy and Markdown export with the research question, findings, sources, retrieval labels, search count, and evidence limitations.
+- Search provider integrations remain Bing RSS, Google News RSS, and a DuckDuckGo HTML fallback. This iteration does not add user-defined preferred-domain settings or open-ended agentic follow-up searches.
+- Claim-level citation support is still not independently verified. Ranking hints are heuristics and do not establish source reliability.
+
+### Verification
+- Website unit suite: 111/111 passed.
+- Backend research helper suite: 7/7 passed; `server.js` and `research.js` syntax checks passed.
+- Routing eval: 31/33 (0.939); the two misses are existing form-interaction prompts routed to Flash without an attached page. This is a routing eval, not a research-quality or citation-accuracy eval.
+- Not run: live provider searches, citation accuracy against model outputs, stop behavior against deployed services, or mobile/desktop browser layout. Those require the deployed API/provider credentials and browser QA.

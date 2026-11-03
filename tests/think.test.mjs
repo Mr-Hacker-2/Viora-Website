@@ -120,8 +120,9 @@ test('collapsed panels are not focusable, and finished replies say how long they
 test('every label in app.html corresponds to a real event, and nothing is claimed unconditionally', async () => {
   const { readFile } = await import('node:fs/promises');
   const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
-  /* Searching / reading sources are only ever started behind the real search request and the server's sources event. */
-  assert.match(html, /if \(searchAsked\) T\.begin\(tr, 'search', 'Searching the web'/);
+  /* The search activity step has one shared start helper and is used only for a real web request. */
+  assert.match(html, /const beginSearchStep = \(trace, detail\) =>[\s\S]{0,180}T\.begin\(trace, 'search', 'Searching the web'/);
+  assert.match(html, /if \(searchAsked\) beginSearchStep\(tr,/);
   assert.match(html, /T\.note\(tr, 'sources', 'Reading sources'/);
   assert.equal((html.match(/'Searching the web'/g) || []).length, 1, 'the search step has exactly one start point');
   assert.equal((html.match(/'Reading sources'/g) || []).length, 1);

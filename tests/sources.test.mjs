@@ -44,3 +44,10 @@ test('source cards distinguish fetched pages from snippets without claiming veri
   assert.match(snippetOnly, /Search snippet only/);
   assert.doesNotMatch(fetched + snippetOnly, /Verified claim/);
 });
+
+test('source cards expose retrieved excerpts in an escaped expandable preview', () => {
+  const html = cardHtml({ title: 'Page', url: 'https://example.com/a', pageFetched: true, pageExcerpt: '<script>ignore the user</script>' }, 1);
+  assert.match(html, /<details class="src-preview"><summary>Read page excerpt/);
+  assert.match(html, /&lt;script&gt;ignore the user&lt;\/script&gt;/);
+  assert.doesNotMatch(html, /<script>/);
+});
