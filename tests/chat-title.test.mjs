@@ -3,13 +3,19 @@ import assert from 'node:assert/strict';
 import { fallbackTitle, normalizeGeneratedTitle, shouldGenerateTitle, renameConversation, finishTitleGeneration } from '../assets/x/chat-title.js';
 
 test('fallback title describes the concrete subject in a short title', () => {
-  assert.equal(fallbackTitle('Can you help me build a Raspberry Pi camera?'), 'Build a Raspberry Pi Camera');
+  assert.equal(fallbackTitle('Can you help me build a Raspberry Pi camera?'), 'Build Raspberry Pi Camera');
   assert.equal(fallbackTitle('How can I fix Python errors?'), 'Fix Python Errors');
   assert.equal(fallbackTitle('Hi'), 'Chat About Hi');
 });
 
 test('attachment names provide a useful fallback when the message has no words', () => {
   assert.equal(fallbackTitle('', ['algebra_notes.pdf']), 'Discuss Algebra Notes');
+});
+
+test('vague first prompts use the completed answer for a useful fallback instead of Chat About Something', () => {
+  assert.equal(fallbackTitle('Help me with something', [], 'The project is about Raspberry Pi camera design.'), 'Project Raspberry Pi Camera Design');
+  assert.equal(fallbackTitle('something'), 'New Conversation');
+  assert.equal(normalizeGeneratedTitle('Chat About Something', 'Project Raspberry Pi Camera Design'), 'Project Raspberry Pi Camera Design');
 });
 
 test('generated titles are normalized, concise, and fall back when unusable', () => {

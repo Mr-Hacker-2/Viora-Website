@@ -37,14 +37,17 @@ test('research report copy and Markdown export include source status and evidenc
   assert.match(html, /text\/markdown;charset=utf-8/);
 });
 
-test('conversation titles use a non-blocking fast AI path and keep a local fallback', async () => {
+test('conversation titles use the completed first exchange through a non-blocking fast AI path', async () => {
   const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
   assert.match(html, /fallbackTitle\(text/);
   assert.match(html, /if \(shouldGenerateTitle\(c\)\) void generateConversationTitle\(c\);/);
   assert.doesNotMatch(html, /await generateConversationTitle\(c\)/);
+  const send = html.slice(html.indexOf('async function send(text)'), html.indexOf('async function generateConversationTitle(c)'));
+  assert.ok(send.indexOf('T.finish(tr, outcome)') < send.indexOf('void generateConversationTitle(c)'));
   assert.match(html, /max_tokens: 48, temperature: 0\.2/);
   assert.match(html, /finishTitleGeneration\(c, raw, fallback\)/);
   assert.match(html, /titleGenerationStarted = true/);
+  assert.match(html, /const titleMessages = \[\{ role: 'user', content: starter \}, \...\(replyText \?/);
 });
 
 test('chat history supports manual names, persistence, switching, and title search', async () => {

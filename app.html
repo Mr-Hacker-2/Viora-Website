@@ -930,7 +930,6 @@ async function send(text) {
   c.messages.push({ role: 'user', content: text, att: (c.page ? c.page.files : []).map(f => ({ name: f.name, kind: f.kind, src: f.kind === 'web' ? f.source : '' })) }, { role: 'assistant', content: '' });
   if (rendered.id !== c.id) rendered = { id: c.id }; /* a brand-new chat: its first messages are new, not "opened" */
   $('#input').value = ''; try { localStorage.removeItem('viora_draft_' + S.email); } catch {} grow(); save(); render();
-  if (shouldGenerateTitle(c)) void generateConversationTitle(c); // fire-and-forget so it never delays the first answer
   const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); let timingStart = 0; busy = ctl; m.stage = 'Starting task…'; sendState(true); syncHumanizer();
   /* Activity record for the thinking panel: a step is added only where that thing really happens below. */
   const tr = m.trace = T.createTrace(); let outcome = 'done'; T.begin(tr, 'understand', 'Understanding your question');
@@ -1107,13 +1106,17 @@ async function send(text) {
   if (timingStart && m.timing) m.timing.totalMs = Math.round(performance.now() - timingStart);
   T.finish(tr, outcome); /* always runs: whatever was still active is closed, so no indicator can be left running */
   m.searching = false; m.wait = ''; m.stage = ''; busy = null; sendState(false); save(); render();
+  if (shouldGenerateTitle(c)) void generateConversationTitle(c); // title uses the completed first exchange and never blocks it
 }
 async function generateConversationTitle(c) {
   const first = c.messages.find(x => x.role === 'user');
   if (!shouldGenerateTitle(c) || !first || !first.content) return;
   const attachmentNames = (first.att || []).map(x => x.name).filter(Boolean).slice(0, 4);
-  const fallback = fallbackTitle(first.content, attachmentNames);
+  const firstIndex = c.messages.indexOf(first), firstReply = c.messages[firstIndex + 1];
+  const replyText = firstReply?.role === 'assistant' && firstReply.trace?.out === 'done' && !firstReply.err ? String(firstReply.content || '').slice(0, 2400) : '';
+  const fallback = fallbackTitle(first.content, attachmentNames, replyText);
   const starter = first.content.slice(0, 1800) + (attachmentNames.length ? '\nAttached: ' + attachmentNames.join(', ') : '');
+  const titleMessages = [{ role: 'user', content: starter }, ...(replyText ? [{ role: 'assistant', content: replyText }] : [])];
   c.titleGenerationStarted = true; c.titlePending = true; save();
   let raw = '';
   try {
@@ -1122,8 +1125,8 @@ async function generateConversationTitle(c) {
       headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
       body: JSON.stringify({
         assistant: 'flash', web: false, max_tokens: 48, temperature: 0.2,
-        context: { instructions: 'Create a specific, natural title for this conversation from the user’s first message and any attachment names. Use 3–7 words, title case, and concrete topic words. Avoid generic labels such as “New Chat”, “General Question”, or “Greetings”. Return only the title, without quotes or explanation.' },
-        messages: [{ role: 'user', content: starter }]
+        context: { instructions: 'Create a specific, natural title for this conversation from the first user message and Viora’s first answer. Infer the concrete topic from the full exchange. Use 3–7 words, title case, and concrete topic words. Avoid generic labels such as “New Chat”, “Chat About Something”, “General Question”, or “Greetings”. Return only the title, without quotes or explanation.' },
+        messages: titleMessages
       }),
       signal: AbortSignal.timeout(20000)
     });
