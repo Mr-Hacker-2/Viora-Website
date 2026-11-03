@@ -1,12 +1,12 @@
 import test from 'node:test'; import assert from 'node:assert/strict';
 import { DEFAULT_LEVEL, personaFor, withPersona, normLevel } from '../assets/x/persona.js';
-test('default level is warm and asks for emojis', () => { assert.equal(DEFAULT_LEVEL, 'warm'); assert.match(personaFor('flash'), /emojis/i); assert.match(withPersona('flash'), /Answer the user's actual request/); });
+test('default level is warm and keeps emotional responses natural', () => { assert.equal(DEFAULT_LEVEL, 'warm'); assert.match(personaFor('flash'), /emojis/i); assert.match(personaFor('flash'), /do not infer a personal emotional state from a neutral question/i); assert.match(withPersona('flash'), /Answer the user's actual request/); });
 test('off adds nothing', () => assert.equal(personaFor('flash', 'off'), ''));
 test('rewriting and unknown assistants stay plain', () => { for (const a of ['human', 'humanize', 'legacy']) assert.equal(personaFor(a, 'vivid'), ''); });
 test('code safety rule is always present', () => { for (const l of ['warm', 'vivid']) assert.match(withPersona('math', l), /code in fenced blocks/); });
 test('vivid differs from warm', () => assert.notEqual(personaFor('flash', 'vivid'), personaFor('flash', 'warm')));
 test('emoji levels keep emojis out of code and away from distress', () => { for (const l of ['warm', 'vivid']) { assert.match(personaFor('flash', l), /code blocks/); assert.match(personaFor('flash', l), /distress/); } });
-test('no prompt text still says emojis are optional or forbidden', () => { assert.doesNotMatch(withPersona('flash', 'warm'), /Emojis are optional|do not force[^.]*emojis/i); });
+test('emoji use stays optional and has no quota', () => { assert.match(withPersona('flash', 'warm'), /Emojis are optional/); assert.match(withPersona('flash', 'vivid'), /no fixed number/); assert.doesNotMatch(withPersona('flash', 'vivid'), /6 to 12 per answer/i); });
 test('unknown or corrupt saved value falls back to the default', () => { assert.equal(normLevel('nonsense'), 'warm'); assert.equal(normLevel(null), 'warm'); assert.equal(normLevel(undefined), 'warm'); });
 test('project instructions are kept after the persona', () => { const t = withPersona('flash', 'warm', 'Answer in French.'); assert.ok(t.endsWith('Answer in French.')); assert.ok(withPersona('human', 'warm', 'X').endsWith('X')); });
 test('every chat assistant knows Abdullah Lababidi created Viora', () => { for (const a of ['flash', 'search', 'math']) assert.match(withPersona(a, 'warm'), /created by Abdullah Lababidi/); });
