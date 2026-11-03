@@ -31,8 +31,12 @@ html,body{height:100%;margin:0}
 .sh-signout:hover{background:var(--raised);color:var(--paper)}
 .sh-signout:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
 #umenu{top:84px;left:14px;right:14px;max-height:none}
-.hx{position:absolute;right:6px;top:50%;transform:translateY(-50%);opacity:0;color:var(--faint);padding:0 6px;font-size:16px}
-.sh-hist button{position:relative;padding-right:28px}.sh-hist button:hover .hx{opacity:1}
+.sh-item{display:flex;align-items:center;gap:2px;min-width:0}
+.sh-item .sh-chat{flex:1;min-width:0;text-align:left;padding-right:6px!important}
+.sh-item .sh-tool{display:grid;place-items:center;flex:0 0 27px;width:27px;height:28px;padding:4px!important;border-radius:7px!important;color:var(--faint);opacity:.6;font-size:15px;line-height:1}
+.sh-item .sh-del{font-size:18px}
+.sh-item:hover .sh-tool,.sh-item:focus-within .sh-tool{opacity:1}
+@media(max-width:979px){.sh-item .sh-tool{opacity:.8}}
 #projs button.on{color:var(--accent)}:root[data-theme=light] #projs button.on{color:var(--accent-ink)}
 .sh-sw[aria-checked=true]{background:var(--accent)}
 @media(max-width:979px){body.sb #sh-left{display:block!important;position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:40;background:var(--ink-2);border-right:1px solid var(--line);padding:18px;overflow:auto}}
@@ -689,6 +693,7 @@ import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories, 
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes, validateVisualPayload } from './assets/x/media.js';
 import * as NP from './assets/x/netperf.js';
 import * as T from './assets/x/think.js';
+import { fallbackTitle, shouldGenerateTitle, renameConversation, finishTitleGeneration } from './assets/x/chat-title.js';
 (() => {
 'use strict';
 const API = 'https://viora-auth-website.onrender.com';
@@ -872,7 +877,7 @@ function render() {
     const messageMatch = (Array.isArray(x.messages) ? x.messages : []).some(m => String(m && m.content || '').toLowerCase().includes(filter));
     return titleMatch || messageMatch;
   });
-  $('#sh-hist').innerHTML = list.map(x => `<button type="button" data-id="${x.id}" class="${x.id === cur ? 'on' : ''}" title="${esc(x.title)}">${esc(x.title)}<span class="hx" data-del="${x.id}" aria-label="Delete chat">×</span></button>`).join('') || `<span class="sh-empty">${filter ? 'No matches.' : 'Nothing saved yet.'}</span>`;
+  $('#sh-hist').innerHTML = list.map(x => `<div class="sh-item"><button type="button" class="sh-chat${x.id === cur ? ' on' : ''}" data-id="${esc(x.id)}" title="${esc(x.title || 'New Conversation')}">${esc(x.title || 'New Conversation')}</button><button type="button" class="sh-tool" data-rename="${esc(x.id)}" title="Rename conversation" aria-label="Rename ${esc(x.title || 'conversation')}">${ic('edit')}</button><button type="button" class="sh-tool sh-del" data-del="${esc(x.id)}" title="Delete conversation" aria-label="Delete ${esc(x.title || 'conversation')}">×</button></div>`).join('') || `<span class="sh-empty">${filter ? 'No matches.' : 'Nothing saved yet.'}</span>`;
   $('#projs').innerHTML = D.projects.map(p => `<button type="button" data-p="${p.id}" class="${p.id === curP ? 'on' : ''}">${ic('folder')} ${esc(p.name)}</button>`).join('') + (curP ? `<button type="button" class="add" data-pe="${curP}">${ic('edit')} Edit this project</button>` : '') + `<button type="button" class="add" id="np">${ic('plus')} Create project</button>`;
   $('#send').disabled = !busy && !$('#input').value.trim();
   /* The welcome screen always starts at the top (otherwise its logo and headline load scrolled out of view);
@@ -920,11 +925,12 @@ async function send(text) {
   const selectedHumanizer = asst === 'human';
   if (!selectedHumanizer && pending.some(p => !p.err)) { toast('Wait for your attachments to finish processing, or cancel them.'); return; }
   let c = chat();
-  if (!c) { c = { id: String(Date.now()), title: text.slice(0, 44), autoTitle: true, assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
+  if (!c) { c = { id: 'c' + Date.now().toString(36) + Math.random().toString(36).slice(2, 8), title: fallbackTitle(text), autoTitle: true, titleManual: false, titleGenerated: false, titleGenerationStarted: false, assistant: asst, messages: [], page: null, pid: curP }; chats.unshift(c); cur = c.id; }
   c.assistant = asst; c.updated = Date.now(); chats = [c, ...chats.filter(x => x !== c)];
   c.messages.push({ role: 'user', content: text, att: (c.page ? c.page.files : []).map(f => ({ name: f.name, kind: f.kind, src: f.kind === 'web' ? f.source : '' })) }, { role: 'assistant', content: '' });
   if (rendered.id !== c.id) rendered = { id: c.id }; /* a brand-new chat: its first messages are new, not "opened" */
   $('#input').value = ''; try { localStorage.removeItem('viora_draft_' + S.email); } catch {} grow(); save(); render();
+  if (shouldGenerateTitle(c)) void generateConversationTitle(c); // fire-and-forget so it never delays the first answer
   const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); let timingStart = 0; busy = ctl; m.stage = 'Starting task…'; sendState(true); syncHumanizer();
   /* Activity record for the thinking panel: a step is added only where that thing really happens below. */
   const tr = m.trace = T.createTrace(); let outcome = 'done'; T.begin(tr, 'understand', 'Understanding your question');
@@ -1101,55 +1107,54 @@ async function send(text) {
   if (timingStart && m.timing) m.timing.totalMs = Math.round(performance.now() - timingStart);
   T.finish(tr, outcome); /* always runs: whatever was still active is closed, so no indicator can be left running */
   m.searching = false; m.wait = ''; m.stage = ''; busy = null; sendState(false); save(); render();
-  if (c.autoTitle && !c.titleGenerated && c.messages.filter(x => x.role === 'user').length === 1) {
-    c.titlePending = true; save();
-    generateConversationTitle(c).catch(() => { c.titlePending = false; save(); });
-  }
 }
 async function generateConversationTitle(c) {
   const first = c.messages.find(x => x.role === 'user');
-  if (!first || !first.content) { c.titlePending = false; return; }
+  if (!shouldGenerateTitle(c) || !first || !first.content) return;
   const attachmentNames = (first.att || []).map(x => x.name).filter(Boolean).slice(0, 4);
+  const fallback = fallbackTitle(first.content, attachmentNames);
   const starter = first.content.slice(0, 1800) + (attachmentNames.length ? '\nAttached: ' + attachmentNames.join(', ') : '');
-  const response = await fetch(API + '/api/chat', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
-    body: JSON.stringify({
-      assistant: 'flash',
-      web: false,
-      context: { instructions: 'Give this conversation a natural, concise title based on the user’s first message, like “Greetings” or “Trip to Ohio.” Use 1 to 6 words in title case. Return only the title, with no quotes or explanation.' },
-      messages: [{ role: 'user', content: starter }]
-    }),
-    signal: AbortSignal.timeout(45000)
-  });
-  if (!response.ok || !response.body) throw new Error('Title request failed');
-  const reader = response.body.getReader(), decoder = new TextDecoder();
-  let buffer = '', raw = '', finished = false;
-  const readTitleLine = line => {
-    if (!line.startsWith('data:')) return;
-    const data = line.slice(5).trim();
-    if (data === '[DONE]') { finished = true; return; }
-    try {
-      const item = JSON.parse(data), text = item.choices?.[0]?.delta?.content;
-      if (text) raw += text;
-    } catch {}
-  };
-  while (!finished) {
-    const { done, value } = await reader.read();
-    if (done) break;
-    const split = NP.splitStreamLines(buffer + decoder.decode(value, { stream: true }));
-    buffer = split.rest;
-    split.lines.forEach(readTitleLine);
+  c.titleGenerationStarted = true; c.titlePending = true; save();
+  let raw = '';
+  try {
+    const response = await fetch(API + '/api/chat', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + S.token },
+      body: JSON.stringify({
+        assistant: 'flash', web: false, max_tokens: 48, temperature: 0.2,
+        context: { instructions: 'Create a specific, natural title for this conversation from the user’s first message and any attachment names. Use 3–7 words, title case, and concrete topic words. Avoid generic labels such as “New Chat”, “General Question”, or “Greetings”. Return only the title, without quotes or explanation.' },
+        messages: [{ role: 'user', content: starter }]
+      }),
+      signal: AbortSignal.timeout(20000)
+    });
+    if (!response.ok || !response.body) throw new Error('Title request failed');
+    const reader = response.body.getReader(), decoder = new TextDecoder();
+    let buffer = '', finished = false;
+    const readTitleLine = line => {
+      if (!line.startsWith('data:')) return;
+      const data = line.slice(5).trim();
+      if (data === '[DONE]') { finished = true; return; }
+      try {
+        const item = JSON.parse(data), text = item.choices?.[0]?.delta?.content;
+        if (text) raw += text;
+        if (item.viora_incomplete) throw new Error('Title stream was incomplete');
+      } catch (error) { if (error.message === 'Title stream was incomplete') throw error; }
+    };
+    while (!finished) {
+      const { done, value } = await reader.read();
+      if (done) break;
+      const split = NP.splitStreamLines(buffer + decoder.decode(value, { stream: true }));
+      buffer = split.rest; split.lines.forEach(readTitleLine);
+    }
+    NP.splitStreamLines(buffer + decoder.decode(), true).lines.forEach(readTitleLine);
+    if (!finished) throw new Error('Title stream ended before completion');
+  } catch {
+    /* The local, topic-based title is already visible and remains the fallback. */
+  } finally {
+    if (chats.includes(c)) finishTitleGeneration(c, raw, fallback);
+    else { c.titlePending = false; c.titleGenerated = true; }
+    save(); render();
   }
-  NP.splitStreamLines(buffer + decoder.decode(), true).lines.forEach(readTitleLine);
-  const title = raw.split(/\r?\n/)[0].replace(/^[\s"'“”‘’`#*]+|[\s"'“”‘’`#*]+$/g, '').replace(/[.!?:]+$/, '').trim().slice(0, 58);
-  if (!title) throw new Error('Title response was empty');
-  c.title = title;
-  c.titleGenerated = true;
-  c.titlePending = false;
-  save();
-  const row = [...$('#sh-hist').querySelectorAll('[data-id]')].find(x => x.dataset.id === c.id);
-  if (row?.firstChild) row.firstChild.textContent = title;
 }
 function grow() { const t = $('#input'); t.style.height = 'auto'; t.style.height = Math.min(t.scrollHeight, 200) + 'px'; $('#send').disabled = !busy && !t.value.trim(); }
 const newChat = () => { cur = null; hide(); render(); $('#input').focus(); closeSb(); };
@@ -1491,8 +1496,14 @@ $('.sh-tabs').onclick = e => { const b = e.target.closest('button[data-tab]'); i
 $('#sh-invite').onclick = () => { window.location.href = 'mobile.html'; };
 $('#page-chip-remove').onclick = () => { curP = null; cur = null; render(); };
 $('#sh-hist').onclick = e => {
+  const rn = e.target.closest('[data-rename]'); if (rn) {
+    e.stopPropagation(); const c = chats.find(x => x.id === rn.dataset.rename); if (!c) return;
+    const value = prompt('Rename conversation', c.title || ''); if (value == null) return;
+    if (!renameConversation(c, value)) { toast('A conversation title cannot be empty.'); return; }
+    save(); render(); return;
+  }
   const d = e.target.closest('[data-del]'); if (d) { e.stopPropagation(); chats = chats.filter(c => c.id !== d.dataset.del); if (cur === d.dataset.del) cur = null; save(); render(); return; }
-  const it = e.target.closest('[data-id]'); if (it) { cur = it.dataset.id; const a = chat().assistant; if (a && A[a]) asst = a; render(); closeSb(); }
+  const it = e.target.closest('.sh-chat[data-id]'); if (it) { cur = it.dataset.id; const a = chat().assistant; if (a && A[a]) asst = a; render(); closeSb(); }
 };
 $('#thread').onclick = e => {
   const tg = e.target.closest('[data-vt-toggle]');
