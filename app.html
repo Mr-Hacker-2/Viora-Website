@@ -2,7 +2,7 @@
 <html lang="en" data-theme="light" data-model="flash">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover,interactive-widget=resizes-content">
 <title>Viora AI — Your AI workspace</title>
 <meta name="theme-color" content="#f6f8fe">
 <meta name="description" content="Think, write, research, understand files and solve problems in one AI workspace with Viora.">
@@ -160,7 +160,6 @@ body.sb:after{content:"";position:fixed;inset:0;background:#11142666;z-index:100
 :root[data-theme="dark"] .send{background:var(--accent)!important;color:var(--on-accent)!important}
 #model-sheet{position:absolute;z-index:120;top:56px;left:14px;right:auto;width:min(360px,calc(100vw - 28px));max-height:70dvh;overflow:auto}
 #attach-sheet{z-index:120}
-#sh-invite{display:none!important}
 #status{max-width:850px;margin:0 auto;width:100%;padding:4px 18px}
 #art{z-index:150}
 dialog{max-height:calc(100dvh - 32px);overflow:auto}
@@ -512,6 +511,8 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 @media(prefers-reduced-motion:reduce){:root[data-model] .dots i,:root[data-model] .msg.assistant.enter,:root[data-model] .msg.assistant.streaming::before,:root[data-model] .msg.assistant.streaming > .body,:root[data-model] .msg.streaming .body>p:last-child::after{animation:none!important}:root[data-model] .msg.assistant.streaming > .body{ text-shadow:none!important }}
 </style>
 <link rel="stylesheet" href="assets/x/viora-think.css?v=20261102-1">
+<link rel="stylesheet" href="assets/x/mobile-first.css?v=20261103-1">
+<script src="assets/x/mobile-viewport.js?v=20261103-1" defer></script>
 </head>
 <body>
 <div id="shell">
@@ -543,7 +544,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   <header class="bar">
     <div class="sh-title"><h1>Chat with Viora AI</h1><p>Research, create, debug, and explore with a capable AI workspace</p></div>
     <div class="bar-id">
-      <button id="open-full" class="icon-btn" type="button" title="Chats and menu" aria-label="Open navigation" data-ic="panel"></button>
+      <button id="open-full" class="icon-btn" type="button" title="Chats and menu" aria-label="Open navigation" aria-controls="sh-left" aria-expanded="false" data-ic="panel"></button>
       <h1 class="wordmark">Viora</h1>
       <button id="model-btn" class="model-pill" type="button" aria-expanded="false" aria-controls="model-sheet"><span class="pill-icon" id="pill-icon"></span><span class="pill-name" id="pill-name"></span><svg class="pill-caret" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg></button>
     </div>
@@ -755,7 +756,7 @@ const MODEL = { auto: 'flash', flash: 'flash', search: 'search', math: 'math', h
 let st = 0; const setStatus = (m, ms = 3500) => { const t = $('#status'); t.textContent = m || ''; t.hidden = !m; clearTimeout(st); if (m) st = setTimeout(() => { t.hidden = true; }, ms); };
 const toast = setStatus;
 const wide = () => matchMedia('(min-width:980px)').matches;
-const closeSb = () => document.body.classList.remove('sb');
+const closeSb = () => { document.body.classList.remove('sb'); $('#open-full')?.setAttribute('aria-expanded', 'false'); };
 const hide = () => { $('#model-sheet').hidden = true; $('#attach-sheet').hidden = true; $('#umenu').hidden = true; $('#model-btn').setAttribute('aria-expanded', 'false'); $('#attach').setAttribute('aria-expanded', 'false'); };
 const SEND = $('#send').innerHTML;
 const health = new Health();
@@ -1497,15 +1498,26 @@ $('#hz-replace').onclick = () => { if (!$('#hz-output').value) return; $('#hz-in
 $('#input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); busy || send(e.target.value); } });
 $('#input').addEventListener('input', grow);
 addEventListener('keydown', e => {
-  if (e.key === 'Escape') { if (!document.querySelector('dialog[open]')) busy?.abort(); hide(); }
+  if (e.key === 'Escape') {
+    if (!document.querySelector('dialog[open]')) {
+      if (document.body.classList.contains('sb')) { closeSb(); $('#open-full').focus(); }
+      else busy?.abort();
+    }
+    hide();
+  }
   if ((e.ctrlKey || e.metaKey) && e.key.toLowerCase() === 'k') {
     e.preventDefault(); $('#sh-search').focus(); $('#sh-search').select();
   }
   if ((e.ctrlKey || e.metaKey) && e.shiftKey && e.key.toLowerCase() === 'o') { e.preventDefault(); newChat(); }
 });
 $('#new-thread').onclick = $('#nav-chat').onclick = newChat;
-$('#open-full').onclick = () => wide() ? $('#shell').classList.remove('no-left') : document.body.classList.toggle('sb');
-$('#sh-collapse').onclick = () => wide() ? $('#shell').classList.add('no-left') : closeSb();
+$('#open-full').onclick = () => {
+  if (wide()) { $('#shell').classList.remove('no-left'); $('#open-full').setAttribute('aria-expanded', 'true'); return; }
+  const open = !document.body.classList.contains('sb');
+  document.body.classList.toggle('sb', open);
+  $('#open-full').setAttribute('aria-expanded', String(open));
+};
+$('#sh-collapse').onclick = () => { if (wide()) { $('#shell').classList.add('no-left'); $('#open-full').setAttribute('aria-expanded', 'false'); } else closeSb(); };
 $('#sh-search').oninput = e => { filter = e.target.value.trim().toLowerCase(); render(); };
 $('#model-btn').onclick = e => { e.stopPropagation(); const o = $('#model-sheet').hidden; hide(); $('#model-sheet').hidden = !o; $('#model-btn').setAttribute('aria-expanded', String(o)); };
 $('#attach').onclick = e => { e.stopPropagation(); const o = $('#attach-sheet').hidden; hide(); $('#attach-sheet').hidden = !o; $('#attach').setAttribute('aria-expanded', String(o)); };

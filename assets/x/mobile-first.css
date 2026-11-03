@@ -1,0 +1,35 @@
+/* Mobile interaction layer for the chat workspace. Keep this last in app.html. */
+:root { --viora-app-height: 100dvh; }
+@media (max-width: 979px) {
+  #shell, #sh-center { height: var(--viora-app-height) !important; min-height: 0 !important; }
+  #sh-left { height: var(--viora-app-height) !important; max-height: var(--viora-app-height); overscroll-behavior: contain; }
+  #sh-center { grid-template-rows: auto minmax(0, 1fr) auto !important; }
+  #sh-center > .thread { overscroll-behavior-y: contain; scroll-padding-block: 16px 24px; }
+  #composer { padding-bottom: max(10px, env(safe-area-inset-bottom)) !important; }
+  #input { max-height: min(30dvh, 220px) !important; }
+  #open-full, #model-btn, #attach, #send, #sh-collapse,
+  #sh-gear, #av, .sh-item .sh-tool { min-width: 44px; min-height: 44px; }
+  .sheet-action { min-height: 44px; }
+  #open-full, #sh-collapse, #sh-gear, #attach { display: inline-grid; place-items: center; }
+  #model-btn { padding-inline: 10px; }
+  #send { width: 44px !important; height: 44px !important; }
+  #attach-sheet, #model-sheet, #umenu { max-height: min(68dvh, 520px); overflow-y: auto; overscroll-behavior: contain; }
+  dialog { inset: auto; width: min(520px, calc(100vw - 24px)); max-height: calc(var(--viora-app-height) - env(safe-area-inset-top) - env(safe-area-inset-bottom) - 20px); margin: auto; padding: 18px; overflow: auto; overscroll-behavior: contain; }
+  .thread :is(pre, .table-wrap, figure.code) { -webkit-overflow-scrolling: touch; }
+  .thread :is(pre, .table-wrap) { overscroll-behavior-x: contain; }
+}
+@media (max-width: 380px) {
+  #sh-center > .bar { padding-inline: 8px !important; }
+  #sh-center > .bar .wordmark { font-size: 17px !important; }
+  #sh-center > .bar .model-pill { max-width: 40vw !important; }
+  #composer { padding-inline: 7px !important; }
+  #composer .composer-inner { padding-inline: 9px !important; }
+  #composer .composer-left { gap: 4px; }
+}
+@media (max-width: 700px) {
+  #sh-center::before, #sh-center::after { animation: none !important; opacity: .16; filter: blur(48px); }
+  #thread .welcome-v2 :is(.welcome-logo, .welcome-line, .welcome-live-dot) { animation: none !important; }
+}
+@media (prefers-reduced-motion: reduce) {
+  #sh-center::before, #sh-center::after { animation: none !important; }
+}

@@ -1,10 +1,10 @@
-const CACHE = 'viora-shell-v8';
-const SHELL = ['/','/index.html','/app.html','/mobile.html','/manifest.json','/assets/x/icon32.png','/assets/mark.png','/assets/pwa-icon.svg','/assets/x/studio-polish.css','/assets/x/app-polish.css','/assets/x/viora-theme.css','/assets/x/chat-surface.css','/assets/x/pwa.js'];
+const CACHE = 'viora-shell-v9';
+const SHELL = ['/','/index.html','/app.html','/mobile.html','/manifest.json','/assets/x/icon32.png','/assets/mark.png','/assets/pwa-icon.svg','/assets/x/studio-polish.css','/assets/x/app-polish.css','/assets/x/viora-theme.css','/assets/x/chat-surface.css','/assets/x/pwa.js','/assets/x/mobile-first.css','/assets/x/mobile-viewport.js'];
 self.addEventListener('install', event => {
   event.waitUntil(caches.open(CACHE).then(cache => cache.addAll(SHELL)).then(() => self.skipWaiting()));
 });
 self.addEventListener('activate', event => {
-  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
+  event.waitUntil(caches.keys().then(keys => Promise.all(keys.filter(key => key.startsWith('viora-shell-') && key !== CACHE).map(key => caches.delete(key)))).then(() => self.clients.claim()));
 });
 self.addEventListener('fetch', event => {
   const req = event.request;
