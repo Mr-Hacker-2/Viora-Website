@@ -129,6 +129,29 @@ function renderDashboard() {
   const recent = [...tasks].sort((a,b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).slice(0,7);
   $('#recent-list').innerHTML = recent.length ? recent.map(renderTaskMini).join('') : '<div class="empty-state">Your recently updated tasks will appear here.</div>';
 }
+function markdownHtml(value) {
+  const lines = String(value || '').split('\n'), out = []; let list = false;
+  for (const raw of lines) {
+    const line = esc(raw);
+    if (/^\s*[-*]\s+/.test(raw)) {
+      if (!list) { out.push('<ul>'); list = true; }
+      out.push('<li>' + line.replace(/^\s*[-*]\s+/, '') + '</li>'); continue;
+    }
+    if (list) { out.push('</ul>'); list = false; }
+    if (!raw.trim()) { out.push('<p><br></p>'); continue; }
+    let formatted = line.replace(/\x60([^\x60]+)\x60/g, '<code>$1</code>').replace(/\*\*([^*]+)\*\*/g, '<strong>$1</strong>').replace(/\*([^*]+)\*/g, '<em>$1</em>');
+    if (/^#\s/.test(raw)) formatted = '<strong>' + formatted.replace(/^#\s+/, '') + '</strong>';
+    out.push('<p>' + formatted + '</p>');
+  }
+  if (list) out.push('</ul>');
+  return out.join('');
+}
+function updateDescriptionPreview() {
+  const value = $('#task-form').elements.description.value;
+  const preview = $('#description-preview');
+  preview.innerHTML = markdownHtml(value);
+  preview.hidden = !value.trim();
+}
 function statusCell(status) { return '<span class="status-pill ' + esc(status) + '">' + esc(statusName(status)) + '</span>'; }
 function priorityCell(priority) { return '<span class="priority-pill ' + esc(priority) + '">' + esc(priorityName(priority)) + '</span>'; }
 function renderList() {
@@ -186,6 +209,7 @@ function renderModes() {
   if (mode === 'list') renderList(); if (mode === 'board') renderBoard(); if (mode === 'calendar') renderCalendar(); if (mode === 'timeline') renderTimeline();
 }
 function renderSelection() {
+  for (const id of selected) if (!taskById(id)) selected.delete(id);
   const count = selected.size; $('#selected-count').textContent = count ? count + ' task' + (count === 1 ? '' : 's') + ' selected for context' : 'Your workspace is ready';
 }
 function renderAll() { renderSidebar(); showView(); renderDashboard(); renderModes(); renderActivity(); renderSelection(); }
@@ -228,7 +252,7 @@ function openTask(id) {
   const task = id ? taskById(id) : null; editingTask = task?.id || '';
   $('#task-dialog-title').textContent = task ? 'Edit task' : 'New task';
   $('#task-kicker').textContent = task ? taskProjectName(task).toUpperCase() : 'TASK DETAILS';
-  populateTaskForm(task); renderTaskExtras(task); $('#task-save-note').textContent = '';
+  populateTaskForm(task); renderTaskExtras(task); updateDescriptionPreview(); $('#task-save-note').textContent = '';
   $('#task-dialog').showModal();
 }
 function updateStateFromResult(data) { if (data.state) { state = data.state; renderAll(); } }
@@ -285,10 +309,14 @@ function openAi() { $('#ai-panel').classList.add('open'); }
 function closeAi() { $('#ai-panel').classList.remove('open'); }
 function bindEvents() {
   $('#refresh').addEventListener('click',loadState);
+  window.addEventListener('focus',()=>{if(!$('dialog[open]').length)loadState()});
+  setInterval(()=>{if(document.visibilityState==='visible'&&!$('dialog[open]').length)loadState()},60000);
   $('#new-task').addEventListener('click',openNewTask);
   $('#add-project').addEventListener('click',()=>$('#project-dialog').showModal());
   $('#project-form').addEventListener('submit',async event=>{event.preventDefault();const data=new FormData(event.currentTarget);const name=String(data.get('name')||'').trim();if(!name)return;try{await createProject(name,String(data.get('folder')||'').trim(),String(data.get('description')||''));event.currentTarget.reset();$('#project-dialog').close()}catch(error){toast(error.message)}});
   $('#task-form').addEventListener('submit',saveTask);
+  $('#task-form').elements.description.addEventListener('input',updateDescriptionPreview);
+  $('.markdown-tools button').forEach(button=>button.addEventListener('click',()=>{const field=$('#task-form').elements.description,kind=button.dataset.markdown,start=field.selectionStart,end=field.selectionEnd,value=field.value,wrap=kind==='bold'?['**','**']:kind==='italic'?['*','*']:kind==='heading'?['## ','']:['- ',''];if(kind==='heading'||kind==='list'){const lineStart=value.lastIndexOf('\n',Math.max(0,start-1))+1;field.setRangeText(wrap[0],lineStart,lineStart,'end')}else{const selection=value.slice(start,end)||'text';field.setRangeText(wrap[0]+selection+wrap[1],start,end,'select')}field.focus();updateDescriptionPreview()}));
   $('#task-form').elements.projectId.addEventListener('change',()=>{const task=taskById(editingTask);const id=$('#task-form').elements.projectId.value;const project=projectById(id);$('#task-form').elements.listId.replaceChildren(...(project?.lists||[]).map(list=>new Option(list.name,list.id)));$('#task-form').elements.parentId.replaceChildren(new Option('No parent (top-level)',''),...state.tasks.filter(t=>t.projectId===id&&!t.parentId&&t.id!==editingTask).map(t=>new Option(t.title,t.id)))});
   $('#add-list').addEventListener('click',()=>addList(currentProject));
   $('#project-tree').addEventListener('click',async event=>{if(event.target.closest('#empty-add-project')){ $('#project-dialog').showModal(); return; }const add=event.target.closest('[data-add-list]');if(add){await addList(add.dataset.addList);return}const target=event.target.closest('[data-project]');if(!target)return;if(target.dataset.list){currentProject=target.dataset.project;currentList=target.dataset.list;view='project';mode='list';showView();renderAll()}else openProject(target.dataset.project)});
