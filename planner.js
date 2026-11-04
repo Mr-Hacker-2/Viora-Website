@@ -72,7 +72,7 @@ function taskProjectName(task) { return projectById(task.projectId)?.name || 'Pr
 function taskListName(task) { return projectById(task.projectId)?.lists?.find(x => x.id === task.listId)?.name || 'Tasks'; }
 function openProject(id) {
   currentProject = id; currentList = ''; view = 'project'; showView(); renderAll();
-  if (window.matchMedia('(max-width: 800px)').matches) $('#sidebar').classList.remove('open');
+  if (window.matchMedia('(max-width: 800px)').matches) { $('#sidebar').classList.remove('open'); $('#planner-app').classList.remove('drawer-open'); }
 }
 function renderSidebar() {
   const root = $('#project-tree'); root.replaceChildren();
@@ -239,10 +239,11 @@ async function saveTask(event) {
   $('#save-task').disabled = true; $('#task-save-note').textContent = 'Saving securely…';
   try {
     if (editingTask) {
-      const old = taskById(editingTask);
-      const actions = [{type:'update_task',taskId:editingTask,...fields}];
-      if (old && (old.projectId !== projectId || old.listId !== listId)) actions.push({type:'move_task',taskId:editingTask,projectId,listId});
-      if (old && old.parentId !== parentId) { if (parentId) actions.push({type:'update_task',taskId:editingTask,parentId}); else throw new Error('To change a parent, create a new task or move the task manually.'); }
+      const old = taskById(editingTask), actions = [];
+      const moving = old && (old.projectId !== projectId || old.listId !== listId);
+      if (moving && old.parentId) actions.push({type:'update_task',taskId:editingTask,parentId:''});
+      if (moving) actions.push({type:'move_task',taskId:editingTask,projectId,listId});
+      actions.push({type:'update_task',taskId:editingTask,...fields,parentId});
       await runActions(actions);
     } else {
       await runActions([{type:'create_task',projectId,listId,parentId,title:fields.title,description:fields.description,status:fields.status,priority:fields.priority,startDate:fields.startDate,dueDate:fields.dueDate,assignee:fields.assignee,tags:fields.tags}]);
@@ -286,16 +287,16 @@ function bindEvents() {
   $('#refresh').addEventListener('click',loadState);
   $('#new-task').addEventListener('click',openNewTask);
   $('#add-project').addEventListener('click',()=>$('#project-dialog').showModal());
-  $('#empty-add-project')?.addEventListener('click',()=>$('#project-dialog').showModal());
   $('#project-form').addEventListener('submit',async event=>{event.preventDefault();const data=new FormData(event.currentTarget);const name=String(data.get('name')||'').trim();if(!name)return;try{await createProject(name,String(data.get('folder')||'').trim(),String(data.get('description')||''));event.currentTarget.reset();$('#project-dialog').close()}catch(error){toast(error.message)}});
   $('#task-form').addEventListener('submit',saveTask);
   $('#task-form').elements.projectId.addEventListener('change',()=>{const task=taskById(editingTask);const id=$('#task-form').elements.projectId.value;const project=projectById(id);$('#task-form').elements.listId.replaceChildren(...(project?.lists||[]).map(list=>new Option(list.name,list.id)));$('#task-form').elements.parentId.replaceChildren(new Option('No parent (top-level)',''),...state.tasks.filter(t=>t.projectId===id&&!t.parentId&&t.id!==editingTask).map(t=>new Option(t.title,t.id)))});
   $('#add-list').addEventListener('click',()=>addList(currentProject));
-  $('#project-tree').addEventListener('click',async event=>{const add=event.target.closest('[data-add-list]');if(add){await addList(add.dataset.addList);return}const target=event.target.closest('[data-project]');if(!target)return;if(target.dataset.list){currentProject=target.dataset.project;currentList=target.dataset.list;view='project';mode='list';showView();renderAll()}else openProject(target.dataset.project)});
+  $('#project-tree').addEventListener('click',async event=>{if(event.target.closest('#empty-add-project')){ $('#project-dialog').showModal(); return; }const add=event.target.closest('[data-add-list]');if(add){await addList(add.dataset.addList);return}const target=event.target.closest('[data-project]');if(!target)return;if(target.dataset.list){currentProject=target.dataset.project;currentList=target.dataset.list;view='project';mode='list';showView();renderAll()}else openProject(target.dataset.project)});
   $('#empty-add-project')?.addEventListener('click',()=>$('#project-dialog').showModal());
   $('#sidebar').addEventListener('click',event=>{const button=event.target.closest('[data-view]');if(button){view=button.dataset.view;currentProject='';currentList='';showView();renderAll();if(window.matchMedia('(max-width: 800px)').matches)$('#sidebar').classList.remove('open')}});
   $$('.view-tab').forEach(button=>button.addEventListener('click',()=>{mode=button.dataset.mode;renderModes()}));
   $$('#search,#status-filter,#priority-filter').forEach(node=>node.addEventListener(node.id==='search'?'input':'change',renderModes));
+  $('#dashboard-view').addEventListener('click',handleTaskClick);
   $('#list-view').addEventListener('click',handleTaskClick);
   $('#board-view').addEventListener('click',handleTaskClick);
   $('#calendar-view').addEventListener('click',event=>{const month=event.target.closest('[data-month]');if(month){monthCursor.setMonth(monthCursor.getMonth()+Number(month.dataset.month));renderCalendar();return}handleTaskClick(event)});
@@ -311,7 +312,8 @@ function bindEvents() {
   $('#ai-form').addEventListener('submit',sendAi);
   $$('.ai-suggestions button').forEach(button=>button.addEventListener('click',()=>sendAi(null,button.dataset.prompt)));
   $('#open-ai').addEventListener('click',openAi);$('#close-ai').addEventListener('click',closeAi);
-  $('#menu-button').addEventListener('click',()=>$('#sidebar').classList.add('open'));$('#close-sidebar').addEventListener('click',()=>$('#sidebar').classList.remove('open'));
+  $('#menu-button').addEventListener('click',()=>{$('#sidebar').classList.add('open');$('#planner-app').classList.add('drawer-open')});$('#close-sidebar').addEventListener('click',()=>{$('#sidebar').classList.remove('open');$('#planner-app').classList.remove('drawer-open')});
+  $('#planner-app').addEventListener('click',event=>{if(event.target===event.currentTarget&&$('#sidebar').classList.contains('open')){$('#sidebar').classList.remove('open');$('#planner-app').classList.remove('drawer-open')}});
   $('#sign-out').addEventListener('click',()=>{localStorage.removeItem('viora_session');token='';showGate()});
   $('#sign-out').title='Sign out of Viora';
   document.addEventListener('click',event=>{const box=event.target.closest('[data-select-task]');if(box){if(box.checked)selected.add(box.dataset.selectTask);else selected.delete(box.dataset.selectTask);renderSelection();return}});
