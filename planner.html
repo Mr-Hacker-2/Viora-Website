@@ -87,7 +87,7 @@
       <label>Priority<select name="priority"><option value="urgent">Urgent</option><option value="high">High</option><option value="normal" selected>Normal</option><option value="low">Low</option></select></label>
       <label>Start date<input name="startDate" type="date"></label><label>Due date<input name="dueDate" type="date"></label>
       <label>Assignee<input name="assignee" maxlength="254" placeholder="Name or email"></label><label>Tags<input name="tags" placeholder="Comma-separated"></label>
-      <label class="wide">Description <span class="muted">(Markdown supported)</span><textarea name="description" rows="5" maxlength="8000" placeholder="Add context, acceptance criteria, or useful links…"></textarea></label>
+      <label class="wide">Description <span class="muted">(Markdown supported)</span><div class="markdown-tools"><button type="button" data-markdown="bold"><b>B</b></button><button type="button" data-markdown="italic"><i>I</i></button><button type="button" data-markdown="heading">H</button><button type="button" data-markdown="list">• List</button></div><textarea name="description" rows="5" maxlength="8000" placeholder="Add context, acceptance criteria, or useful links…"></textarea><div id="description-preview" class="description-preview" hidden></div></label>
     </div>
     <section class="task-extras" id="task-extras" hidden>
       <div class="extra-section"><div class="extra-title"><h3>Checklist</h3></div><div id="checklist-list"></div><div id="checklist-form" class="inline-add"><input name="text" required maxlength="300" placeholder="Add a checklist item"><button type="button" class="button small primary" id="add-checklist-item">Add</button></div></div>
