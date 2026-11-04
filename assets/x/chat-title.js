@@ -47,6 +47,17 @@ export function shouldGenerateTitle(conversation) {
     && !conversation.titlePending && (conversation.messages || []).filter(m => m?.role === 'user').length === 1;
 }
 
+export function shouldRefineTitle(conversation) {
+  if (!conversation || conversation.autoTitle !== true || conversation.titleManual === true
+    || conversation.titleGenerated !== true || conversation.titleRefinementStarted === true
+    || conversation.titlePending || (conversation.messages || []).filter(m => m?.role === 'user').length !== 2) return false;
+  const title = String(conversation.title || '').trim();
+  const first = (conversation.messages || []).find(m => m?.role === 'user');
+  const topicWords = value => (String(value || '').match(WORD) || []).filter(word => !GENERIC.has(word.toLowerCase()));
+  const genericTitle = /^(?:new conversation|new chat|chat about|general question|greetings?|hello|introduction|conversation about|help with|something about)\b/i.test(title);
+  return genericTitle || (topicWords(first?.content).length < 2 && topicWords(title).length < 2);
+}
+
 export function renameConversation(conversation, value) {
   const title = String(value || '').trim().replace(/\s+/g, ' ').slice(0, 60);
   if (!conversation || !title) return false;

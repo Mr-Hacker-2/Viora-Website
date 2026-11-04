@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { fallbackTitle, normalizeGeneratedTitle, shouldGenerateTitle, renameConversation, finishTitleGeneration } from '../assets/x/chat-title.js';
+import { fallbackTitle, normalizeGeneratedTitle, shouldGenerateTitle, shouldRefineTitle, renameConversation, finishTitleGeneration } from '../assets/x/chat-title.js';
 
 test('fallback title describes the concrete subject in a short title', () => {
   assert.equal(fallbackTitle('Can you help me build a Raspberry Pi camera?'), 'Build Raspberry Pi Camera');
@@ -30,6 +30,19 @@ test('title generation is allowed once, only for a new auto-titled conversation'
   assert.equal(shouldGenerateTitle({ ...chat, titleGenerationStarted: true }), false);
   assert.equal(shouldGenerateTitle({ ...chat, titleManual: true }), false);
   assert.equal(shouldGenerateTitle({ ...chat, messages: [...chat.messages, { role: 'user', content: 'second' }] }), false);
+});
+
+test('only vague automatic titles get one refinement after a second exchange', () => {
+  const chat = { title: 'Chat About Hi', autoTitle: true, titleGenerated: true, messages: [
+    { role: 'user', content: 'Hi' }, { role: 'assistant', content: 'Hello!' },
+    { role: 'user', content: 'I need help understanding algebra equations' }, { role: 'assistant', content: 'Let us solve one together.' }
+  ] };
+  assert.equal(shouldRefineTitle(chat), true);
+  assert.equal(shouldRefineTitle({ ...chat, titleManual: true }), false);
+  assert.equal(shouldRefineTitle({ ...chat, titleRefinementStarted: true }), false);
+  assert.equal(shouldRefineTitle({ ...chat, titlePending: true }), false);
+  assert.equal(shouldRefineTitle({ ...chat, title: 'Understanding Algebra Equations' }), false);
+  assert.equal(shouldRefineTitle({ ...chat, messages: chat.messages.slice(0, 2) }), false);
 });
 
 test('manual titles persist and win if an AI title request finishes later', () => {

@@ -27,6 +27,13 @@
   #composer .composer-left { gap: 4px; }
 }
 @media (max-width: 700px) {
+  #sh-center, #thread, #composer, #humanizer-studio { width: 100% !important; min-width: 0 !important; max-width: 100% !important; }
+  #thread .welcome-v2 { width: 100% !important; min-width: 0 !important; max-width: 100% !important; flex-basis: auto !important; }
+  #thread .welcome-v2 > *, #thread .welcome-v2 .welcome-main,
+  #thread .welcome-v2 .welcome-prompt-head, #thread .welcome-v2 .suggestions { min-width: 0 !important; max-width: 100% !important; }
+  #thread .welcome-v2 .welcome-line { max-width: 100% !important; white-space: normal !important; overflow-wrap: anywhere; font-size: clamp(23px, 7vw, 32px) !important; }
+  #thread .welcome-v2 .welcome-capabilities { flex-wrap: wrap; }
+  #composer .composer-inner { width: 100% !important; max-width: 100% !important; }
   #sh-center::before, #sh-center::after { animation: none !important; opacity: .16; filter: blur(48px); }
   #thread .welcome-v2 :is(.welcome-logo, .welcome-line, .welcome-live-dot) { animation: none !important; }
 }
