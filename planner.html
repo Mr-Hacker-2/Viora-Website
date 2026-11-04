@@ -55,7 +55,8 @@
       <section id="project-view" class="view" hidden>
         <div class="view-toolbar">
           <div class="view-tabs" role="tablist"><button class="view-tab active" data-mode="list">List</button><button class="view-tab" data-mode="board">Board</button><button class="view-tab" data-mode="calendar">Calendar</button><button class="view-tab" data-mode="timeline">Timeline</button></div>
-          <button class="button ghost" id="add-list" hidden>＋ New list</button>\n          <div class="filters"><input id="search" class="input" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="status-filter" class="input"><option value="">All statuses</option><option value="todo">To do</option><option value="in_progress">In progress</option><option value="review">Review</option><option value="completed">Completed</option></select><select id="priority-filter" class="input"><option value="">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select></div>
+          <button class="button ghost" id="add-list" hidden>＋ New list</button>
+          <div class="filters"><input id="search" class="input" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="status-filter" class="input"><option value="">All statuses</option><option value="todo">To do</option><option value="in_progress">In progress</option><option value="review">Review</option><option value="completed">Completed</option></select><select id="priority-filter" class="input"><option value="">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select></div>
         </div>
         <div id="list-view" class="project-mode"></div>
         <div id="board-view" class="project-mode" hidden></div>
