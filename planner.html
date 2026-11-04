@@ -31,7 +31,7 @@
     <header class="topbar">
       <button class="icon-button menu-button" id="menu-button" aria-label="Open navigation">☰</button>
       <div class="crumb"><span>Workspace</span><b>/</b><strong id="current-crumb">Overview</strong></div>
-      <div class="top-actions"><span class="flash-chip"><i></i> Viora Flash connected</span><button class="button primary" id="new-task">＋ New task</button></div>
+      <div class="top-actions"><span class="flash-chip"><i></i> Viora Flash connected</span><button class="button ghost open-ai" id="open-ai">Ask Flash</button><button class="button primary" id="new-task">＋ New task</button></div>
     </header>
     <div class="content">
       <section class="page-head">
@@ -55,7 +55,7 @@
       <section id="project-view" class="view" hidden>
         <div class="view-toolbar">
           <div class="view-tabs" role="tablist"><button class="view-tab active" data-mode="list">List</button><button class="view-tab" data-mode="board">Board</button><button class="view-tab" data-mode="calendar">Calendar</button><button class="view-tab" data-mode="timeline">Timeline</button></div>
-          <div class="filters"><input id="search" class="input" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="status-filter" class="input"><option value="">All statuses</option><option value="todo">To do</option><option value="in_progress">In progress</option><option value="review">Review</option><option value="completed">Completed</option></select><select id="priority-filter" class="input"><option value="">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select></div>
+          <button class="button ghost" id="add-list" hidden>＋ New list</button>\n          <div class="filters"><input id="search" class="input" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="status-filter" class="input"><option value="">All statuses</option><option value="todo">To do</option><option value="in_progress">In progress</option><option value="review">Review</option><option value="completed">Completed</option></select><select id="priority-filter" class="input"><option value="">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select></div>
         </div>
         <div id="list-view" class="project-mode"></div>
         <div id="board-view" class="project-mode" hidden></div>
@@ -89,8 +89,8 @@
       <label class="wide">Description <span class="muted">(Markdown supported)</span><textarea name="description" rows="5" maxlength="8000" placeholder="Add context, acceptance criteria, or useful links…"></textarea></label>
     </div>
     <section class="task-extras" id="task-extras" hidden>
-      <div class="extra-section"><div class="extra-title"><h3>Checklist</h3></div><div id="checklist-list"></div><form id="checklist-form" class="inline-add"><input name="text" required maxlength="300" placeholder="Add a checklist item"><button class="button small primary">Add</button></form></div>
-      <div class="extra-section"><div class="extra-title"><h3>Comments</h3></div><div id="comment-list"></div><form id="comment-form" class="inline-add"><input name="text" required maxlength="2000" placeholder="Write a comment"><button class="button small primary">Comment</button></form></div>
+      <div class="extra-section"><div class="extra-title"><h3>Checklist</h3></div><div id="checklist-list"></div><div id="checklist-form" class="inline-add"><input name="text" required maxlength="300" placeholder="Add a checklist item"><button type="button" class="button small primary" id="add-checklist-item">Add</button></div></div>
+      <div class="extra-section"><div class="extra-title"><h3>Comments</h3></div><div id="comment-list"></div><div id="comment-form" class="inline-add"><input name="text" required maxlength="2000" placeholder="Write a comment"><button type="button" class="button small primary" id="add-comment">Comment</button></div></div>
       <div class="extra-section"><label class="select-ai"><input id="select-for-ai" type="checkbox"> Include this task in my next Viora request</label></div>
     </section>
     <footer><span id="task-save-note" class="muted"></span><button class="button ghost" value="cancel">Cancel</button><button class="button primary" id="save-task" value="save">Save task</button></footer>
