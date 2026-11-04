@@ -1,0 +1,39 @@
+/* Viora orb design layer. Loaded last (by mobile-viewport.js), so it wins the cascade without a fight.
+   Dark glass look is scoped to data-theme=dark; the light theme keeps its existing palette. */
+:root{--o-violet:#7c5cff;--o-blue:#3aa0ff;--o-glass:rgba(20,15,44,.66);--o-edge:rgba(150,130,255,.24)}
+:root[data-theme=dark]{--ink:#0a0716;--ink-2:#120e26;--raised:#1a1535;--line:#2b2450}
+
+/* The orb in the header and on the welcome screen. The boxes include room for the glow, so they overlap their neighbours. */
+.v-orb-bar{width:52px;margin:-12px -6px -12px -8px;flex:none}
+:root[data-model] #thread .welcome-v2 .logo-stage{width:clamp(190px,44vw,240px);height:clamp(190px,44vw,240px);margin:-34px auto -30px;display:grid;place-items:center}
+:root[data-model] #thread .welcome-v2 .welcome-logo{display:none}
+.v-orb-hero{width:100%}
+@media(max-width:700px){
+  .v-orb-bar{width:48px;margin:-12px -6px -12px -8px}
+  :root[data-model] #thread .welcome-v2 .logo-stage{width:190px;height:190px;margin:-28px auto -24px}
+}
+
+/* One state, shared by the whole interface (set from the orb: html[data-orb]). */
+:root[data-orb] #composer .composer-inner{transition:box-shadow .6s ease,border-color .6s ease}
+:root[data-orb=thinking] #composer .composer-inner,:root[data-orb=searching] #composer .composer-inner,:root[data-orb=responding] #composer .composer-inner{box-shadow:0 0 0 1px rgba(124,92,255,.4),0 12px 44px rgba(124,92,255,.2)!important}
+:root[data-orb=error] #composer .composer-inner{box-shadow:0 0 0 1px rgba(255,150,90,.5),0 12px 40px rgba(255,150,90,.14)!important}
+#send[aria-label=Stop]{animation:o-ping 1.7s ease-out infinite}
+@keyframes o-ping{0%{box-shadow:0 0 0 0 rgba(124,92,255,.5)}80%,100%{box-shadow:0 0 0 12px rgba(124,92,255,0)}}
+
+/* Dark glass surfaces */
+:root[data-theme=dark] #shell{background:radial-gradient(ellipse 60% 45% at 50% 0,rgba(124,92,255,.17),transparent 70%),radial-gradient(ellipse 50% 40% at 88% 100%,rgba(58,160,255,.1),transparent 70%),var(--ink)!important}
+:root[data-theme=dark] #sh-left{background:linear-gradient(180deg,rgba(26,20,56,.72),rgba(11,8,26,.94))!important;border-right-color:var(--o-edge)!important}
+:root[data-theme=dark] .bar{background:rgba(10,7,22,.72)!important;border-bottom-color:var(--o-edge)!important}
+:root[data-theme=dark] #composer .composer-inner{background:var(--o-glass)!important;border-color:var(--o-edge)!important;backdrop-filter:blur(18px) saturate(1.4)}
+:root[data-theme=dark] #composer .composer-inner:focus-within{border-color:rgba(124,92,255,.6)!important}
+:root[data-theme=dark] .sheet{background:rgba(18,14,38,.9)!important;border-color:var(--o-edge)!important;backdrop-filter:blur(20px)}
+:root[data-theme=dark] .model-pill{background:rgba(26,21,53,.7)!important;border-color:var(--o-edge)!important}
+:root[data-theme=dark] #thread .src-card{background:var(--ink-2);border:1px solid var(--o-edge)}
+:root[data-theme=dark] #thread .src-card:hover{border-color:rgba(58,160,255,.55);box-shadow:0 8px 24px rgba(58,160,255,.14)}
+:root[data-theme=dark] .suggestion:hover{border-color:rgba(124,92,255,.6)!important;box-shadow:0 8px 26px rgba(124,92,255,.18)!important}
+
+/* Messages: you = tinted glass bubble, Viora = open prose with the orb's rail while it writes */
+:root[data-model] .msg.user{box-shadow:0 6px 24px rgba(124,92,255,.14),inset 0 1px 0 rgba(255,255,255,.07)}
+:root[data-theme=dark][data-model] .msg.user{background:linear-gradient(135deg,rgba(124,92,255,.3),rgba(58,160,255,.14))!important;border-color:rgba(150,130,255,.3)}
+
+@media(prefers-reduced-motion:reduce){#send[aria-label=Stop]{animation:none}}
