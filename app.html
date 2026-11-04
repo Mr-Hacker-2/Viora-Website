@@ -513,36 +513,6 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 <link rel="stylesheet" href="assets/x/viora-think.css?v=20261102-1">
 <link rel="stylesheet" href="assets/x/mobile-first.css?v=20261103-1">
 <script src="assets/x/mobile-viewport.js?v=20261103-1" defer></script>
-<style id="viora-orb-system">
-:root{--orb-violet:#a68bff;--orb-blue:#61c8ff;--orb-deep:#100d20}
-html[data-theme="light"]{--orb-deep:#18122d}
-.orb{position:relative;display:inline-grid;place-items:center;isolation:isolate;flex:none;border-radius:50%;background:radial-gradient(circle at 35% 30%,#e6ddff 0 2%,#b9a0ff 8%,#7c56f7 29%,#35246e 58%,#111124 76%);box-shadow:inset -8px -12px 22px #080814a8,inset 5px 6px 18px #d2c2ff66,0 0 25px #815cff55,0 0 60px #426eff22;animation:orb-breathe 5s ease-in-out infinite}
-.orb::before,.orb::after{content:"";position:absolute;inset:-12%;border:1px solid #a68bff52;border-radius:50%;transform:rotate(-24deg) scaleY(.42);animation:orb-wave 4.8s ease-out infinite;z-index:-1}
-.orb::after{inset:-21%;border-color:#68baff33;animation-delay:2.4s}
-.orb .orb-core{width:36%;height:36%;border-radius:50%;background:radial-gradient(circle at 35% 30%,#fff 0 6%,#d8c7ff 20%,#9976ff 54%,#56c9ff 100%);filter:blur(.2px);box-shadow:0 0 18px #c2a6ff,0 0 38px #607bff99}
-.orb i{position:absolute;width:5px;height:5px;border-radius:50%;background:#c9efff;box-shadow:0 0 10px #76d4ff;animation:orb-drift 3.2s ease-in-out infinite}
-.orb i:nth-of-type(1){top:18%;left:20%}.orb i:nth-of-type(2){right:12%;top:43%;animation-delay:-1s}.orb i:nth-of-type(3){bottom:18%;left:34%;animation-delay:-2s}
-.orb b{position:absolute;inset:-5%;border-radius:50%;background:conic-gradient(from 0deg,transparent 0 68%,#9adfffaa 78%,#b6a0ff 82%,transparent 92%);mask:radial-gradient(farthest-side,transparent calc(100% - 2px),#000 calc(100% - 1px));animation:orb-spin 9s linear infinite}
-.orb-header{width:30px;height:30px;margin-left:1px;vertical-align:middle}
-.orb-hero{width:clamp(92px,11vw,126px);height:clamp(92px,11vw,126px);animation-duration:5.4s}
-.orb-caption{display:block;margin-top:16px;color:#a99cce;font:600 9px/1.2 var(--sans);letter-spacing:.2em}
-html[data-orb="listening"] .orb{animation-duration:2.2s}
-html[data-orb="listening"] .orb::before,html[data-orb="listening"] .orb::after{animation-duration:2.1s;opacity:.8}
-html[data-orb="thinking"] .orb,html[data-orb="responding"] .orb{animation-duration:1.45s;box-shadow:inset -8px -12px 22px #080814a8,0 0 32px #9564ff88,0 0 76px #557dff44}
-html[data-orb="thinking"] .orb i,html[data-orb="responding"] .orb i{animation-duration:1.2s}
-html[data-orb="searching"] .orb b{animation-duration:1.4s}
-html[data-orb="searching"] .orb{box-shadow:inset -8px -12px 22px #080814a8,0 0 30px #608dff88,0 0 70px #347bff44}
-html[data-orb="error"] .orb{filter:saturate(.55);box-shadow:0 0 25px #ff728355}
-html[data-orb="complete"] .orb{animation-duration:2.4s;box-shadow:0 0 34px #8fffd355,0 0 72px #7b63ff33}
-.orb-stage{filter:drop-shadow(0 12px 32px #8160ff22)}
-@keyframes orb-breathe{0%,100%{transform:scale(.97);filter:brightness(.94)}50%{transform:scale(1.035);filter:brightness(1.12)}}
-@keyframes orb-wave{0%{transform:rotate(-24deg) scaleY(.42);opacity:0}30%{opacity:.68}100%{transform:rotate(16deg) scaleY(.66) scale(1.16);opacity:0}}
-@keyframes orb-spin{to{transform:rotate(360deg)}}
-@keyframes orb-drift{0%,100%{transform:translate(0,0);opacity:.42}50%{transform:translate(5px,-7px);opacity:1}}
-.logo-stage{display:flex;flex-direction:column;align-items:center;justify-content:center}
-@media(max-width:700px){.orb-header{width:26px;height:26px}.orb-hero{width:88px;height:88px}.orb-caption{margin-top:12px}.bar-id{gap:6px!important}}
-@media(prefers-reduced-motion:reduce){.orb,.orb::before,.orb::after,.orb b,.orb i{animation:none!important}}
-</style>
 </head>
 <body>
 <div id="shell">
@@ -576,7 +546,6 @@ html[data-orb="complete"] .orb{animation-duration:2.4s;box-shadow:0 0 34px #8fff
     <div class="bar-id">
       <button id="open-full" class="icon-btn" type="button" title="Chats and menu" aria-label="Open navigation" aria-controls="sh-left" aria-expanded="false" data-ic="panel"></button>
       <h1 class="wordmark">Viora</h1>
-      <span class="orb orb-header" data-orb aria-label="Viora is ready"><span class="orb-core"></span><i></i><i></i><i></i><b></b></span>
       <button id="model-btn" class="model-pill" type="button" aria-expanded="false" aria-controls="model-sheet"><span class="pill-icon" id="pill-icon"></span><span class="pill-name" id="pill-name"></span><svg class="pill-caret" viewBox="0 0 20 20" aria-hidden="true"><path d="M6 8l4 4 4-4"/></svg></button>
     </div>
   </header>
@@ -890,7 +859,7 @@ function render() {
   <div class="welcome-glow" aria-hidden="true"></div>
   <div class="welcome-main">
     <div class="welcome-eyebrow"><span class="welcome-live-dot"></span> ${esc(greet())}, ${esc(first)}</div>
-    <div class="logo-stage"><span class="orb orb-hero" data-orb aria-label="Viora is ready"><span class="orb-core"></span><i></i><i></i><i></i><b></b></span><span class="orb-caption" data-orb-label>READY WHEN YOU ARE</span></div>
+    <div class="logo-stage"><span class="welcome-logo"><img src="assets/mark.png" alt="Viora" width="64" height="64" draggable="false"></span></div>
     <h2 class="welcome-line">${videos.length ? 'Let’s explore your video.' : 'What are we working on?'}</h2>
     <p class="welcome-subline">${videos.length ? 'Ask about scenes, actions, visible text, or the sequence of events.' : 'One workspace for thinking, writing, research, files, images, video, and code.'}</p>
     <div class="welcome-capabilities" aria-label="Viora capabilities"><span>${ic('bolt')} Fast answers</span><span>${ic('globe')} Web research</span><span>${ic('folder')} File understanding</span></div>
@@ -952,8 +921,7 @@ function syncHumanizer() {
   if (sig) { const html = !active && has ? signalsHtml($('#hz-input').value, out.value) : ''; sig.innerHTML = html; sig.hidden = !html; }
 }
 function jump() { const th = $('#thread'), c = chat(); $('#to-bottom').classList.toggle('show', !!(c && c.messages.length) && th.scrollHeight - th.scrollTop - th.clientHeight > 240); }
-function setOrbState(state) { document.documentElement.dataset.orb = state; const labels = { idle: "Ready when you are", listening: "Listening", thinking: "Thinking", searching: "Searching the web", responding: "Writing your answer", error: "Something went wrong", complete: "Answer complete" }; document.querySelectorAll("[data-orb-label]").forEach(el => el.textContent = (labels[state] || labels.idle).toUpperCase()); document.querySelectorAll("[data-orb]").forEach(el => el.setAttribute("aria-label", "Viora: " + (labels[state] || labels.idle))); }
-function sendState(on) { $('#send').innerHTML = on ? ic('stop') : SEND; $('#send').setAttribute('aria-label', on ? 'Stop' : 'Send'); $('#send').disabled = false; if (on) setOrbState("thinking"); }
+function sendState(on) { $('#send').innerHTML = on ? ic('stop') : SEND; $('#send').setAttribute('aria-label', on ? 'Stop' : 'Send'); $('#send').disabled = false; }
 async function monitorResearch(id, signal, onUpdate) {
   while (!signal.aborted) {
     try {
@@ -990,7 +958,7 @@ async function send(text) {
   const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); let timingStart = 0; busy = ctl; m.stage = 'Starting task…'; sendState(true); syncHumanizer();
   /* Activity record for the thinking panel: a step is added only where that thing really happens below. */
   const tr = m.trace = T.createTrace(); let outcome = 'done'; T.begin(tr, 'understand', 'Understanding your question');
-  const th = $('#thread'), paint = () => { setOrbState(m.err ? "error" : m.searching ? "searching" : m.content ? "responding" : "thinking"); const near = th.scrollHeight - th.scrollTop - th.clientHeight < 32, b = $('#b' + idx); if (b) { paintBody(b, m); if (busy === ctl) thinkSync(idx, m, true); /* a paint queued during streaming can fire after the reply ended: it must never put the panel back into a live state */ if (near) th.scrollTop = th.scrollHeight; } if (asst === 'human') syncHumanizer(); };
+  const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 32, b = $('#b' + idx); if (b) { paintBody(b, m); if (busy === ctl) thinkSync(idx, m, true); /* a paint queued during streaming can fire after the reply ended: it must never put the panel back into a live state */ if (near) th.scrollTop = th.scrollHeight; } if (asst === 'human') syncHumanizer(); };
   const autoRoute = asst === 'auto' ? routeDetails(text, c) : null;
   let eff = autoRoute ? autoRoute.assistant : asst;
   const humanizerOnly = eff === 'human';
@@ -1162,7 +1130,7 @@ async function send(text) {
   }
   if (timingStart && m.timing) m.timing.totalMs = Math.round(performance.now() - timingStart);
   T.finish(tr, outcome); /* always runs: whatever was still active is closed, so no indicator can be left running */
-  m.searching = false; m.wait = ''; m.stage = ''; busy = null; setOrbState(outcome === "failed" ? "error" : "complete"); sendState(false); save(); render(); setTimeout(() => { if (!busy) setOrbState("idle"); }, outcome === "failed" ? 2400 : 1800);
+  m.searching = false; m.wait = ''; m.stage = ''; busy = null; sendState(false); save(); render();
   if (shouldGenerateTitle(c)) void generateConversationTitle(c); // title uses the completed first exchange and never blocks it
 }
 async function generateConversationTitle(c) {
