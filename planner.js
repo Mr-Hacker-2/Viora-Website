@@ -126,6 +126,11 @@ function renderDashboard() {
     return '<div class="pulse-project"><div class="pulse-head"><strong>' + esc(p.name) + '</strong><span>' + pct + '% · ' + completed + '/' + projectTasks.length + '</span></div><div class="progress-track"><div class="progress-fill" style="width:' + pct + '%"></div></div></div>';
   }).join('');
   $('#project-pulse').innerHTML = pulse || '<div class="empty-state">Create a project to track its progress.</div>';
+  const week = [];
+  for (let offset = 6; offset >= 0; offset--) { const date = new Date(); date.setDate(date.getDate() - offset); const key = localDate(date); week.push({ key, label: date.toLocaleDateString(undefined,{weekday:'short'}), count: tasks.filter(task => task.completedAt && task.completedAt.slice(0,10) === key).length }); }
+  const weekMax = Math.max(1, ...week.map(item => item.count)), weekSum = week.reduce((sum,item)=>sum+item.count,0);
+  $('#week-total').textContent = weekSum + ' completed';
+  $('#week-chart').innerHTML = week.map(item => '<div class="week-day" title="' + esc(item.count + ' completed') + '"><span class="week-count">' + item.count + '</span><div class="week-bar-wrap"><i style="height:' + (item.count ? Math.max(10,Math.round(item.count * 100 / weekMax)) : 3) + '%"></i></div><small>' + esc(item.label) + '</small></div>').join('') || '<div class="empty-state">No recent completions.</div>';
   const recent = [...tasks].sort((a,b) => String(b.updatedAt).localeCompare(String(a.updatedAt))).slice(0,7);
   $('#recent-list').innerHTML = recent.length ? recent.map(renderTaskMini).join('') : '<div class="empty-state">Your recently updated tasks will appear here.</div>';
 }
