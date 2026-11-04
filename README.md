@@ -1,6 +1,8 @@
 # Viora website
 Static site, no build step. Pages: index, login (Google), account, help, privacy, terms, 404.
 
+The `/admin/` page uses the same Google sign-in server. It verifies the signed session and grants the admin view only to `gamer360810@gmail.com`. The companion `Viora-auth` server routes that OAuth return to `/admin/` only when the sign-in was started from the admin page; deploy both repositories for the flow to work.
+
 ## Deploy (Render → Static Site)
 Build command: empty. Publish directory: `.`
 
@@ -145,3 +147,4 @@ answered the sign-up questions sees a required popup with 5 multiple-choice ques
 so change them in one place. Answers are saved to B2 and given to the AI as background about the person.
 `login.html?mode=signup` opens the page on the Sign up tab.
 Setup is on the auth server: see `Viora-auth/README.md` for the `B2_*` environment variables.
+
