@@ -84,7 +84,7 @@ const LS = {
 };
 const session = () => LS.get('viora_session', null);
 const Auth = {
-  googleUrl(mode) { return VIORA.authApi + '/auth/google?site=1&mode=' + (mode === 'signup' ? 'signup' : 'signin'); },
+  googleUrl(mode, returnTo) { return VIORA.authApi + '/auth/google?site=1&mode=' + (mode === 'signup' ? 'signup' : 'signin') + (returnTo === 'admin' ? '&return=admin' : ''); },
   /** The account record in Backblaze (via the auth server): the sign-up questions plus this person's saved answers. */
   async profile(token, answers) {
     let r;
@@ -196,6 +196,42 @@ if (page === 'login') {
   btn.onclick = () => { btn.disabled = true; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode()); };
 }
 
+/* ================= page: admin sign-in ================= */
+if (page === 'admin') {
+  const err = $('#admin-err'), button = $('#google');
+  const showError = message => { err.textContent = message; err.hidden = false; button.disabled = false; };
+  const grant = async token => {
+    button.disabled = true;
+    button.lastChild.textContent = 'Verifying your Google account…';
+    try {
+      const verified = token ? await Auth.finish(token) : s;
+      const response = await fetch(VIORA.authApi + '/api/verify?token=' + encodeURIComponent(verified?.token || ''));
+      if (!response.ok) { Auth.signOut(); throw new Error('Your sign-in expired. Please sign in again.'); }
+      const identity = await response.json();
+      if ((identity.email || '').trim().toLowerCase() !== 'gamer360810@gmail.com') {
+        Auth.signOut();
+        document.querySelector('[data-admin-content]').hidden = true;
+        document.querySelector('[data-admin-denied]').hidden = false;
+        throw new Error('Access denied. Sign in with the authorized Google account.');
+      }
+      document.querySelector('[data-admin-gate]').hidden = true;
+      document.querySelector('[data-admin-content]').hidden = false;
+      $('#admin-email').textContent = identity.email;
+      $('#admin-signout').onclick = () => { Auth.signOut(); location.reload(); };
+    } catch (ex) {
+      if (ex.message.startsWith('Access denied')) {
+        err.textContent = ex.message; err.hidden = false; button.disabled = false;
+      } else showError(ex.message || 'Could not verify your sign-in. Please try again.');
+    }
+  };
+  const hp = new URLSearchParams(location.hash.slice(1));
+  history.replaceState(null, '', location.pathname);
+  if (hp.get('error')) showError(hp.get('error') === 'access_denied' ? 'Google sign-in was cancelled or this account is not allowed.' : 'Google sign-in failed. Please try again.');
+  else if (hp.get('token')) grant(hp.get('token'));
+  else if (s) grant();
+  button.onclick = () => { button.disabled = true; button.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl('signin', 'admin'); };
+}
+
 /* ================= page: account ================= */
 if (page === 'account') {
   if (!s) location.replace('login.html');
@@ -237,4 +273,5 @@ if (page === 'help') {
   secs.forEach(x => spy.observe(x));
 }
 })();
+
 
