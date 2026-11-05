@@ -13,6 +13,11 @@ Build command: empty. Publish directory: `.`
 `SITE_URL` must be this site's exact URL, with no trailing slash.
 
 ---
+## Admin control center
+
+The protected dashboard is available at `/admin/`. It displays account and server data only after the auth API verifies an administrator role. Set the comma-separated `ADMIN_EMAILS` bootstrap variable in the Viora auth service before use. See the [Viora auth server README](https://github.com/Mr-Hacker-2/Viora-auth#admin-control-center) for role and data limitations. The page intentionally marks metrics and controls unavailable when the current services do not provide them.
+
+---
 ## v2 upgrade notes
 
 ### Look & feel: Viora extension colours + Settings

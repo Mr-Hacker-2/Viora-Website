@@ -102,6 +102,8 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
   *,*::before,*::after{scroll-behavior:auto!important;animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important}
 }
 
+
+.planner-nav-link{display:flex;align-items:center;gap:11px;min-height:42px;padding:8px 12px;margin:3px 0;border-radius:11px;color:var(--muted,#a69dbd);text-decoration:none;font:inherit;font-size:13px;transition:background .16s,color .16s,transform .16s}.planner-nav-link:hover{background:var(--raised,#201b30);color:var(--paper,#f4f0ff);transform:translateX(2px)}.planner-nav-link span{width:18px;text-align:center;color:var(--accent,#a98bff);font-size:18px}
 </style>
 <link rel="stylesheet" href="assets/x/pro-ui.css?v=20261026-2">
 <link rel="stylesheet" href="assets/x/layout-final.css?v=20261029-1">
@@ -530,6 +532,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   <h6>FEATURES</h6>
   <nav class="sh-nav">
     <button type="button" class="on" id="nav-chat" data-ic="chat"> AI Chat</button>
+    <a class="planner-nav-link" href="planner.html"><span aria-hidden="true">◫</span> Planner</a>
     <button type="button" id="mem" data-ic="note"> About you &amp; memory</button>
     <button type="button" id="exp-chat" data-ic="note"> Export this chat</button>
     <button type="button" id="exp" data-ic="download"> Export my data</button>

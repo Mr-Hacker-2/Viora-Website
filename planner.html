@@ -1,0 +1,103 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0d0b15">
+<meta name="robots" content="noindex,nofollow">
+<title>Planner — Viora</title>
+<link rel="icon" href="assets/icon-128.png">
+<link rel="stylesheet" href="planner.css">
+<script defer src="planner.js"></script>
+</head>
+<body>
+<div id="signin-gate" class="gate" hidden>
+  <div class="gate-card"><a class="brand" href="index.html"><span class="orb"></span>Viora</a><p class="eyebrow">YOUR WORKSPACE</p><h1>Sign in to Planner</h1><p>Planner data is private to your Viora account and syncs through Viora’s server.</p><a class="button primary" href="login.html">Continue with Google</a></div>
+</div>
+<div class="app" id="planner-app" hidden>
+  <aside class="sidebar" id="sidebar">
+    <div class="brand-row"><a class="brand" href="app.html"><span class="orb"></span>Viora</a><button class="icon-button mobile-close" id="close-sidebar" aria-label="Close navigation">×</button></div>
+    <a class="back-chat" href="app.html"><span>←</span> Back to AI Chat</a>
+    <div class="workspace-label">WORKSPACE <button id="add-project" class="tiny-add" title="Create project" aria-label="Create project">＋</button></div>
+    <div class="side-scroll">
+      <div id="project-tree" class="project-tree"></div>
+      <div class="sidebar-rule"></div>
+      <button class="side-link" data-view="dashboard"><span>◈</span> Overview</button>
+      <button class="side-link" data-view="activity"><span>◷</span> Activity</button>
+    </div>
+    <div class="sidebar-foot"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Connecting…</span><button id="sign-out" class="side-signout">Sign out</button></div>
+  </aside>
+  <main class="main">
+    <header class="topbar">
+      <button class="icon-button menu-button" id="menu-button" aria-label="Open navigation">☰</button>
+      <div class="crumb"><span>Workspace</span><b>/</b><strong id="current-crumb">Overview</strong></div>
+      <div class="top-actions"><span class="flash-chip"><i></i> Viora Flash connected</span><button class="button ghost open-ai" id="open-ai">Ask Flash</button><button class="button primary" id="new-task">＋ New task</button></div>
+    </header>
+    <div class="content">
+      <section class="page-head">
+        <div><p class="eyebrow" id="head-eyebrow">YOUR PRODUCTIVITY, IN FOCUS</p><h1 id="page-title">Good work starts with a plan.</h1><p class="subhead" id="page-subtitle">A clear view of what’s moving, what’s next, and where Viora can help.</p></div>
+        <div class="head-actions"><button class="button ghost" id="refresh">↻ Refresh</button></div>
+      </section>
+      <div id="notice" class="notice" role="status" hidden></div>
+      <section id="dashboard-view" class="view">
+        <div class="stats-grid">
+          <article class="stat-card"><span>Due today</span><strong id="stat-today">—</strong><small>Tasks with a deadline today</small></article>
+          <article class="stat-card"><span>Overdue</span><strong class="danger" id="stat-overdue">—</strong><small>Need a new plan or a quick finish</small></article>
+          <article class="stat-card"><span>In progress</span><strong id="stat-progress">—</strong><small>Work currently moving</small></article>
+          <article class="stat-card"><span>Completed</span><strong id="stat-complete">—</strong><small>All-time completed tasks</small></article>
+        </div>
+        <div class="dashboard-grid">
+          <section class="panel"><div class="panel-head"><div><p class="eyebrow">DEADLINES</p><h2>Coming up</h2></div><button class="text-button" data-view="calendar">Open calendar →</button></div><div id="upcoming-list" class="task-stack"></div></section>
+          <section class="panel progress-panel"><div class="panel-head"><div><p class="eyebrow">WORKSPACE</p><h2>Project pulse</h2></div></div><div id="project-pulse" class="pulse-list"></div></section>
+          <section class="panel recent-panel"><div class="panel-head"><div><p class="eyebrow">RECENTLY UPDATED</p><h2>Recent work</h2></div></div><div id="recent-list" class="task-stack"></div></section>
+          <section class="panel weekly-panel"><div class="panel-head"><div><p class="eyebrow">LAST SEVEN DAYS</p><h2>Weekly productivity</h2></div><span class="muted" id="week-total"></span></div><div id="week-chart" class="week-chart"></div></section>
+        </div>
+      </section>
+      <section id="project-view" class="view" hidden>
+        <div class="view-toolbar">
+          <div class="view-tabs" role="tablist"><button class="view-tab active" data-mode="list">List</button><button class="view-tab" data-mode="board">Board</button><button class="view-tab" data-mode="calendar">Calendar</button><button class="view-tab" data-mode="timeline">Timeline</button></div>
+          <button class="button ghost" id="add-list" hidden>＋ New list</button>
+          <div class="filters"><input id="search" class="input" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="status-filter" class="input"><option value="">All statuses</option><option value="todo">To do</option><option value="in_progress">In progress</option><option value="review">Review</option><option value="completed">Completed</option></select><select id="priority-filter" class="input"><option value="">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select></div>
+        </div>
+        <div id="list-view" class="project-mode"></div>
+        <div id="board-view" class="project-mode" hidden></div>
+        <div id="calendar-view" class="project-mode" hidden></div>
+        <div id="timeline-view" class="project-mode" hidden></div>
+      </section>
+      <section id="activity-view" class="view" hidden><section class="panel"><div class="panel-head"><div><p class="eyebrow">WORKSPACE HISTORY</p><h2>Recent activity</h2></div></div><div id="activity-list" class="activity-list"></div></section></section>
+    </div>
+  </main>
+  <aside class="ai-panel" id="ai-panel">
+    <div class="ai-head"><div class="ai-orb"><span></span></div><div><p class="eyebrow">VIORA FLASH</p><h2>Planner assistant</h2><small id="selected-count">Your workspace is ready</small></div><button id="close-ai" class="icon-button ai-close" aria-label="Close assistant">×</button></div>
+    <div id="ai-messages" class="ai-messages"><div class="ai-message assistant"><span class="ai-avatar">✦</span><p>I can organize tasks, build project plans, find deadlines, and make updates in your workspace. Tell me what you need.</p></div></div>
+    <div class="ai-suggestions"><button data-prompt="What should I focus on today?">Plan my day</button><button data-prompt="Summarize overdue tasks and suggest next steps.">Review overdue</button></div>
+    <form id="ai-form" class="ai-compose"><textarea id="ai-input" rows="2" placeholder="Ask Viora to update your Planner…" aria-label="Message Viora Flash"></textarea><button class="send-button" id="ai-send" type="submit" aria-label="Send to Viora Flash">↑</button></form>
+    <p class="ai-foot">Actions run on your account. Deletions always ask first.</p>
+  </aside>
+</div>
+<dialog id="project-dialog" class="dialog">
+  <form id="project-form" method="dialog"><header class="dialog-head"><div><p class="eyebrow">WORKSPACE</p><h2>New project</h2></div><button class="icon-button" value="cancel" aria-label="Close">×</button></header><label>Project name<input name="name" required maxlength="180" placeholder="e.g. Science Fair"></label><label>Folder<input name="folder" maxlength="180" placeholder="e.g. School"></label><label>Description<textarea name="description" rows="3" maxlength="8000" placeholder="What does success look like?"></textarea></label><footer><button class="button ghost" value="cancel">Cancel</button><button class="button primary" id="save-project" value="save">Create project</button></footer></form>
+</dialog>
+<dialog id="task-dialog" class="dialog task-dialog">
+  <form id="task-form" method="dialog"><header class="dialog-head"><div><p class="eyebrow" id="task-kicker">TASK DETAILS</p><h2 id="task-dialog-title">New task</h2></div><button class="icon-button" value="cancel" aria-label="Close">×</button></header>
+    <div class="task-fields">
+      <label class="wide">Task name<input name="title" required maxlength="180" placeholder="What needs to get done?"></label>
+      <label>Project<select name="projectId" required></select></label><label>List<select name="listId"></select></label>
+      <label>Parent task<select name="parentId"><option value="">No parent (top-level)</option></select></label>
+      <label>Status<select name="status"><option value="todo">To do</option><option value="in_progress">In progress</option><option value="review">Review</option><option value="completed">Completed</option></select></label>
+      <label>Priority<select name="priority"><option value="urgent">Urgent</option><option value="high">High</option><option value="normal" selected>Normal</option><option value="low">Low</option></select></label>
+      <label>Start date<input name="startDate" type="date"></label><label>Due date<input name="dueDate" type="date"></label>
+      <label>Assignee<input name="assignee" maxlength="254" placeholder="Name or email"></label><label>Tags<input name="tags" placeholder="Comma-separated"></label>
+      <label class="wide">Description <span class="muted">(Markdown supported)</span><div class="markdown-tools"><button type="button" data-markdown="bold"><b>B</b></button><button type="button" data-markdown="italic"><i>I</i></button><button type="button" data-markdown="heading">H</button><button type="button" data-markdown="list">• List</button></div><textarea name="description" rows="5" maxlength="8000" placeholder="Add context, acceptance criteria, or useful links…"></textarea><div id="description-preview" class="description-preview" hidden></div></label>
+    </div>
+    <section class="task-extras" id="task-extras" hidden>
+      <div class="extra-section"><div class="extra-title"><h3>Checklist</h3></div><div id="checklist-list"></div><div id="checklist-form" class="inline-add"><input name="text" required maxlength="300" placeholder="Add a checklist item"><button type="button" class="button small primary" id="add-checklist-item">Add</button></div></div>
+      <div class="extra-section"><div class="extra-title"><h3>Comments</h3></div><div id="comment-list"></div><div id="comment-form" class="inline-add"><input name="text" required maxlength="2000" placeholder="Write a comment"><button type="button" class="button small primary" id="add-comment">Comment</button></div></div>
+      <div class="extra-section"><label class="select-ai"><input id="select-for-ai" type="checkbox"> Include this task in my next Viora request</label></div>
+    </section>
+    <footer><span id="task-save-note" class="muted"></span><button class="button ghost" value="cancel">Cancel</button><button class="button primary" id="save-task" value="save">Save task</button></footer>
+  </form>
+</dialog>
+<div id="toast" class="toast" role="status" aria-live="polite"></div>
+</body>
+</html>
