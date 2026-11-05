@@ -21,7 +21,9 @@
       <dl class="kv"><dt>Name</dt><dd id="kv-name"></dd><dt>Email</dt><dd id="kv-email"></dd><dt>Sign-in</dt><dd id="kv-prov"></dd><dt>Last signed in</dt><dd id="kv-since"></dd></dl></section>
     <section class="a-box" style="grid-column:1/-1" id="appearance"><h3><span data-i="spark"></span>Appearance</h3><p>Viora uses the extension’s violet by default. Pick a different accent colour or theme if you prefer.</p>
       <div id="pf-mount"></div></section>
-    <section class="a-box"><h3><span data-i="cloud"></span>Backup &amp; sync</h3><p>Open Viora, go to <b>Settings → Account</b> and sign in with this email. Changes to chats, agents and settings upload automatically in the background.</p>
+    <section class="a-box" id="cloud-backup"><h3><span data-i="cloud"></span>Backblaze backup</h3><p>Save this website’s chats and memory to your private Viora cloud backup. The same private Backblaze account bucket is used by the Viora extension.</p>
+      <div class="cta-row" style="justify-content:flex-start"><button class="btn btn-primary" id="backup-now" type="button">Back up now</button><button class="btn btn-ghost" id="backup-restore" type="button">Restore from cloud</button></div>
+      <p id="backup-status" role="status" aria-live="polite" style="margin-top:12px"></p>
       <a class="btn btn-ghost" href="help.html#g-backup">How backup works <span data-i="arrow"></span></a></section>
     <section class="a-box"><h3><span data-i="download"></span>Get Viora</h3><p>Not installed yet, or setting up another device? Add it to your browser in a few clicks.</p>
       <a class="btn btn-primary" data-install href="#"><span data-i="download"></span>Add to Chrome</a></section>

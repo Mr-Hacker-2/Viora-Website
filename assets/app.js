@@ -109,6 +109,26 @@ const Auth = {
     const s = { email: d.email, name: d.name || '', picture: d.picture || '', token, provider: 'google', at: Date.now() };
     LS.set('viora_session', s); return s;
   },
+  async backup(data, token) {
+    let response;
+    try {
+      response = await fetch(VIORA.authApi + '/api/backup', {
+        method: 'PUT', headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ backup: data })
+      });
+    } catch { throw new Error('Could not reach the Viora backup server. Try again shortly.'); }
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'The backup could not be saved.');
+    return result;
+  },
+  async restore(token) {
+    let response;
+    try { response = await fetch(VIORA.authApi + '/api/backup', { headers: { Authorization: 'Bearer ' + token }, cache: 'no-store' }); }
+    catch { throw new Error('Could not reach the Viora backup server. Try again shortly.'); }
+    const result = await response.json().catch(() => ({}));
+    if (!response.ok) throw new Error(result.error || 'The backup could not be downloaded.');
+    return result.backup || null;
+  },
   signOut() { LS.del('viora_session'); }
 };
 window.VioraAuth = Auth; window.vtoast = toast; window.vicon = ico;
@@ -209,6 +229,44 @@ if (page === 'account') {
     $('#kv-prov').textContent = 'Google';
     $('#kv-since').textContent = new Date(s.at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
     $('#signout').onclick = () => { Auth.signOut(); location.href = 'index.html'; };
+    const backupStatus = $('#backup-status'), backupButton = $('#backup-now'), restoreButton = $('#backup-restore');
+    const backupState = message => { backupStatus.textContent = message; };
+    const setBackupBusy = busy => { backupButton.disabled = busy; restoreButton.disabled = busy; };
+    backupButton.onclick = async () => {
+      setBackupBusy(true); backupState('Preparing your backup…');
+      try {
+        const current = {
+          website: {
+            chats: LS.get('viora_chats_' + s.email, []),
+            data: LS.get('viora_data_' + s.email, { projects: [], memory: [], profile: {} }),
+            preferences: {
+              tone: LS.get('viora_tone', 'warm'), assistant: LS.get('viora_assistant', 'auto'),
+              web: LS.get('viora_web', true), researchDepth: LS.get('viora_research_depth', 'quick')
+            }
+          }
+        };
+        const saved = await Auth.backup(current, s.token);
+        backupState('Backed up ' + saved.chats + ' chats at ' + new Date(saved.savedAt).toLocaleString() + '.');
+      } catch (ex) { backupState(ex.message || 'The backup could not be saved.'); }
+      finally { setBackupBusy(false); }
+    };
+    restoreButton.onclick = async () => {
+      if (!confirm('Replace this browser’s Viora website chats, memory, and preferences with the saved cloud copy?')) return;
+      setBackupBusy(true); backupState('Downloading your backup…');
+      try {
+        const backup = await Auth.restore(s.token);
+        if (!backup?.website) throw new Error('No Viora website data is in this cloud backup yet.');
+        const website = backup.website;
+        LS.set('viora_chats_' + s.email, Array.isArray(website.chats) ? website.chats.slice(0, 80) : []);
+        LS.set('viora_data_' + s.email, website.data && typeof website.data === 'object' ? website.data : { projects: [], memory: [], profile: {} });
+        for (const [key, fallback] of [['tone', 'warm'], ['assistant', 'auto'], ['web', true], ['researchDepth', 'quick']]) {
+          const value = website.preferences?.[key];
+          LS.set(key === 'researchDepth' ? 'viora_research_depth' : 'viora_' + key, value === undefined ? fallback : value);
+        }
+        backupState('Restored ' + (website.chats || []).length + ' chats. Reopen Viora to load the restored data.');
+      } catch (ex) { backupState(ex.message || 'The backup could not be restored.'); }
+      finally { setBackupBusy(false); }
+    };
     // If the server no longer accepts this session, sign out instead of showing stale details.
     fetch(VIORA.authApi + '/api/verify?token=' + encodeURIComponent(s.token || '')).then(r => { if (r.status === 401) { Auth.signOut(); location.replace('login.html'); } }).catch(() => {});
   }
