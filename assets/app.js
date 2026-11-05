@@ -84,7 +84,13 @@ const LS = {
 };
 const session = () => LS.get('viora_session', null);
 const Auth = {
-  googleUrl(mode) { return VIORA.authApi + '/auth/google?site=1&mode=' + (mode === 'signup' ? 'signup' : 'signin'); },
+  googleUrl(mode, email, termsAccepted = false) {
+    const url = new URL(VIORA.authApi + '/auth/google');
+    url.searchParams.set('site', '1'); url.searchParams.set('mode', mode === 'signup' ? 'signup' : 'signin');
+    if (email) url.searchParams.set('email', email);
+    if (mode === 'signup' && termsAccepted) url.searchParams.set('terms', '1');
+    return url.href;
+  },
   /** The account record in Backblaze (via the auth server): the sign-up questions plus this person's saved answers. */
   async profile(token, answers) {
     let r;
@@ -163,16 +169,32 @@ $$('.rv').forEach(el => io ? io.observe(el) : el.classList.add('in'));
 
 /* ================= page: login ================= */
 if (page === 'login') {
-  const err = $('#auth-err'), btn = $('#google');
+  const err = $('#auth-err'), btn = $('#google'), email = $('#auth-email'), consent = $('#auth-consent');
   const mode = () => document.body.dataset.mode === 'signup' ? 'signup' : 'signin';
   const label = () => mode() === 'signup' ? 'Create account with Google' : 'Continue with Google';
-  const fail = msg => { err.textContent = msg; err.classList.add('show'); btn.disabled = false; btn.lastChild.textContent = label(); };
+  const fail = msg => { err.textContent = msg; err.classList.add('show'); btn.dataset.busy = 'false'; btn.disabled = mode() === 'signup' && !consent.checked; btn.lastChild.textContent = label(); };
   const hp = new URLSearchParams(location.hash.slice(1));
+  const query = new URLSearchParams(location.search);
   history.replaceState(null, '', location.pathname);
+
+  const friendlyError = code => {
+    if (code === 'account_not_found') {
+      document.body.dataset.mode = 'signup'; $('#auth-signin').setAttribute('aria-pressed', 'false'); $('#auth-signup').setAttribute('aria-pressed', 'true');
+      $('#auth-title').textContent = 'Create your Viora account';
+      $('#auth-sub').textContent = 'Use your Google profile name and verified email to create an account, then answer a few quick questions so Viora can tailor your experience.';
+      $('#auth-consent-wrap').hidden = false;
+      email.value = email.value || query.get('email') || '';
+      btn.lastChild.textContent = 'Create account with Google';
+      const message = "We couldn't find an account with this email. Let's create one!";
+      err.textContent = message; err.classList.add('show'); btn.disabled = !consent.checked;
+      return true;
+    }
+    return false;
+  };
 
   // After Google: accounts that have not answered the 5 questions yet see the popup. Answers are saved to Backblaze by the auth server.
   async function finishLogin(sess) {
-    btn.disabled = true; btn.lastChild.textContent = 'Setting up your account…';
+    btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Setting up your account…';
     let p;
     try { p = await Auth.profile(sess.token); }
     catch (ex) {
@@ -185,15 +207,26 @@ if (page === 'login') {
   }
 
   (async () => {
-    if (hp.get('error')) return fail(hp.get('error') === 'access_denied' ? 'Google sign-in was cancelled, or this Google account is not allowed yet.' : 'Google sign-in failed (' + hp.get('error') + '). Please try again.');
+    if (hp.get('error')) {
+      if (friendlyError(hp.get('error'))) return;
+      const messages = { storage_unavailable: 'Viora could not reach secure account storage. Please try again shortly.', account_suspended: 'This account is currently unavailable. Contact Viora support for help.', unverified_email: 'Google did not verify this email. Please choose a verified Google account.' };
+      return fail(messages[hp.get('error')] || (hp.get('error') === 'access_denied' ? 'Google sign-in was cancelled. You can try again any time.' : 'Google sign-in failed. Please try again.'));
+    }
     if (hp.get('token')) {
-      btn.disabled = true; btn.lastChild.textContent = 'Signing you in…';
+      btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Signing you in…';
       let sess;
       try { sess = await Auth.finish(hp.get('token')); } catch (ex) { return fail(ex.message); }
       finishLogin(sess);
     } else if (s) finishLogin(s);
   })();
-  btn.onclick = () => { btn.disabled = true; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode()); };
+  btn.onclick = () => {
+    const value = email.value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { email.setAttribute('aria-invalid', 'true'); email.focus(); return fail('Enter a valid email address to continue.'); }
+    email.removeAttribute('aria-invalid');
+    if (mode() === 'signup' && !consent.checked) return fail('Please accept the Terms and Privacy Policy to create your account.');
+    btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode(), value, consent.checked);
+  };
+  email.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); btn.click(); } });
 }
 
 /* ================= page: account ================= */
