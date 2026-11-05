@@ -11,7 +11,7 @@ self.addEventListener('fetch', event => {
   const url = new URL(req.url);
   if (req.method !== 'GET' || url.origin !== self.location.origin) return;
   // Never cache API, auth, or user-specific chat responses.
-  if (url.pathname.startsWith('/api/') || url.pathname.includes('login') || url.pathname.includes('account')) return;
+  if (url.pathname.startsWith('/api/') || url.pathname.includes('login') || url.pathname.includes('signup') || url.pathname.includes('account')) return;
   if (req.mode === 'navigate') {
     event.respondWith(fetch(req).then(res => {
       if (res.ok) { const copy = res.clone(); caches.open(CACHE).then(cache => cache.put(req, copy)); }
