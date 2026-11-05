@@ -22,7 +22,16 @@
     <div class="side-scroll">
       <div id="project-tree" class="project-tree"></div>
       <div class="sidebar-rule"></div>
+      <p class="folder-label">MY PLANNER</p>
       <button class="side-link" data-view="dashboard"><span>◈</span> Overview</button>
+      <button class="side-link" data-view="my-tasks"><span>☷</span> My tasks</button>
+      <button class="side-link" data-view="today"><span>◷</span> Today</button>
+      <button class="side-link" data-view="upcoming"><span>↗</span> Upcoming</button>
+      <button class="side-link" data-view="calendar"><span>▦</span> Calendar</button>
+      <button class="side-link" data-view="important"><span>✦</span> Important</button>
+      <button class="side-link" data-view="completed"><span>✓</span> Completed</button>
+      <button class="side-link" data-view="archived"><span>⌑</span> Archived</button>
+      <button class="side-link" data-view="focus"><span>◉</span> Focus</button>
       <button class="side-link" data-view="activity"><span>◷</span> Activity</button>
     </div>
     <div class="sidebar-foot"><span class="sync-dot" id="sync-dot"></span><span id="sync-label">Connecting…</span><button id="sign-out" class="side-signout">Sign out</button></div>
@@ -31,6 +40,7 @@
     <header class="topbar">
       <button class="icon-button menu-button" id="menu-button" aria-label="Open navigation">☰</button>
       <div class="crumb"><span>Workspace</span><b>/</b><strong id="current-crumb">Overview</strong></div>
+      <time class="planner-live-clock" id="planner-live-clock" aria-label="Current date and time"></time>
       <div class="top-actions"><span class="flash-chip"><i></i> Viora Flash connected</span><button class="button ghost open-ai" id="open-ai">Ask Flash</button><button class="button primary" id="new-task">＋ New task</button></div>
     </header>
     <div class="content">
@@ -39,6 +49,7 @@
         <div class="head-actions"><button class="button ghost" id="refresh">↻ Refresh</button></div>
       </section>
       <div id="notice" class="notice" role="status" hidden></div>
+      <div class="reminder-banner"><span><strong>Reminders on this device</strong><small id="reminder-permission">Notifications appear while Planner is open in this browser.</small></span><button class="button ghost" id="enable-reminders" type="button">Enable notifications</button></div>
       <section id="dashboard-view" class="view">
         <div class="stats-grid">
           <article class="stat-card"><span>Due today</span><strong id="stat-today">—</strong><small>Tasks with a deadline today</small></article>
@@ -57,6 +68,7 @@
         <div class="view-toolbar">
           <div class="view-tabs" role="tablist"><button class="view-tab active" data-mode="list">List</button><button class="view-tab" data-mode="board">Board</button><button class="view-tab" data-mode="calendar">Calendar</button><button class="view-tab" data-mode="timeline">Timeline</button></div>
           <button class="button ghost" id="add-list" hidden>＋ New list</button>
+          <label class="calendar-scale" id="calendar-scale-wrap" hidden>Show <select id="calendar-scale" class="input"><option value="month">Month</option><option value="week">Week</option><option value="day">Day</option></select></label>
           <div class="filters"><input id="search" class="input" type="search" placeholder="Search tasks…" aria-label="Search tasks"><select id="status-filter" class="input"><option value="">All statuses</option><option value="todo">To do</option><option value="in_progress">In progress</option><option value="review">Review</option><option value="completed">Completed</option></select><select id="priority-filter" class="input"><option value="">All priorities</option><option value="urgent">Urgent</option><option value="high">High</option><option value="normal">Normal</option><option value="low">Low</option></select></div>
         </div>
         <div id="list-view" class="project-mode"></div>
@@ -65,6 +77,7 @@
         <div id="timeline-view" class="project-mode" hidden></div>
       </section>
       <section id="activity-view" class="view" hidden><section class="panel"><div class="panel-head"><div><p class="eyebrow">WORKSPACE HISTORY</p><h2>Recent activity</h2></div></div><div id="activity-list" class="activity-list"></div></section></section>
+      <section id="focus-view" class="view" hidden><section class="panel focus-panel"><div class="panel-head"><div><p class="eyebrow">SINGLE TASK MODE</p><h2>Focus session</h2><p class="muted">Choose one task and start a timer. Time is added when the session ends.</p></div></div><label class="focus-picker">Choose a task<select id="focus-task"></select></label><div id="focus-task-card" class="focus-task-card"></div><div class="focus-clock" id="focus-clock" aria-live="polite">25:00</div><div class="focus-controls"><select id="focus-length" aria-label="Focus session length"><option value="25">25 minute focus</option><option value="50">50 minute focus</option><option value="15">15 minute focus</option></select><button class="button primary" id="focus-start">Start focus</button><button class="button ghost" id="focus-reset">Reset</button></div><p id="focus-note" class="muted" role="status">Timer only runs while this Planner page is open.</p></section></section>
     </div>
   </main>
   <aside class="ai-panel" id="ai-panel">
@@ -87,12 +100,20 @@
       <label>Status<select name="status"><option value="todo">To do</option><option value="in_progress">In progress</option><option value="review">Review</option><option value="completed">Completed</option></select></label>
       <label>Priority<select name="priority"><option value="urgent">Urgent</option><option value="high">High</option><option value="normal" selected>Normal</option><option value="low">Low</option></select></label>
       <label>Start date<input name="startDate" type="date"></label><label>Due date<input name="dueDate" type="date"></label>
+      <label>Scheduled time<input name="scheduledAt" type="datetime-local"></label><label>Reminder<input name="reminderAt" type="datetime-local"></label>
+      <label>Category<input name="category" maxlength="80" placeholder="School, work, personal…"></label><label>Estimated minutes<input name="estimatedMinutes" type="number" min="0" max="100000" step="1" placeholder="e.g. 45"></label>
+      <label>Actual minutes<input name="actualMinutes" type="number" min="0" max="100000" step="1" placeholder="e.g. 30"></label><label>Completion %<input name="progress" type="number" min="0" max="100" step="1" value="0"></label>
+      <label>Repeat<select name="recurrenceFrequency"><option value="none">Does not repeat</option><option value="daily">Daily</option><option value="weekly">Weekly</option><option value="monthly">Monthly</option><option value="yearly">Yearly</option></select></label><label>Repeat interval<input name="recurrenceInterval" type="number" min="1" max="30" step="1" value="1"></label>
+      <label class="task-toggle"><input name="important" type="checkbox"> Mark important</label><label class="task-toggle"><input name="archived" type="checkbox"> Archive task</label>
       <label>Assignee<input name="assignee" maxlength="254" placeholder="Name or email"></label><label>Tags<input name="tags" placeholder="Comma-separated"></label>
       <label class="wide">Description <span class="muted">(Markdown supported)</span><div class="markdown-tools"><button type="button" data-markdown="bold"><b>B</b></button><button type="button" data-markdown="italic"><i>I</i></button><button type="button" data-markdown="heading">H</button><button type="button" data-markdown="list">• List</button></div><textarea name="description" rows="5" maxlength="8000" placeholder="Add context, acceptance criteria, or useful links…"></textarea><div id="description-preview" class="description-preview" hidden></div></label>
+      <label class="wide">Notes<textarea name="notes" rows="3" maxlength="8000" placeholder="Private notes for this task…"></textarea></label>
     </div>
     <section class="task-extras" id="task-extras" hidden>
       <div class="extra-section"><div class="extra-title"><h3>Checklist</h3></div><div id="checklist-list"></div><div id="checklist-form" class="inline-add"><input name="text" required maxlength="300" placeholder="Add a checklist item"><button type="button" class="button small primary" id="add-checklist-item">Add</button></div></div>
       <div class="extra-section"><div class="extra-title"><h3>Comments</h3></div><div id="comment-list"></div><div id="comment-form" class="inline-add"><input name="text" required maxlength="2000" placeholder="Write a comment"><button type="button" class="button small primary" id="add-comment">Comment</button></div></div>
+      <div class="extra-section"><div class="extra-title"><h3>Attachments</h3><span class="muted">PDF, images, or text · 3 MB max each</span></div><div id="attachment-list" class="attachment-list"></div><div class="inline-add"><input id="attachment-file" type="file" accept="application/pdf,image/png,image/jpeg,image/gif,image/webp,text/plain,text/markdown,.md"><button type="button" class="button small primary" id="upload-attachment">Upload</button></div><small id="attachment-status" class="muted" role="status"></small></div>
+      <div class="extra-section task-actions"><button type="button" class="button ghost" id="duplicate-task">Duplicate task</button><button type="button" class="button ghost danger-button" id="delete-task">Delete task</button></div>
       <div class="extra-section"><label class="select-ai"><input id="select-for-ai" type="checkbox"> Include this task in my next Viora request</label></div>
     </section>
     <footer><span id="task-save-note" class="muted"></span><button class="button ghost" value="cancel">Cancel</button><button class="button primary" id="save-task" value="save">Save task</button></footer>
