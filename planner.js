@@ -10,7 +10,8 @@ let state = { projects: [], tasks: [], activity: [] };
 let view = 'dashboard', mode = 'list', currentProject = '', currentList = '', editingTask = '', monthCursor = new Date(), calendarScale = 'month', sortColumn = 'dueDate', sortDirection = 'asc';
 let focusRemaining = 25 * 60, focusDuration = 25 * 60, focusInterval = 0, focusStartedAt = 0, focusTaskId = '', reminderInterval = 0;
 const selected = new Set();
-let toastTimer;
+let toastTimer, loadPromise = null, lastLoadedAt = 0, pendingActions = 0, refreshQueued = false, aiRequestActive = false;
+let actionQueue = Promise.resolve();
 function localDate(d = new Date()) { return new Date(d.getTime() - d.getTimezoneOffset() * 60000).toISOString().slice(0,10); }
 function dateLabel(value) { if (!value) return 'No date'; const d = new Date(value + 'T12:00:00'); return Number.isNaN(+d) ? 'No date' : d.toLocaleDateString(undefined,{month:'short',day:'numeric'}); }
 function dateTime(value) { if (!value) return ''; const d = new Date(value); return Number.isNaN(+d) ? '' : d.toLocaleString(); }
@@ -23,39 +24,84 @@ function priorityName(value) { return ({urgent:'Urgent',high:'High',normal:'Norm
 function projectById(id) { return state.projects.find(p => p.id === id); }
 function taskById(id) { return state.tasks.find(t => t.id === id); }
 async function request(path, options = {}) {
-  const response = await fetch(API + path, { ...options, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', ...(options.headers || {}) }, cache: 'no-store' });
+  const timeoutMs = options.timeoutMs || (path === '/api/planner/assistant' ? 70000 : path.includes('/attachments') ? 45000 : options.method ? 45000 : 22000);
+  const controller = new AbortController(), timeout = setTimeout(() => controller.abort(), timeoutMs);
+  const { timeoutMs: _timeoutMs, ...fetchOptions } = options;
+  const signal = options.signal && AbortSignal.any ? AbortSignal.any([options.signal, controller.signal]) : controller.signal;
+  let response, raw;
+  try {
+    response = await fetch(API + path, { ...fetchOptions, signal, headers: { Authorization: 'Bearer ' + token, 'Content-Type': 'application/json', ...(options.headers || {}) }, cache: 'no-store' });
+    raw = await response.text();
+  }
+  catch (error) {
+    if (controller.signal.aborted) throw Object.assign(new Error('The Planner request took too long. Check your connection and retry.'), { code: 'PLANNER_TIMEOUT' });
+    if (error?.name === 'AbortError') throw new Error('The Planner request was cancelled.');
+    throw new Error('Could not reach the Planner service. Check your connection and retry.');
+  } finally { clearTimeout(timeout); }
   let data;
-  try { data = await response.json(); } catch { throw new Error('The Planner service returned an invalid response.'); }
+  try { data = JSON.parse(raw); } catch { throw new Error('The Planner service returned an invalid response. Retry the request.'); }
+  if (!data || typeof data !== 'object' || Array.isArray(data)) throw new Error('The Planner service returned malformed data. Your saved workspace was left unchanged.');
   if (!response.ok) throw new Error(data.error || ('Planner request failed (' + response.status + ').'));
   return data;
 }
+function normalizeState(value) {
+  if (!value || typeof value !== 'object' || !Array.isArray(value.projects) || !Array.isArray(value.tasks) || (value.activity != null && !Array.isArray(value.activity))) throw new Error('The Planner service returned malformed workspace data. Your saved data was left untouched.');
+  return { version: 1, ...value, activity: value.activity || [] };
+}
 function setSync(ok, text) { $('#sync-dot').classList.toggle('error', !ok); $('#sync-label').textContent = text; }
 function announce(message, error = false) {
-  const box = $('#notice'); box.hidden = !message; box.textContent = message || ''; box.classList.toggle('error-block', !!error);
+  const box = $('#notice'); box.replaceChildren(); box.hidden = !message; box.classList.toggle('error-block', !!error);
+  if (!message) return;
+  const text = document.createElement('span'); text.className = 'notice-text'; text.textContent = message; box.append(text);
+  if (error) { const retry = document.createElement('button'); retry.className = 'notice-retry'; retry.type = 'button'; retry.textContent = 'Retry'; retry.addEventListener('click', () => { retry.disabled = true; retry.textContent = 'Retrying…'; void loadState({ force: true }); }); box.append(retry); }
 }
 function toast(message) { const box = $('#toast'); box.textContent = message; box.classList.add('show'); clearTimeout(toastTimer); toastTimer = setTimeout(() => box.classList.remove('show'), 2600); }
-function showGate() { $('#signin-gate').hidden = false; $('#planner-app').hidden = true; }
-function showApp() { $('#signin-gate').hidden = true; $('#planner-app').hidden = false; }
-async function loadState() {
-  if (!token) { showGate(); return; }
-  setSync(true, 'Syncing privately');
-  try {
-    state = await request('/api/planner/state');
-    state.projects ||= []; state.tasks ||= []; state.activity ||= [];
-    showApp(); setSync(true, 'Synced to your account'); announce('');
-    renderAll();
-  } catch (error) {
-    if (/sign in again/i.test(error.message)) { showGate(); return; }
-    showApp(); setSync(false, 'Sync unavailable');
-    announce(error.message + ' Your Planner changes have not been saved.', true);
-    renderAll();
-  }
+function showGate() { $('#planner-loading').hidden = true; $('#signin-gate').hidden = false; $('#planner-app').hidden = true; }
+function showLoading() { $('#planner-loading').hidden = false; $('#signin-gate').hidden = true; $('#planner-app').hidden = true; }
+function showApp() { $('#planner-loading').hidden = true; $('#signin-gate').hidden = true; $('#planner-app').hidden = false; }
+function loadState({ force = false, quiet = false } = {}) {
+  if (!token) { showGate(); return Promise.resolve(); }
+  if (pendingActions) { refreshQueued = true; return actionQueue.then(() => loadState({ force: true, quiet })); }
+  if (loadPromise) return loadPromise;
+  if (!force && lastLoadedAt && Date.now() - lastLoadedAt < 3000) return Promise.resolve();
+  loadPromise = (async () => {
+    if (!quiet) setSync(true, 'Syncing privately');
+    try {
+      state = normalizeState(await request('/api/planner/state'));
+      lastLoadedAt = Date.now(); showApp(); setSync(true, 'Synced to your account'); announce('');
+      renderAll();
+    } catch (error) {
+      if (/sign in again/i.test(error.message)) { showGate(); return; }
+      showApp(); setSync(false, 'Sync unavailable');
+      announce(error.message, true); renderAll();
+    }
+  })().finally(() => { loadPromise = null; });
+  return loadPromise;
 }
-async function runActions(actions, confirmed = false) {
-  const result = await request('/api/planner/actions', { method: 'POST', body: JSON.stringify({ actions, confirmed }) });
-  state = result.state; state.projects ||= []; state.tasks ||= []; state.activity ||= [];
-  setSync(true, 'Synced to your account'); announce(''); renderAll();
-  return result;
+function runActions(actions, confirmed = false) {
+  pendingActions++;
+  const operation = actionQueue.catch(() => {}).then(async () => {
+    if (loadPromise) await loadPromise;
+    try {
+      const result = await request('/api/planner/actions', { method: 'POST', body: JSON.stringify({ actions, confirmed }) });
+      if (!Array.isArray(result.results)) throw new Error('The Planner service returned an incomplete save response. Refresh before retrying.');
+      const updated = normalizeState(result.state);
+      state = updated; lastLoadedAt = Date.now();
+      setSync(true, 'Synced to your account'); announce(''); renderAll();
+      return { ...result, state: updated };
+    } catch (error) {
+      if (error.code === 'PLANNER_TIMEOUT') {
+        try { state = normalizeState(await request('/api/planner/state')); lastLoadedAt = Date.now(); renderAll(); }
+        catch { /* Keep the last known good state; retry control remains available. */ }
+      }
+      throw error;
+    }
+  });
+  actionQueue = operation.catch(() => {}).finally(() => {
+    pendingActions = Math.max(0, pendingActions - 1);
+    if (!pendingActions && refreshQueued) { refreshQueued = false; void loadState({ force: true, quiet: true }); }
+  });
+  return operation;
 }
 function filteredTasks() {
   const query = $('#search')?.value.trim().toLowerCase() || '';
@@ -358,23 +404,25 @@ async function uploadAttachment() {
     for (let at=0;at<bytes.length;at+=0x8000) binary += String.fromCharCode(...bytes.subarray(at,at+0x8000));
     status.textContent = 'Uploading to your private Viora storage…';
     const data = await request('/api/planner/attachments',{method:'POST',body:JSON.stringify({taskId:task.id,name:file.name,contentType,data:btoa(binary)})});
-    state=data.state;state.projects ||= [];state.tasks ||= [];state.activity ||= [];setSync(true,'Synced to your account');renderAll();renderTaskExtras(taskById(task.id));status.textContent='Uploaded '+file.name;input.value='';
+    state=normalizeState(data.state);lastLoadedAt=Date.now();setSync(true,'Synced to your account');renderAll();renderTaskExtras(taskById(task.id));status.textContent='Uploaded '+file.name;input.value='';
   } catch(error) { status.textContent='Upload failed: '+error.message; }
   finally { button.disabled = false; }
 }
 async function downloadAttachment(id) {
   const task=taskById(editingTask),file=task?.attachments?.find(item=>item.id===id);if(!task||!file)return;
   $('#attachment-status').textContent='Downloading '+file.name+'…';
+  const controller=new AbortController(),timeout=setTimeout(()=>controller.abort(),45000);
   try {
-    const response=await fetch(API+'/api/planner/attachments/'+encodeURIComponent(id)+'?taskId='+encodeURIComponent(task.id),{headers:{Authorization:'Bearer '+token},cache:'no-store'});
+    const response=await fetch(API+'/api/planner/attachments/'+encodeURIComponent(id)+'?taskId='+encodeURIComponent(task.id),{headers:{Authorization:'Bearer '+token},cache:'no-store',signal:controller.signal});
     if(!response.ok){const data=await response.json().catch(()=>({}));throw new Error(data.error||'Download failed ('+response.status+').')}
     const blob=await response.blob(),url=URL.createObjectURL(blob),a=document.createElement('a');a.href=url;a.download=file.name;a.click();setTimeout(()=>URL.revokeObjectURL(url),5000);$('#attachment-status').textContent='Downloaded '+file.name;
-  } catch(error) { $('#attachment-status').textContent='Download failed: '+error.message; }
+  } catch(error) { $('#attachment-status').textContent=controller.signal.aborted?'Download timed out. Check your connection and retry.':'Download failed: '+error.message; }
+  finally { clearTimeout(timeout); }
 }
 async function removeAttachment(id) {
   const task=taskById(editingTask),file=task?.attachments?.find(item=>item.id===id);if(!task||!file)return;
   if(!window.confirm('Remove attachment “'+file.name+'”?'))return;
-  try { const data=await request('/api/planner/attachments/remove',{method:'POST',body:JSON.stringify({taskId:task.id,attachmentId:id})});state=data.state;state.projects ||= [];state.tasks ||= [];state.activity ||= [];renderAll();renderTaskExtras(taskById(task.id));$('#attachment-status').textContent='Removed '+file.name; }
+  try { const data=await request('/api/planner/attachments/remove',{method:'POST',body:JSON.stringify({taskId:task.id,attachmentId:id})});state=normalizeState(data.state);lastLoadedAt=Date.now();renderAll();renderTaskExtras(taskById(task.id));$('#attachment-status').textContent='Removed '+file.name; }
   catch(error){$('#attachment-status').textContent='Could not remove attachment: '+error.message}
 }
 function openTask(id) {
@@ -418,8 +466,10 @@ function pushAiMessage(text, role) {
 }
 async function sendAi(event, promptOverride) {
   if (event) event.preventDefault();
+  if (aiRequestActive) return;
   const input=$('#ai-input'), command=String(promptOverride||input.value||'').trim();
   if(!command)return;
+  aiRequestActive=true;
   input.value=''; pushAiMessage(command,'user');
   const waiting=pushAiMessage('Checking your workspace and preparing the right actions…','assistant'); waiting.classList.add('pending'); $('#ai-send').disabled=true;
   try {
@@ -430,23 +480,30 @@ async function sendAi(event, promptOverride) {
       if(!window.confirm('Viora is asking to delete or change this data:\n\n'+summary+'\n\nContinue?')) { pushAiMessage('Cancelled. No changes were made.','assistant'); return; }
       data=await request('/api/planner/assistant/confirm',{method:'POST',body:JSON.stringify({confirmationId:data.confirmationId})});
     }
-    if(data.state) { state=data.state; renderAll(); }
+    if(data.state) { state=normalizeState(data.state); lastLoadedAt=Date.now(); renderAll(); }
     pushAiMessage(data.message || 'The request finished.','assistant');
-  } catch(error) { waiting.remove(); pushAiMessage('I could not complete that Planner request: '+error.message,'assistant'); }
-  finally { $('#ai-send').disabled=false; }
+  } catch(error) {
+    waiting.remove(); input.value=command;
+    pushAiMessage('I could not complete that Planner request: '+error.message+' Your request is back in the input so you can retry.','assistant');
+    if(error.code==='PLANNER_TIMEOUT')void loadState({force:true,quiet:true});
+  }
+  finally { aiRequestActive=false; $('#ai-send').disabled=false; }
 }
 function openAi() { $('#ai-panel').classList.add('open'); }
 function closeAi() { $('#ai-panel').classList.remove('open'); }
 function bindEvents() {
-  $('#refresh').addEventListener('click',loadState);
-  window.addEventListener('focus',()=>{if(!$('dialog[open]').length)loadState()});
-  setInterval(()=>{if(document.visibilityState==='visible'&&!$('dialog[open]').length)loadState()},60000);
+  $('#refresh').addEventListener('click',()=>void loadState({force:true}));
+  window.addEventListener('focus',()=>{if(!$('dialog[open]').length)void loadState()});
+  window.addEventListener('storage',event=>{if(event.key==='viora_planner_changed')void loadState({force:true,quiet:true})});
+  if ('BroadcastChannel' in window) { const channel=new BroadcastChannel('viora-planner'); channel.addEventListener('message',event=>{if(event.data?.type==='changed')void loadState({force:true,quiet:true})}); }
+  setInterval(()=>{if(document.visibilityState==='visible'&&!$('dialog[open]').length&&Date.now()-lastLoadedAt>=60000)void loadState({force:true,quiet:true})},60000);
   if ('Notification' in window && Notification.permission === 'granted') { $('#reminder-permission').textContent = 'Browser reminders enabled on this device.'; pollReminders(); }
   reminderInterval = setInterval(pollReminders,15000);
   updateLiveClock(); setInterval(updateLiveClock,1000);
   $('#new-task').addEventListener('click',openNewTask);
   $('#add-project').addEventListener('click',()=>$('#project-dialog').showModal());
-  $('#project-form').addEventListener('submit',async event=>{event.preventDefault();const data=new FormData(event.currentTarget);const name=String(data.get('name')||'').trim();if(!name)return;try{await createProject(name,String(data.get('folder')||'').trim(),String(data.get('description')||''));event.currentTarget.reset();$('#project-dialog').close()}catch(error){toast(error.message)}});
+  let projectSubmitting=false;
+  $('#project-form').addEventListener('submit',async event=>{event.preventDefault();if(projectSubmitting)return;const form=event.currentTarget,data=new FormData(form),submit=event.submitter,name=String(data.get('name')||'').trim();if(!name)return;projectSubmitting=true;if(submit)submit.disabled=true;try{await createProject(name,String(data.get('folder')||'').trim(),String(data.get('description')||''));form.reset();$('#project-dialog').close()}catch(error){toast(error.message)}finally{projectSubmitting=false;if(submit)submit.disabled=false}});
   $('#task-form').addEventListener('submit',saveTask);
   $('#enable-reminders').addEventListener('click',enableBrowserReminders);
   $('#focus-task').addEventListener('change',()=>{if(focusInterval)void finishFocus(true);renderFocus()});
@@ -510,8 +567,12 @@ function handleTaskClick(event) {
 bindEvents();
 async function boot() {
   if (!token) { showGate(); return; }
-  try { state=await request('/api/planner/state'); state.projects ||= [];state.tasks ||= [];state.activity ||= [];showApp();setSync(true,'Synced to your account');renderAll();const params=new URLSearchParams(location.search),taskId=params.get('task'),projectId=params.get('project');if(taskId&&taskById(taskId)){history.replaceState(null,'',location.pathname);openTask(taskId)}else if(projectId&&projectById(projectId)){history.replaceState(null,'',location.pathname);openProject(projectId)} }
-  catch(error) { if(/sign in again/i.test(error.message)){showGate();return} showApp();setSync(false,'Sync unavailable');announce(error.message,true);renderAll(); }
+  showLoading();
+  await loadState({force:true});
+  if ($('#sync-dot').classList.contains('error')) return;
+  const params=new URLSearchParams(location.search),taskId=params.get('task'),projectId=params.get('project');
+  if(taskId&&taskById(taskId)){history.replaceState(null,'',location.pathname);openTask(taskId)}
+  else if(projectId&&projectById(projectId)){history.replaceState(null,'',location.pathname);openProject(projectId)}
 }
 boot();
 })();

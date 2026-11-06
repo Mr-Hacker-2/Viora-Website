@@ -8,9 +8,11 @@
 <title>Planner — Viora</title>
 <link rel="icon" href="assets/icon-128.png">
 <link rel="stylesheet" href="planner.css">
+<link rel="stylesheet" href="planner-runtime.css">
 <script defer src="planner.js"></script>
 </head>
 <body>
+<div id="planner-loading" class="planner-loading" role="status" aria-live="polite"><span class="planner-spinner" aria-hidden="true"></span><strong>Opening your Planner…</strong><small>Checking your account and saved workspace.</small></div>
 <div id="signin-gate" class="gate" hidden>
   <div class="gate-card"><a class="brand" href="index.html"><span class="orb"></span>Viora</a><p class="eyebrow">YOUR WORKSPACE</p><h1>Sign in to Planner</h1><p>Planner data is private to your Viora account and syncs through Viora’s server.</p><a class="button primary" href="login.html">Continue with Google</a></div>
 </div>

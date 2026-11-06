@@ -956,6 +956,10 @@ function isPlannerChatRequest(text) {
   const plannerVerb = /\b(add|create|make|plan|organize|schedule|reschedule|move|finish|complete|mark|show|list|find|search|update|delete|remove|what'?s|what is|tell me)\b/i.test(text);
   return plannerSubject && plannerVerb;
 }
+function notifyPlannerChanged() {
+  try { localStorage.setItem('viora_planner_changed', String(Date.now())); } catch {}
+  try { const channel = new BroadcastChannel('viora-planner'); channel.postMessage({type:'changed'}); channel.close(); } catch {}
+}
 async function send(text) {
   text = (text || '').trim(); if (!text || busy) return;
   const selectedHumanizer = asst === 'human';
@@ -979,6 +983,7 @@ async function send(text) {
   if (isPlannerChatRequest(text)) {
     m.eff = 'flash'; m.stage = 'Checking your Planner…'; T.detail(tr, 'understand', 'Authenticated Planner tools'); paint();
     const command = text.replace(/^\s*@planner\b\s*[:,]?\s*/i, '').trim() || text;
+    const plannerTimeout = setTimeout(() => ctl.abort(), 70000);
     try {
       let response = await fetch(API + '/api/planner/assistant', { method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+S.token}, body:JSON.stringify({command,selectedTaskIds:[],timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone}), signal:ctl.signal });
       let data = await response.json().catch(()=>({}));
@@ -992,13 +997,15 @@ async function send(text) {
         if (!response.ok) throw new Error(data.error || 'The confirmed Planner change could not be saved.');
       }
       m.content = String(data.message || 'Planner request complete.');
+      if (Array.isArray(data.results) && data.results.length) notifyPlannerChanged();
       const tasks = Array.isArray(data.tasks) ? data.tasks.slice(0,8).map(task=>({id:String(task.id||''),title:String(task.title||'').slice(0,180),status:String(task.status||'todo'),priority:String(task.priority||'normal'),dueDate:String(task.dueDate||''),progress:Number(task.progress)||0})) : [];
       const projects = Array.isArray(data.projects) ? data.projects.slice(0,4).map(project=>({id:String(project.id||''),name:String(project.name||'').slice(0,180)})) : [];
       if (tasks.length || projects.length) m.planner = { tasks, projects };
       m.stage = ''; paint();
     } catch (error) {
-      m.err = true; m.content = 'I could not complete that Planner request: ' + String(error.message || error);
+      m.err = true; m.content = ctl.signal.aborted ? 'Planner did not respond in time, or the request was stopped. Open Planner to confirm the latest saved state before retrying.' : 'I could not complete that Planner request: ' + String(error.message || error);
     } finally {
+      clearTimeout(plannerTimeout);
       T.finish(tr, m.err ? 'failed' : 'done'); busy = null; sendState(false); save(); render();
     }
     return;
