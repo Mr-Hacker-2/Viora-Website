@@ -8,6 +8,7 @@ const js = await readFile(new URL('../planner.js', import.meta.url), 'utf8');
 const app = await readFile(new URL('../app.html', import.meta.url), 'utf8');
 const css = await readFile(new URL('../planner.css', import.meta.url), 'utf8');
 const appCss = await readFile(new URL('../assets/x/app-polish.css', import.meta.url), 'utf8');
+const runtimeCss = await readFile(new URL('../planner-runtime.css', import.meta.url), 'utf8');
 
 test('planner page scripts parse and expose authenticated workspace actions', () => {
   assert.doesNotThrow(() => new Script(js));
@@ -47,6 +48,23 @@ test('planner and conversation visuals adapt at tablet and mobile widths', () =>
   assert.match(css, /@media\(max-width:480px\)/);
   assert.match(css, /\.focus-panel/);
   assert.match(appCss, /\.planner-chat-card/);
+});
+
+test('planner boot and refresh always settle, deduplicate requests, and expose retry', () => {
+  assert.match(html, /id="planner-loading"/);
+  assert.match(js, /PLANNER_TIMEOUT/);
+  assert.match(js, /normalizeState\(value\)/);
+  assert.match(js, /if \(loadPromise\) return loadPromise/);
+  assert.match(js, /if \(pendingActions\) \{ refreshQueued = true/);
+  assert.match(js, /notice-retry/);
+  assert.match(runtimeCss, /@media\(prefers-reduced-motion:reduce\)/);
+});
+
+test('chat changes notify an already open Planner tab', () => {
+  assert.match(app, /function notifyPlannerChanged\(\)/);
+  assert.match(app, /viora_planner_changed/);
+  assert.match(js, /viora_planner_changed/);
+  assert.match(js, /new BroadcastChannel\('viora-planner'\)/);
 });
 
 test('frontend does not contain B2 signing code or storage credentials', () => {
