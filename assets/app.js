@@ -84,12 +84,20 @@ const LS = {
 };
 const session = () => LS.get('viora_session', null);
 const Auth = {
-  googleUrl(mode, email, termsAccepted = false) {
+  googleUrl(mode, email = '', termsAccepted = false) {
     const url = new URL(VIORA.authApi + '/auth/google');
     url.searchParams.set('site', '1'); url.searchParams.set('mode', mode === 'signup' ? 'signup' : 'signin');
     if (email) url.searchParams.set('email', email);
     if (mode === 'signup' && termsAccepted) url.searchParams.set('terms', '1');
     return url.href;
+  },
+  async email(path, body) {
+    let response;
+    try { response = await fetch(VIORA.authApi + '/api/auth/email/' + path, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body), signal: AbortSignal.timeout(20000) }); }
+    catch { throw new Error('Could not reach the Viora sign-in server. Please try again shortly.'); }
+    const data = await response.json().catch(() => ({}));
+    if (!response.ok) throw Object.assign(new Error(data.error || 'We could not complete that request. Please try again.'), { status: response.status });
+    return data;
   },
   /** The account record in Backblaze (via the auth server): the sign-up questions plus this person's saved answers. */
   async profile(token, answers) {
@@ -112,7 +120,7 @@ const Auth = {
     catch { throw new Error('Could not reach the sign-in server. It may be waking up, so try again in 30 seconds.'); }
     if (!r.ok) throw new Error('That sign-in could not be verified. Please try again.');
     const d = await r.json();
-    const s = { email: d.email, name: d.name || '', picture: d.picture || '', token, provider: 'google', at: Date.now() };
+    const s = { email: d.email, name: d.name || '', picture: d.picture || '', token, provider: d.provider || 'google', at: Date.now() };
     LS.set('viora_session', s); return s;
   },
   signOut() { LS.del('viora_session'); }
@@ -169,24 +177,43 @@ $$('.rv').forEach(el => io ? io.observe(el) : el.classList.add('in'));
 
 /* ================= page: login ================= */
 if (page === 'login') {
-  const err = $('#auth-err'), btn = $('#google'), email = $('#auth-email'), consent = $('#auth-consent');
-  const mode = () => document.body.dataset.mode === 'signup' ? 'signup' : 'signin';
-  const label = () => mode() === 'signup' ? 'Create account with Google' : 'Continue with Google';
-  const fail = msg => { err.textContent = msg; err.classList.add('show'); btn.dataset.busy = 'false'; btn.disabled = mode() === 'signup' && !consent.checked; btn.lastChild.textContent = label(); };
-  const hp = new URLSearchParams(location.hash.slice(1));
+  const err = $('#auth-err'), note = $('#auth-note'), btn = $('#google'), email = $('#auth-email'), consent = $('#auth-consent');
+  const emailForm = $('#email-auth'), submit = $('#email-submit'), password = $('#auth-password'), confirm = $('#auth-confirm');
   const query = new URLSearchParams(location.search);
+  const mode = () => document.body.dataset.mode === 'signup' ? 'signup' : 'signin';
+  let busy = false, resetMode = query.get('reset') === '1';
+  const label = () => mode() === 'signup' ? 'Sign up with Google' : 'Continue with Google';
+  const fail = msg => { busy = false; err.textContent = msg; err.classList.add('show'); btn.dataset.busy = 'false'; submit.dataset.busy = 'false'; btn.disabled = submit.disabled = mode() === 'signup' && !consent.checked && !resetMode; submit.textContent = resetMode ? 'Update password' : (mode() === 'signup' ? 'Create account with email' : 'Sign in with email'); btn.querySelector('#google-label').textContent = label(); };
+  const showNote = msg => { note.textContent = msg; note.classList.add('show'); err.classList.remove('show'); };
+  const setMode = next => {
+    resetMode = false; document.body.dataset.mode = next;
+    const creating = next === 'signup';
+    $('#auth-title').textContent = creating ? 'Create your account' : 'Welcome back';
+    $('#auth-sub').textContent = creating ? 'Start your Viora workspace with email or Google.' : 'Sign in with email or continue securely with Google.';
+    $('#name-field').hidden = !creating; $('#confirm-field').hidden = !creating; $('#auth-consent-wrap').hidden = !creating; $('#forgot-wrap').hidden = creating;
+    password.autocomplete = creating ? 'new-password' : 'current-password';
+    $('#auth-signin').setAttribute('aria-pressed', String(!creating)); $('#auth-signup').setAttribute('aria-pressed', String(creating));
+    submit.textContent = creating ? 'Create account with email' : 'Sign in with email';
+    btn.querySelector('#google-label').textContent = label();
+    btn.disabled = creating && !consent.checked; submit.disabled = creating && !consent.checked;
+    if (creating) showNote('Choose email or Google. Your Google account opens directly without requiring an email above.');
+    else { err.classList.remove('show'); note.classList.remove('show'); }
+  };
+  $('#auth-signin').addEventListener('click', () => setMode('signin'));
+  $('#auth-signup').addEventListener('click', () => setMode('signup'));
+  consent.addEventListener('change', () => { btn.disabled = submit.disabled = mode() === 'signup' && !consent.checked && !resetMode; });
+  $$('[data-toggle-password]').forEach(toggle => toggle.addEventListener('click', () => { const input = $('#' + toggle.dataset.togglePassword); input.type = input.type === 'password' ? 'text' : 'password'; toggle.textContent = input.type === 'password' ? 'Show' : 'Hide'; toggle.setAttribute('aria-label', input.type === 'password' ? 'Show password' : 'Hide password'); }));
+  password.addEventListener('input', () => { if (mode() !== 'signup') return; const v = password.value, score = [v.length >= 10, /[a-z]/.test(v) && /[A-Z]/.test(v), /\d/.test(v), /[^A-Za-z0-9]/.test(v)].filter(Boolean).length; $('#password-strength').textContent = v ? ['Use at least 10 characters', 'Weak password', 'Fair password', 'Good password', 'Strong password'][score] : ''; $('#password-strength').dataset.level = String(score); });
+  const hp = new URLSearchParams(location.hash.slice(1));
   history.replaceState(null, '', location.pathname);
 
   const friendlyError = code => {
     if (code === 'account_not_found') {
       document.body.dataset.mode = 'signup'; $('#auth-signin').setAttribute('aria-pressed', 'false'); $('#auth-signup').setAttribute('aria-pressed', 'true');
-      $('#auth-title').textContent = 'Create your Viora account';
-      $('#auth-sub').textContent = 'Use your Google profile name and verified email to create an account, then answer a few quick questions so Viora can tailor your experience.';
-      $('#auth-consent-wrap').hidden = false;
+      setMode('signup');
       email.value = email.value || query.get('email') || '';
-      btn.lastChild.textContent = 'Create account with Google';
       const message = "We couldn't find an account with this email. Let's create one!";
-      err.textContent = message; err.classList.add('show'); btn.disabled = !consent.checked;
+      showNote(message); btn.disabled = !consent.checked;
       return true;
     }
     return false;
@@ -209,7 +236,7 @@ if (page === 'login') {
   (async () => {
     if (hp.get('error')) {
       if (friendlyError(hp.get('error'))) return;
-      const messages = { storage_unavailable: 'Viora could not reach secure account storage. Please try again shortly.', account_suspended: 'This account is currently unavailable. Contact Viora support for help.', unverified_email: 'Google did not verify this email. Please choose a verified Google account.' };
+      const messages = { storage_unavailable: 'Viora could not reach secure account storage. Please try again shortly.', account_suspended: 'This account is currently unavailable. Contact Viora support for help.', account_method_conflict: 'This account uses email and password. Please sign in with the email form.', unverified_email: 'Google did not verify this email. Please choose a verified Google account.' };
       return fail(messages[hp.get('error')] || (hp.get('error') === 'access_denied' ? 'Google sign-in was cancelled. You can try again any time.' : 'Google sign-in failed. Please try again.'));
     }
     if (hp.get('token')) {
@@ -220,13 +247,45 @@ if (page === 'login') {
     } else if (s) finishLogin(s);
   })();
   btn.onclick = () => {
-    const value = email.value.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { email.setAttribute('aria-invalid', 'true'); email.focus(); return fail('Enter a valid email address to continue.'); }
-    email.removeAttribute('aria-invalid');
     if (mode() === 'signup' && !consent.checked) return fail('Please accept the Terms and Privacy Policy to create your account.');
-    btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode(), value, consent.checked);
+    // Google OAuth is intentionally independent from the email/password fields.
+    btn.disabled = true; btn.dataset.busy = 'true'; btn.querySelector('#google-label').textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode(), '', consent.checked);
   };
-  email.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); btn.click(); } });
+  emailForm.addEventListener('submit', async event => {
+    event.preventDefault(); if (busy) return;
+    err.classList.remove('show'); note.classList.remove('show');
+    const address = email.value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) { email.setAttribute('aria-invalid', 'true'); email.focus(); return fail('Enter a valid email address.'); }
+    email.removeAttribute('aria-invalid');
+    if (mode() === 'signup' && !resetMode && !consent.checked) return fail('Please accept the Terms and Privacy Policy to create your account.');
+    if (password.value.length < 10) return fail('Use a password with at least 10 characters.');
+    if (mode() === 'signup' && !resetMode && password.value !== confirm.value) return fail('Your passwords do not match.');
+    busy = true; submit.disabled = btn.disabled = true; submit.dataset.busy = 'true'; submit.textContent = resetMode ? 'Updating password…' : (mode() === 'signup' ? 'Creating account…' : 'Signing in…');
+    try {
+      if (resetMode) {
+        const result = await Auth.email('reset', { email: address, token: query.get('token'), password: password.value });
+        resetMode = false; setMode('signin'); password.value = ''; confirm.value = ''; showNote(result.message || 'Password updated. Sign in to continue.');
+      } else if (mode() === 'signup') {
+        const result = await Auth.email('register', { name: $('#auth-name').value.trim(), email: address, password: password.value, termsAccepted: consent.checked });
+        password.value = ''; confirm.value = ''; showNote(result.message || 'Check your email for a verification link.');
+      } else {
+        const result = await Auth.email('login', { email: address, password: password.value });
+        const sess = await Auth.finish(result.token); await finishLogin(sess);
+      }
+    } catch (error) { fail(error.message); }
+    finally { busy = false; submit.disabled = btn.disabled = mode() === 'signup' && !consent.checked && !resetMode; submit.dataset.busy = 'false'; if (!resetMode) submit.textContent = mode() === 'signup' ? 'Create account with email' : 'Sign in with email'; }
+  });
+  $('#forgot-password').addEventListener('click', async event => {
+    event.preventDefault(); if (busy) return;
+    const address = email.value.trim().toLowerCase();
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) { email.setAttribute('aria-invalid', 'true'); email.focus(); return fail('Enter your email address first, then choose Forgot password.'); }
+    busy = true; try { const result = await Auth.email('forgot', { email: address }); showNote(result.message); } catch (error) { fail(error.message); } finally { busy = false; }
+  });
+  if (query.get('mode') === 'signup' || location.pathname.endsWith('/signup.html')) setMode('signup');
+  if (resetMode) { document.body.dataset.mode = 'signin'; setMode('signup'); resetMode = true; $('#auth-consent-wrap').hidden = true; $('#name-field').hidden = true; $('#confirm-field').hidden = false; $('#forgot-wrap').hidden = true; $('#auth-title').textContent = 'Choose a new password'; $('#auth-sub').textContent = 'Set a new password for your Viora account.'; submit.textContent = 'Update password'; submit.disabled = false; showNote('Use at least 10 characters for your new password.'); }
+  if (query.get('verified') === '1') showNote('Email verified. Sign in to continue.');
+  else if (query.get('verified') === 'error') fail('That verification link is invalid or expired. Please sign up again or contact support.');
+  if (query.get('email')) email.value = query.get('email');
 }
 
 /* ================= page: account ================= */
@@ -239,7 +298,7 @@ if (page === 'account') {
     else av.textContent = name[0].toUpperCase();
     $('#a-name').textContent = name; $('#a-email').textContent = s.email;
     $('#kv-email').textContent = s.email; $('#kv-name').textContent = name;
-    $('#kv-prov').textContent = 'Google';
+    $('#kv-prov').textContent = s.provider === 'email' ? 'Email and password' : 'Google';
     $('#kv-since').textContent = new Date(s.at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
     $('#signout').onclick = () => { Auth.signOut(); location.href = 'index.html'; };
     // If the server no longer accepts this session, sign out instead of showing stale details.
