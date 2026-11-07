@@ -1070,12 +1070,14 @@ figure.code pre {
 .step {
   display: flex;
   align-items: center;
+  min-width: 0;
   gap: 8px;
   padding: 7px 10px;
   border: 1px solid var(--line);
   border-radius: var(--r-md);
   background: var(--ink-2);
   font-size: 12.5px;
+  overflow-wrap: anywhere;
 }
 
 .step .dot {
