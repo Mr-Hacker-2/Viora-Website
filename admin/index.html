@@ -175,7 +175,7 @@
 <script>
 (() => {
 'use strict';
-const API='https://viora-auth-website.onrender.com';
+const API=['localhost','127.0.0.1','::1'].includes(location.hostname)||location.port==='4173'?'/__admin_api':'https://viora-auth-website.onrender.com';
 const $=s=>document.querySelector(s), $$=s=>[...document.querySelectorAll(s)];
 let token=(()=>{try{return sessionStorage.getItem('viora_admin_session')||JSON.parse(localStorage.getItem('viora_session')||'null')?.token||''}catch{return ''}})();
 const gateTitle=$('#gate-title'),gateMessage=$('#gate-message'),gateDetail=$('#gate-detail'),gateActions=$('#gate-actions');
