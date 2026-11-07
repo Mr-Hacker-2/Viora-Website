@@ -1,6 +1,12 @@
 import test from 'node:test'; import assert from 'node:assert/strict';
 import { DEFAULT_LEVEL, personaFor, withPersona, normLevel } from '../assets/x/persona.js';
 test('default level is warm and asks for emojis', () => { assert.equal(DEFAULT_LEVEL, 'warm'); assert.match(personaFor('flash'), /emojis/i); assert.match(withPersona('flash'), /Answer the user's actual request/); });
+test('Flash idea suggestions respect explicit user constraints', () => {
+  const prompt = withPersona('flash');
+  assert.match(prompt, /unless they request a different number or format/);
+  assert.match(prompt, /recommendation only when it fits their tone and needs/);
+  assert.match(prompt, /invite them to choose only when a follow-up would help/);
+});
 test('off adds nothing', () => assert.equal(personaFor('flash', 'off'), ''));
 test('rewriting and unknown assistants stay plain', () => { for (const a of ['human', 'humanize', 'legacy']) assert.equal(personaFor(a, 'vivid'), ''); });
 test('code safety rule is always present', () => { for (const l of ['warm', 'vivid']) assert.match(withPersona('math', l), /code in fenced blocks/); });
