@@ -17,6 +17,23 @@ test('the app inline module parses before the chat UI can initialize', async () 
   assert.doesNotThrow(() => new AsyncFunction(body.slice(iife)));
 });
 
+test('planner commands use the authenticated Planner service', async () => {
+  const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
+  assert.match(html, /function isPlannerChatRequest\(text\)/);
+  assert.match(html, /if \(isPlannerChatRequest\(text\)\)/);
+  assert.match(html, /\/api\/planner\/assistant/);
+  assert.match(html, /\/api\/planner\/assistant\/confirm/);
+});
+
+test('login explains that Google verifies the email and password', async () => {
+  const html = await readFile(new URL('../login.html', import.meta.url), 'utf8');
+  const auth = await readFile(new URL('../assets/app.js', import.meta.url), 'utf8');
+  assert.match(html, /id="auth-email"[^>]*type="email"[^>]*required/);
+  assert.match(html, /Enter your Google email above/);
+  assert.match(auth, /googleUrl\(mode, email, termsAccepted = false\)/);
+  assert.match(auth, /Auth\.googleUrl\(mode\(\), value, consent\.checked\)/);
+});
+
 test('Pro Search exposes real Quick and Deep modes and streams server activity into progress', async () => {
   const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
   assert.match(html, /id="research-mode"[^>]*aria-label="Research depth"/);

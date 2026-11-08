@@ -1,8 +1,9 @@
 {
-  "at": "2026-11-03T22:12:00.201Z",
+  "at": "2026-11-08T15:30:49.634Z",
+  "caseSignature": "6ee5596921a08f56313638590b422a000472e153dcda5a98931b6b54e601c460",
   "legacy": {
-    "accuracy": 0.758,
-    "correct": 25,
+    "accuracy": 0.697,
+    "correct": 23,
     "total": 33,
     "misses": [
       {
@@ -31,6 +32,16 @@
         "got": "math"
       },
       {
+        "t": "Plan how to fill this form",
+        "want": "flash",
+        "got": "automate"
+      },
+      {
+        "t": "Which button submits this page?",
+        "want": "flash",
+        "got": "automate"
+      },
+      {
         "t": "Fact-check this Python code against current documentation",
         "want": "search",
         "got": "math"
@@ -48,20 +59,9 @@
     ]
   },
   "current": {
-    "accuracy": 0.939,
-    "correct": 31,
+    "accuracy": 1,
+    "correct": 33,
     "total": 33,
-    "misses": [
-      {
-        "t": "Plan how to fill this form",
-        "want": "automate",
-        "got": "flash"
-      },
-      {
-        "t": "Which button submits this page?",
-        "want": "automate",
-        "got": "flash"
-      }
-    ]
+    "misses": []
   }
 }

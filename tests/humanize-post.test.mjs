@@ -71,5 +71,7 @@ test('Humanizer Voice option offers chats, natural and sample, and falls back to
   const sel = html.match(/<select id="hz-voice-mode">([\s\S]*?)<\/select>/); assert.ok(sel);
   assert.deepEqual([...sel[1].matchAll(/value="([^"]+)"/g)].map(m => m[1]), ['chats', 'natural', 'sample']);
   assert.match(html, /chatVoiceSample\(chats\)/); assert.match(html, /Viora uses a natural human voice/);
+  assert.match(html, /const voiceGuide = voice \? '' : 'Use a natural human voice\. '/);
+  assert.match(html, /strengthGuide \+ '\. ' \+ voiceGuide/);
   assert.match(HUMANIZER, /requested style sets formality/);
 });

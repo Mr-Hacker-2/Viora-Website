@@ -1,6 +1,7 @@
 /* Routing eval: scores the current router and the legacy one on labelled prompts, then compares with the last saved run.
    This measures ROUTING accuracy only. It says nothing about the quality of the answers the server's models give. */
 import { readFileSync, writeFileSync, existsSync, mkdirSync } from 'node:fs';
+import { createHash } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
 import { classify } from '../assets/x/router.js';
 const legacy = (t, page) => { const x = t.toLowerCase();
@@ -11,12 +12,13 @@ const legacy = (t, page) => { const x = t.toLowerCase();
   if (!fileQ && /\b(latest|news|today|current|currently|price|who won|who is|who are|this week|this year|202\d|compare|research|sources|release|weather|score|stock|forecast|trending|election|near me)\b/.test(x)) return 'search';
   return 'flash'; };
 const cases = JSON.parse(readFileSync(new URL('./cases.json', import.meta.url)));
+const caseSignature = createHash('sha256').update(JSON.stringify(cases)).digest('hex');
 const run = fn => { const miss = []; let ok = 0; for (const [t, want, page] of cases) { const got = fn(t, !!page); if (got === want) ok++; else miss.push({ t, want, got }); } return { accuracy: +(ok / cases.length).toFixed(3), correct: ok, total: cases.length, misses: miss }; };
-const result = { at: new Date().toISOString(), legacy: run(legacy), current: run((t, p) => classify(t, { hasPage: p }).assistant) };
+const result = { at: new Date().toISOString(), caseSignature, legacy: run(legacy), current: run((t, p) => classify(t, { hasPage: p }).assistant) };
 const dir = fileURLToPath(new URL('./results/', import.meta.url)); mkdirSync(dir, { recursive: true });
 const latest = dir + 'latest.json';
 const beforeResult = existsSync(latest) ? JSON.parse(readFileSync(latest)) : null;
-const before = beforeResult?.current?.total === cases.length ? beforeResult.current.accuracy : null;
+const before = beforeResult?.caseSignature === caseSignature ? beforeResult.current.accuracy : null;
 writeFileSync(latest, JSON.stringify(result, null, 2));
 console.log(`legacy router : ${result.legacy.correct}/${result.legacy.total} (${result.legacy.accuracy})`);
 console.log(`current router: ${result.current.correct}/${result.current.total} (${result.current.accuracy})` + (before != null ? `   previous run: ${before}` : ''));

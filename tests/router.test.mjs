@@ -13,6 +13,7 @@ test('routes code, search, math and rewriting requests', () => {
   assert.equal(classify('calculate 15% of 80').assistant, 'math');
   assert.equal(classify('Make this sound more natural: leverage synergies').assistant, 'human');
   assert.equal(classify('Plan how to fill this form', { hasPage: true }).assistant, 'flash');
+  assert.equal(classify('Which button submits this page?', { hasPage: true }).assistant, 'flash');
 });
 test('does not over-trigger on ordinary words', () => {
   assert.equal(classify('Who was the first president of the USA?').assistant, 'flash');
