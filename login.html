@@ -24,7 +24,7 @@
         <button class="btn btn-ghost" id="auth-signin" type="button" aria-pressed="true">Sign in</button>
         <button class="btn btn-ghost" id="auth-signup" type="button" aria-pressed="false">Sign up</button>
       </div>
-      <p class="sub" id="auth-sub">Sign in with Google to return to your account. Your chats, agents and settings sync across devices.</p>
+      <p class="sub" id="auth-sub">Enter your Google email above, then continue with Google. Your chats, agents and settings sync across devices.</p>
       <div class="alert err" id="auth-err" role="alert"></div>
       <label class="auth-label" for="auth-email">Email address</label>
       <input class="auth-email" id="auth-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required>
@@ -66,8 +66,8 @@
       document.body.dataset.mode = mode; // read by assets/app.js when Google is opened
       title.textContent = creating ? 'Create your Viora account' : 'Sign in to Viora';
       sub.textContent = creating
-        ? 'Use your Google profile name and verified email to create an account, then answer 5 quick questions so Viora can tailor your experience.'
-        : 'Sign in with Google to return to your account. Your chats, agents and settings sync across devices.';
+        ? 'Enter your Google email above and continue with Google to create your account, then answer 5 quick questions so Viora can tailor your experience.'
+        : 'Enter your Google email above, then continue with Google. Your chats, agents and settings sync across devices.';
       google.lastChild.textContent = creating ? 'Create account with Google' : 'Continue with Google';
       consentWrap.hidden = !creating;
       footnote.textContent = creating
