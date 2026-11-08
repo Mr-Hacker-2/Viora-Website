@@ -202,7 +202,12 @@ if (page === 'login') {
       if (ex.status === 503) return location.replace('app.html'); // the server has no Backblaze keys yet, so there is nowhere to save answers
       return fail(ex.message);
     }
-    if (!p.onboarded) await window.VioraOnboarding.ask(p.questions, a => Auth.profile(sess.token, a));
+    /* Only ask when the server actually sent questions. An unexpected profile response must never leave the button stuck on
+       "Setting up your account…" or stop a signed-in person from reaching the app. */
+    if (!p.onboarded && Array.isArray(p.questions) && p.questions.length && window.VioraOnboarding) {
+      try { await window.VioraOnboarding.ask(p.questions, a => Auth.profile(sess.token, a)); }
+      catch (ex) { console.warn('Sign-up questions could not be shown:', ex && ex.message || ex); }
+    }
     location.replace('app.html');
   }
 

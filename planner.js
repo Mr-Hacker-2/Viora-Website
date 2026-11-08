@@ -434,6 +434,8 @@ function openTask(id) {
 }
 function updateStateFromResult(data) { if (data.state) { state = data.state; renderAll(); } }
 async function saveTask(event) {
+  /* Cancel and × are submit buttons of this dialog form: let the dialog close natively and save nothing. */
+  if (event.submitter && event.submitter.value === 'cancel') return;
   event.preventDefault(); const form = $('#task-form'), data = new FormData(form);
   const frequency = String(data.get('recurrenceFrequency') || 'none');
   const fields = {title:String(data.get('title')||'').trim(),description:String(data.get('description')||''),notes:String(data.get('notes')||''),status:String(data.get('status')),priority:String(data.get('priority')),startDate:String(data.get('startDate')||''),dueDate:String(data.get('dueDate')||''),scheduledAt:dateTimeIso(String(data.get('scheduledAt')||'')),reminderAt:dateTimeIso(String(data.get('reminderAt')||'')),category:String(data.get('category')||'').trim(),estimatedMinutes:Number(data.get('estimatedMinutes')||0),actualMinutes:Number(data.get('actualMinutes')||0),progress:Number(data.get('progress')||0),important:form.elements.important.checked,archived:form.elements.archived.checked,recurrence:frequency==='none'?null:{frequency,interval:Number(data.get('recurrenceInterval')||1)},assignee:String(data.get('assignee')||'').trim(),tags:String(data.get('tags')||'').split(',').map(x=>x.trim()).filter(Boolean)};
@@ -503,7 +505,7 @@ function bindEvents() {
   $('#new-task').addEventListener('click',openNewTask);
   $('#add-project').addEventListener('click',()=>$('#project-dialog').showModal());
   let projectSubmitting=false;
-  $('#project-form').addEventListener('submit',async event=>{event.preventDefault();if(projectSubmitting)return;const form=event.currentTarget,data=new FormData(form),submit=event.submitter,name=String(data.get('name')||'').trim();if(!name)return;projectSubmitting=true;if(submit)submit.disabled=true;try{await createProject(name,String(data.get('folder')||'').trim(),String(data.get('description')||''));form.reset();$('#project-dialog').close()}catch(error){toast(error.message)}finally{projectSubmitting=false;if(submit)submit.disabled=false}});
+  $('#project-form').addEventListener('submit',async event=>{if(event.submitter&&event.submitter.value==='cancel')return;event.preventDefault();if(projectSubmitting)return;const form=event.currentTarget,data=new FormData(form),submit=event.submitter,name=String(data.get('name')||'').trim();if(!name)return;projectSubmitting=true;if(submit)submit.disabled=true;try{await createProject(name,String(data.get('folder')||'').trim(),String(data.get('description')||''));form.reset();$('#project-dialog').close()}catch(error){toast(error.message)}finally{projectSubmitting=false;if(submit)submit.disabled=false}});
   $('#task-form').addEventListener('submit',saveTask);
   $('#enable-reminders').addEventListener('click',enableBrowserReminders);
   $('#focus-task').addEventListener('change',()=>{if(focusInterval)void finishFocus(true);renderFocus()});
