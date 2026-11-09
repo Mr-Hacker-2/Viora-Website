@@ -1,5 +1,5 @@
 /* File validation helpers for attachments: size limits and content sniffing (never trust the extension). */
-export const LIMITS = { image: 25e6, video: 300e6, audio: 4e6, doc: 40e6, parse: 15e6, maxFiles: 8, video_frames: 8, video_every_s: 5, visual_request_chars: 8e6 };
+export const LIMITS = { image: 25e6, video: 300e6, audio: 4e6, doc: 40e6, parse: 15e6, maxFiles: 8, maxImages: 12, video_frames: 12, video_every_s: 4, visual_request_chars: 8e6 };
 export const fmtSize = n => n < 1e3 ? n + ' B' : n < 1e6 ? (n / 1e3).toFixed(n < 1e4 ? 1 : 0) + ' KB' : (n / 1e6).toFixed(n < 1e7 ? 1 : 0) + ' MB';
 export const fmtTime = s => { s = Math.max(0, Math.round(s)); const m = Math.floor(s / 60); return m + ':' + String(s % 60).padStart(2, '0'); };
 export function videoSampleTimes(duration) {
@@ -11,7 +11,7 @@ export function videoSampleTimes(duration) {
 }
 export function validateVisualPayload(images) {
   const list = Array.isArray(images) ? images : [];
-  if (list.length > 8) throw new Error('A chat can send up to 8 image frames at once. Remove some visual attachments and retry.');
+  if (list.length > LIMITS.maxImages) throw new Error('A chat can send up to ' + LIMITS.maxImages + ' image frames at once. Remove some visual attachments and retry.');
   const size = list.reduce((total, image) => total + String(image || '').length, 0);
   if (size > LIMITS.visual_request_chars) throw new Error('These images or video frames exceed the 8 MB analysis limit. Remove an attachment or use a shorter/smaller video, then retry.');
   return size;
