@@ -24,15 +24,24 @@
         <button class="btn btn-ghost" id="auth-signin" type="button" aria-pressed="true">Sign in</button>
         <button class="btn btn-ghost" id="auth-signup" type="button" aria-pressed="false">Sign up</button>
       </div>
-      <p class="sub" id="auth-sub">Enter your Google email above, then continue with Google. Your chats, agents and settings sync across devices.</p>
+      <p class="sub" id="auth-sub">Sign in with Google, or with your email and password. Your chats, agents and settings sync across devices.</p>
       <div class="alert err" id="auth-err" role="alert"></div>
       <label class="auth-label" for="auth-email">Email address</label>
       <input class="auth-email" id="auth-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required>
       <label class="auth-consent" id="auth-consent-wrap" hidden><input id="auth-consent" type="checkbox"><span>I agree to Viora’s <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
       <button class="btn btn-google btn-block btn-lg" id="google" type="button">
         <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>Continue with Google</button>
-      <p class="terms" id="auth-footnote">New here? Choose <b>Sign up</b> and we'll ask 5 quick questions so Viora can tailor its answers to you. Google securely handles your password and any verification steps.</p>
-      <p class="terms auth-recovery">Need to reset your password? <a href="https://accounts.google.com/signin/recovery" rel="noopener noreferrer">Recover your Google account</a>.</p>
+      <div class="auth-or" role="separator"><span>or use your email and password</span></div>
+      <form class="auth-pw" id="pw-form" novalidate>
+        <label class="auth-label" for="auth-name" id="auth-name-label" hidden>Your name</label>
+        <input class="auth-email" id="auth-name" name="name" type="text" autocomplete="name" maxlength="80" placeholder="Your name (optional)" hidden>
+        <label class="auth-label" for="auth-pass">Password</label>
+        <input class="auth-email" id="auth-pass" name="password" type="password" autocomplete="current-password" maxlength="128" placeholder="Your password">
+        <p class="terms" id="auth-pass-hint" hidden>Use at least 8 characters. Your password is stored only as a salted hash, so nobody at Viora can read it.</p>
+        <button class="btn btn-primary btn-block btn-lg" id="pw-submit" type="submit">Sign in with email</button>
+      </form>
+      <p class="terms" id="auth-footnote">New here? Choose <b>Sign up</b> and we'll ask 5 quick questions so Viora can tailor its answers to you. With Google, Google handles your password; with email, it is stored only as a salted hash.</p>
+      <p class="terms auth-recovery">Forgot a Google password? <a href="https://accounts.google.com/signin/recovery" rel="noopener noreferrer">Recover your Google account</a>. Password reset for email accounts is not available yet.</p>
       <p class="hint" style="margin-top:18px">Already use the Viora extension? Open <b>Settings → Account</b> and sign in with the same Google account to sync.</p>
     </div>
   </div>
@@ -45,7 +54,7 @@
       <ul>
         <li><span data-i="cloud"></span><span><b>Automatic backup</b>Chats, agents and settings sync in the background.</span></li>
         <li><span data-i="at"></span><span><b>Agents that follow you</b>Build them once, summon them with @ on any device.</span></li>
-        <li><span data-i="shield"></span><span><b>Private by design</b>No password to remember or leak. Google handles sign-in.</span></li>
+        <li><span data-i="shield"></span><span><b>Private by design</b>Sign in with Google, or use an email and password that is stored only as a salted hash.</span></li>
       </ul>
     </div>
   </aside>
@@ -66,20 +75,27 @@
       document.body.dataset.mode = mode; // read by assets/app.js when Google is opened
       title.textContent = creating ? 'Create your Viora account' : 'Sign in to Viora';
       sub.textContent = creating
-        ? 'Enter your Google email above and continue with Google to create your account, then answer 5 quick questions so Viora can tailor your experience.'
-        : 'Enter your Google email above, then continue with Google. Your chats, agents and settings sync across devices.';
+        ? 'Create your account with Google, or with an email and password, then answer 5 quick questions so Viora can tailor your experience.'
+        : 'Sign in with Google, or with your email and password. Your chats, agents and settings sync across devices.';
       google.lastChild.textContent = creating ? 'Create account with Google' : 'Continue with Google';
       consentWrap.hidden = !creating;
       footnote.textContent = creating
-        ? 'Google securely handles your password, email verification, and account recovery.'
-        : 'New to Viora? Choose Sign up to create an account. Google securely handles your password and verification.';
+        ? 'With Google, Google handles your password and verification. With email, your password is stored only as a salted hash.'
+        : 'New to Viora? Choose Sign up to create an account with Google or an email and password.';
       google.disabled = creating && !consent.checked;
+      const pw = document.getElementById('pw-submit');
+      document.getElementById('auth-name').hidden = !creating; document.getElementById('auth-name-label').hidden = !creating;
+      document.getElementById('auth-pass-hint').hidden = !creating;
+      document.getElementById('auth-pass').autocomplete = creating ? 'new-password' : 'current-password';
+      document.getElementById('auth-pass').placeholder = creating ? 'At least 8 characters' : 'Your password';
+      pw.textContent = creating ? 'Create account with email' : 'Sign in with email';
+      pw.disabled = creating && !consent.checked;
       signin.setAttribute('aria-pressed', String(!creating));
       signup.setAttribute('aria-pressed', String(creating));
     };
     signin.addEventListener('click', () => setMode('signin'));
     signup.addEventListener('click', () => setMode('signup'));
-    consent.addEventListener('change', () => { google.disabled = document.body.dataset.mode === 'signup' && !consent.checked; });
+    consent.addEventListener('change', () => { const blocked = document.body.dataset.mode === 'signup' && !consent.checked; google.disabled = blocked; document.getElementById('pw-submit').disabled = blocked; });
     const qs = new URLSearchParams(location.search);
     email.value = qs.get('email') || '';
     if (qs.get('notice') === 'account-not-found') {

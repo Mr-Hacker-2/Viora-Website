@@ -35,3 +35,10 @@ body[data-page="login"] .auth-top .btn{border-color:#ffffff15;color:#dcd4e9}
 @media(max-width:900px){body[data-page="login"] .auth{display:block}body[data-page="login"] .auth-form{min-height:100svh;padding:20px clamp(18px,6vw,44px)}body[data-page="login"] .auth-body{padding:clamp(34px,8vh,75px) 0;margin:0 auto}body[data-page="login"] .auth-art{display:none}}
 @media(max-width:420px){body[data-page="login"] .auth-choice{margin:18px 0}body[data-page="login"] .auth-top .btn{padding:8px 10px;font-size:13px}body[data-page="login"] .auth-top .brand{font-size:18px}}
 @media(prefers-reduced-motion:reduce){body[data-page="login"] *,body[data-page="login"] *::before,body[data-page="login"] *::after{transition:none!important;animation:none!important;scroll-behavior:auto!important}}
+
+/* Email + password option under the Google button */
+.auth-or{display:flex;align-items:center;gap:12px;margin:20px 0 14px;color:var(--faint,#8a8fa3);font-size:13px}
+.auth-or::before,.auth-or::after{content:"";flex:1;height:1px;background:color-mix(in srgb,currentColor 25%,transparent)}
+.auth-pw{display:flex;flex-direction:column;gap:6px}
+.auth-pw .btn{margin-top:10px}
+.auth-pw [hidden]{display:none!important}
