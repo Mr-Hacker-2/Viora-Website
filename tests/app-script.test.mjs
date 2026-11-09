@@ -25,11 +25,11 @@ test('planner commands use the authenticated Planner service', async () => {
   assert.match(html, /\/api\/planner\/assistant\/confirm/);
 });
 
-test('login explains that Google verifies the email and password', async () => {
+test('login offers Google (which verifies the email) and email + password', async () => {
   const html = await readFile(new URL('../login.html', import.meta.url), 'utf8');
   const auth = await readFile(new URL('../assets/app.js', import.meta.url), 'utf8');
   assert.match(html, /id="auth-email"[^>]*type="email"[^>]*required/);
-  assert.match(html, /Enter your Google email above/);
+  assert.match(html, /Sign in with Google, or with your email and password/);
   assert.match(auth, /googleUrl\(mode, email, termsAccepted = false\)/);
   assert.match(auth, /Auth\.googleUrl\(mode\(\), value, consent\.checked\)/);
 });
