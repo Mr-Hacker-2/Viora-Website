@@ -1298,7 +1298,7 @@ async function pagePayload(c, q) {
     out.push(wrapUntrusted(f.name + ' (excerpts, ' + Math.round(t.length / 1000) + 'k characters in total)', [...pick].sort((a, b) => a - b).map(k => ch[k]).join('\n[…]\n')));
   }
   // Never silently drop pages or frames: the model must know if the complete visual payload cannot fit.
-  if (images.length > 8) throw new Error('This chat has more than 8 visual pages or frames. Remove some image/video/PDF attachments or send them in separate messages so Viora does not silently miss pages.');
+  if (images.length > LIMITS.maxImages) throw new Error('This chat has more than ' + LIMITS.maxImages + ' visual pages or frames. Remove some image/video/PDF attachments or send them in separate messages so Viora does not silently miss pages.');
   validateVisualPayload(images);
   return { page: { title: c.page.title, text: out.join('\n\n'), source: c.page.source }, images, video, audio };
 }
@@ -1406,7 +1406,7 @@ async function readVideo(f, p) {
         v.addEventListener('seeked', seeked, { once: true });
         try { v.currentTime = t; } catch (e) { clearTimeout(timer); v.removeEventListener('seeked', seeked); no(e); }
       });
-      imgs.push(shrink(v, v.videoWidth, v.videoHeight, 512, .58));
+      imgs.push(shrink(v, v.videoWidth, v.videoHeight, 768, .7));
     }
     let video = null;
     if (nativeEligible) {
@@ -1424,7 +1424,7 @@ async function readVideo(f, p) {
       return { text: '[Video: ' + f.name + ', ' + fmtTime(dur) + ' long. The native video and embedded audio are attached with ' + imgs.length + ' timestamped preview frames (' + stamps + '). Use the video to understand motion and audible content, and use the frames as a visual fallback. Do not claim no frames were provided. Only describe details supported by the clip or frames.]', imgs, dur, video };
     }
     const trunc = dur > LIMITS.video_frames * LIMITS.video_every_s ? ' Only ' + ts.length + ' frames from a ' + fmtTime(dur) + ' video were sampled, so details between frames are not visible.' : '';
-    return { text: '[Video: ' + f.name + ', ' + fmtTime(dur) + ' long. ' + ts.length + ' still frames are attached in order, taken at: ' + ts.map((t, i) => 'frame ' + (i + 1) + ' = ' + fmtTime(t)).join(', ') + '. Audio is NOT analysed: do not describe speech or sound.' + trunc + ']', imgs, dur, video: null };
+    return { text: '[Video: ' + f.name + ', ' + fmtTime(dur) + ' long. ' + ts.length + ' still frames are attached in order, taken at: ' + ts.map((t, i) => 'frame ' + (i + 1) + ' = ' + fmtTime(t)).join(', ') + '. Audio is NOT analysed: do not describe speech or sound. Refer to moments by these timestamps (for example “at 0:12”), describe changes between frames, and say plainly when something happens between frames and cannot be seen.' + trunc + ']', imgs, dur, video: null };
   } finally {
     v.pause(); v.removeAttribute('src'); v.load(); URL.revokeObjectURL(u);
   }

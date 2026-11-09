@@ -20,7 +20,7 @@ test('video frame sampling covers short clips and caps long clips evenly', () =>
   assert.deepEqual(videoSampleTimes(4), [.25, 3.75]);
 
   const long = videoSampleTimes(120);
-  assert.equal(long.length, 8);
+  assert.equal(long.length, LIMITS.video_frames);
   assert.ok(long[0] < 1);
   assert.ok(long.at(-1) > 119);
   assert.ok(long.every((time, index) => index === 0 || time > long[index - 1]));
@@ -32,7 +32,7 @@ test('video frame sampling covers short clips and caps long clips evenly', () =>
 test('visual payload preflight rejects requests that exceed the API body budget', () => {
   assert.equal(validateVisualPayload(['a'.repeat(100), 'b'.repeat(200)]), 300);
   assert.throws(() => validateVisualPayload(['a'.repeat(LIMITS.visual_request_chars + 1)]), /8 MB analysis limit/);
-  assert.throws(() => validateVisualPayload(Array.from({ length: 9 }, () => 'frame')), /up to 8 image frames/);
+  assert.throws(() => validateVisualPayload(Array.from({ length: 13 }, () => 'frame')), /up to 12 image frames/);
 });
 
 test('sniff detects documents and refuses to trust a misleading extension', async () => {
