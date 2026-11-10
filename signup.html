@@ -19,20 +19,25 @@
       <a class="btn btn-ghost" href="index.html"><span data-i="arrow" style="transform:scaleX(-1);display:flex"></span>Back home</a>
     </div>
     <div class="auth-body">
-      <h1 id="auth-title">Sign in to Viora</h1>
+      <h1 id="auth-title">Create your Viora account</h1>
       <div class="auth-choice" role="group" aria-label="Choose sign-in or sign-up">
-        <button class="btn btn-ghost" id="auth-signin" type="button" aria-pressed="true">Sign in</button>
-        <button class="btn btn-ghost" id="auth-signup" type="button" aria-pressed="false">Sign up</button>
+        <button class="btn btn-ghost" id="auth-signin" type="button" aria-pressed="false">Sign in</button>
+        <button class="btn btn-ghost" id="auth-signup" type="button" aria-pressed="true">Sign up</button>
       </div>
-      <p class="sub" id="auth-sub">Sign in with Google to return to your account. Your chats, agents and settings sync across devices.</p>
+      <p class="sub" id="auth-sub">Create an account with your email and password, or continue with Google.</p>
       <div class="alert err" id="auth-err" role="alert"></div>
-      <label class="auth-label" for="auth-email">Email address</label>
-      <input class="auth-email" id="auth-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required>
-      <label class="auth-consent" id="auth-consent-wrap" hidden><input id="auth-consent" type="checkbox"><span>I agree to Viora’s <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
+      <form id="email-auth-form" novalidate>
+        <label class="auth-label" for="auth-email">Email address</label>
+        <input class="auth-email" id="auth-email" name="email" type="email" autocomplete="email" inputmode="email" maxlength="254" placeholder="you@example.com" required>
+        <label class="auth-label auth-password-label" for="auth-password">Password</label>
+        <div class="auth-password-wrap"><input class="auth-email" id="auth-password" name="password" type="password" autocomplete="new-password" maxlength="128" placeholder="Create a password (8+ characters)" required><button class="auth-password-toggle" id="auth-password-toggle" type="button" aria-label="Show password" aria-pressed="false"><span data-i="eye"></span></button></div>
+        <label class="auth-consent" id="auth-consent-wrap" hidden><input id="auth-consent" type="checkbox"><span>I agree to Viora’s <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>.</span></label>
+        <button class="btn btn-auth-submit btn-block btn-lg" id="email-auth" type="submit">Create account</button>
+      </form>
+      <div class="auth-divider" aria-label="or"><span>OR</span></div>
       <button class="btn btn-google btn-block btn-lg" id="google" type="button">
-        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>Continue with Google</button>
-      <p class="terms" id="auth-footnote">New here? Choose <b>Sign up</b> and we'll ask 5 quick questions so Viora can tailor its answers to you. Google securely handles your password and any verification steps.</p>
-      <p class="terms auth-recovery">Need to reset your password? <a href="https://accounts.google.com/signin/recovery" rel="noopener noreferrer">Recover your Google account</a>.</p>
+        <svg viewBox="0 0 24 24" aria-hidden="true"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92a5.06 5.06 0 0 1-2.2 3.32v2.77h3.57c2.08-1.92 3.27-4.74 3.27-8.1z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84A11 11 0 0 0 12 23z"/><path fill="#FBBC05" d="M5.84 14.1a6.6 6.6 0 0 1 0-4.2V7.06H2.18a11 11 0 0 0 0 9.88z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1A11 11 0 0 0 2.18 7.06l3.66 2.84C6.71 7.31 9.14 5.38 12 5.38z"/></svg>Create account with Google</button>
+      <p class="terms" id="auth-footnote">Use 8 to 128 characters, not all spaces. Your password is securely hashed by Viora’s authentication server.</p>
       <p class="hint" style="margin-top:18px">Already use the Viora extension? Open <b>Settings → Account</b> and sign in with the same Google account to sync.</p>
     </div>
   </div>
@@ -45,7 +50,7 @@
       <ul>
         <li><span data-i="cloud"></span><span><b>Automatic backup</b>Chats, agents and settings sync in the background.</span></li>
         <li><span data-i="at"></span><span><b>Agents that follow you</b>Build them once, summon them with @ on any device.</span></li>
-        <li><span data-i="shield"></span><span><b>Private by design</b>No password to remember or leak. Google handles sign-in.</span></li>
+        <li><span data-i="shield"></span><span><b>Private by design</b>Passwords are securely hashed; Google sign-in is also available.</span></li>
       </ul>
     </div>
   </aside>
@@ -66,13 +71,16 @@
       document.body.dataset.mode = mode; // read by assets/app.js when Google is opened
       title.textContent = creating ? 'Create your Viora account' : 'Sign in to Viora';
       sub.textContent = creating
-        ? 'Use your Google profile name and verified email to create an account, then answer 5 quick questions so Viora can tailor your experience.'
-        : 'Sign in with Google to return to your account. Your chats, agents and settings sync across devices.';
+        ? 'Create an account with your email and password, or continue with Google.'
+        : 'Sign in to sync your chats, agents and settings across devices.';
       google.lastChild.textContent = creating ? 'Create account with Google' : 'Continue with Google';
+      document.getElementById('email-auth').textContent = creating ? 'Create account' : 'Log in';
+      document.getElementById('auth-password').autocomplete = creating ? 'new-password' : 'current-password';
+      document.getElementById('auth-password').placeholder = creating ? 'Create a password (8+ characters)' : 'Enter your password';
       consentWrap.hidden = !creating;
       footnote.textContent = creating
-        ? 'Google securely handles your password, email verification, and account recovery.'
-        : 'New to Viora? Choose Sign up to create an account. Google securely handles your password and verification.';
+        ? 'Use 8 to 128 characters, not all spaces. Your password is securely hashed by Viora’s authentication server.'
+        : 'New to Viora? Choose Sign up to create an account.';
       google.disabled = creating && !consent.checked;
       signin.setAttribute('aria-pressed', String(!creating));
       signup.setAttribute('aria-pressed', String(creating));

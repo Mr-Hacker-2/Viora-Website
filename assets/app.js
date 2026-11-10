@@ -76,7 +76,7 @@ function toast(msg) {
   clearTimeout(toastT); toastT = setTimeout(() => toastEl.classList.remove('show'), 3200);
 }
 
-/* ================= session / auth (Google, via the Viora auth server) ================= */
+/* ================= session / auth (via the Viora auth server) ================= */
 const LS = {
   get(k, d) { try { const v = localStorage.getItem(k); return v ? JSON.parse(v) : d; } catch { return d; } },
   set(k, v) { try { localStorage.setItem(k, JSON.stringify(v)); } catch {} },
@@ -106,13 +106,13 @@ const Auth = {
     return d;
   },
   /** Ask the server to confirm the token, and trust ITS answer, not the URL. */
-  async finish(token) {
+  async finish(token, provider = 'google') {
     let r;
     try { r = await fetch(VIORA.authApi + '/api/verify?token=' + encodeURIComponent(token)); }
     catch { throw new Error('Could not reach the sign-in server. It may be waking up, so try again in 30 seconds.'); }
     if (!r.ok) throw new Error('That sign-in could not be verified. Please try again.');
     const d = await r.json();
-    const s = { email: d.email, name: d.name || '', picture: d.picture || '', token, provider: 'google', at: Date.now() };
+    const s = { email: d.email, name: d.name || '', picture: d.picture || '', token, provider, at: Date.now() };
     LS.set('viora_session', s); return s;
   },
   signOut() { LS.del('viora_session'); }
@@ -169,10 +169,11 @@ $$('.rv').forEach(el => io ? io.observe(el) : el.classList.add('in'));
 
 /* ================= page: login ================= */
 if (page === 'login') {
-  const err = $('#auth-err'), btn = $('#google'), email = $('#auth-email'), consent = $('#auth-consent');
+  const err = $('#auth-err'), btn = $('#google'), passwordButton = $('#email-auth'), form = $('#email-auth-form');
+  const email = $('#auth-email'), password = $('#auth-password'), passwordToggle = $('#auth-password-toggle'), consent = $('#auth-consent');
   const mode = () => document.body.dataset.mode === 'signup' ? 'signup' : 'signin';
   const label = () => mode() === 'signup' ? 'Create account with Google' : 'Continue with Google';
-  const fail = msg => { err.textContent = msg; err.classList.add('show'); btn.dataset.busy = 'false'; btn.disabled = mode() === 'signup' && !consent.checked; btn.lastChild.textContent = label(); };
+  const fail = (msg, button = btn) => { err.textContent = msg; err.classList.add('show'); button.dataset.busy = 'false'; button.disabled = button === btn ? mode() === 'signup' && !consent.checked : false; if (button === btn) btn.lastChild.textContent = label(); else passwordButton.textContent = mode() === 'signup' ? 'Create account' : 'Log in'; };
   const hp = new URLSearchParams(location.hash.slice(1));
   const query = new URLSearchParams(location.search);
   history.replaceState(null, '', location.pathname);
@@ -181,8 +182,9 @@ if (page === 'login') {
     if (code === 'account_not_found') {
       document.body.dataset.mode = 'signup'; $('#auth-signin').setAttribute('aria-pressed', 'false'); $('#auth-signup').setAttribute('aria-pressed', 'true');
       $('#auth-title').textContent = 'Create your Viora account';
-      $('#auth-sub').textContent = 'Use your Google profile name and verified email to create an account, then answer a few quick questions so Viora can tailor your experience.';
+      $('#auth-sub').textContent = 'Create an account with your email and password, or continue with Google.';
       $('#auth-consent-wrap').hidden = false;
+      passwordButton.textContent = 'Create account'; password.autocomplete = 'new-password'; password.placeholder = 'Create a password (8+ characters)';
       email.value = email.value || query.get('email') || '';
       btn.lastChild.textContent = 'Create account with Google';
       const message = "We couldn't find an account with this email. Let's create one!";
@@ -193,14 +195,16 @@ if (page === 'login') {
   };
 
   // After Google: accounts that have not answered the 5 questions yet see the popup. Answers are saved to Backblaze by the auth server.
-  async function finishLogin(sess) {
-    btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Setting up your account…';
+  async function finishLogin(sess, source = btn) {
+    source.disabled = true; source.dataset.busy = 'true';
+    if (source === btn) btn.lastChild.textContent = 'Setting up your account…';
+    else passwordButton.textContent = 'Setting up your account…';
     let p;
     try { p = await Auth.profile(sess.token); }
     catch (ex) {
-      if (ex.status === 401) { Auth.signOut(); return fail('Your sign-in expired. Please sign in again.'); }
+      if (ex.status === 401) { Auth.signOut(); return fail('Your sign-in expired. Please sign in again.', source); }
       if (ex.status === 503) return location.replace('app.html'); // the server has no Backblaze keys yet, so there is nowhere to save answers
-      return fail(ex.message);
+      return fail(ex.message, source);
     }
     if (!p.onboarded) await window.VioraOnboarding.ask(p.questions, a => Auth.profile(sess.token, a));
     location.replace('app.html');
@@ -217,16 +221,46 @@ if (page === 'login') {
       let sess;
       try { sess = await Auth.finish(hp.get('token')); } catch (ex) { return fail(ex.message); }
       finishLogin(sess);
-    } else if (s) finishLogin(s);
+    } else if (s) finishLogin(s, s.provider === 'password' ? passwordButton : btn);
   })();
   btn.onclick = () => {
     const value = email.value.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { email.setAttribute('aria-invalid', 'true'); email.focus(); return fail('Enter a valid email address to continue.'); }
+    if (value && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { email.setAttribute('aria-invalid', 'true'); email.focus(); return fail('Enter a valid email address or leave it blank to choose a Google account.'); }
     email.removeAttribute('aria-invalid');
     if (mode() === 'signup' && !consent.checked) return fail('Please accept the Terms and Privacy Policy to create your account.');
     btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode(), value, consent.checked);
   };
-  email.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); btn.click(); } });
+  form.addEventListener('submit', async event => {
+    event.preventDefault(); err.textContent = ''; err.classList.remove('show');
+    const address = email.value.trim().toLowerCase(), secret = password.value;
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(address)) { email.setAttribute('aria-invalid', 'true'); email.focus(); return fail('Enter a valid email address.', passwordButton); }
+    email.removeAttribute('aria-invalid');
+    if (mode() === 'signup' && !consent.checked) return fail('Please accept the Terms and Privacy Policy to create your account.', passwordButton);
+    if (mode() === 'signup' && (secret.length < 8 || secret.length > 128 || !/\S/.test(secret))) { password.setAttribute('aria-invalid', 'true'); password.focus(); return fail('Use a password of 8 to 128 characters that is not only spaces.', passwordButton); }
+    if (!secret) { password.setAttribute('aria-invalid', 'true'); password.focus(); return fail('Enter your password.', passwordButton); }
+    password.removeAttribute('aria-invalid'); passwordButton.disabled = true; passwordButton.dataset.busy = 'true'; passwordButton.textContent = mode() === 'signup' ? 'Creating account…' : 'Signing in…';
+    try {
+      const response = await fetch(VIORA.authApi + '/api/auth/' + (mode() === 'signup' ? 'signup' : 'login'), {
+        method: 'POST', headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: address, password: secret, terms: consent.checked })
+      });
+      const data = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(data.error || 'Sign-in failed. Please try again.');
+      const sess = await Auth.finish(data.token, 'password');
+      password.value = '';
+      await finishLogin(sess, passwordButton);
+    } catch (ex) {
+      passwordButton.disabled = false;
+      fail(ex.message || 'Could not reach the Viora sign-in server. Try again shortly.', passwordButton);
+    }
+  });
+  passwordToggle.addEventListener('click', () => {
+    const showing = password.type === 'password';
+    password.type = showing ? 'text' : 'password';
+    passwordToggle.setAttribute('aria-pressed', String(showing));
+    passwordToggle.setAttribute('aria-label', showing ? 'Hide password' : 'Show password');
+    passwordToggle.innerHTML = ico(showing ? 'eyeoff' : 'eye');
+  });
 }
 
 /* ================= page: account ================= */
@@ -239,7 +273,7 @@ if (page === 'account') {
     else av.textContent = name[0].toUpperCase();
     $('#a-name').textContent = name; $('#a-email').textContent = s.email;
     $('#kv-email').textContent = s.email; $('#kv-name').textContent = name;
-    $('#kv-prov').textContent = 'Google';
+    $('#kv-prov').textContent = s.provider === 'password' ? 'Email and password' : 'Google';
     $('#kv-since').textContent = new Date(s.at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
     $('#signout').onclick = () => { Auth.signOut(); location.href = 'index.html'; };
     // If the server no longer accepts this session, sign out instead of showing stale details.

@@ -143,10 +143,23 @@ Same palette, type and shapes as the extension's side panel / tab:
 
 ---
 ## Accounts and sign-up questions (Backblaze B2)
-Sign in and Sign up both go through Google, and every account is saved in a private Backblaze B2 bucket by the
-auth server (`Viora-auth` repo). The website never holds Backblaze keys. After Google, any account that has not
-answered the sign-up questions sees a required popup with 5 multiple-choice questions
-(`assets/x/onboarding.js`, `onboarding.css`). The questions live in `Viora-auth/profile.js` and are sent to the site,
-so change them in one place. Answers are saved to B2 and given to the AI as background about the person.
-`login.html?mode=signup` opens the page on the Sign up tab.
-Setup is on the auth server: see `Viora-auth/README.md` for the `B2_*` environment variables.
+Login and Sign up offer separate email/password and Google OAuth methods. Both use the external `Viora-auth`
+service and its private Backblaze B2 account storage; the website never holds B2 credentials. Email/password
+registration and login call `/api/auth/signup` and `/api/auth/login`. The provider stores salted scrypt hashes,
+and the website only receives a signed session token. Google continues through `/auth/google`; accounts are keyed
+by normalized email to avoid duplicate records. The auth service must be deployed with these routes before the
+website changes can work in production.
+
+After a new account is created, any account that has not answered the sign-up questions sees a required popup with
+5 multiple-choice questions (`assets/x/onboarding.js`, `onboarding.css`). The questions live in
+`Viora-auth/profile.js`; answers are saved to B2 and given to the AI as background about the person.
+`login.html?mode=signup` opens the Sign up tab.
+
+Configure `GOOGLE_CLIENT_ID`, `GOOGLE_CLIENT_SECRET`, `TOKEN_SECRET`, `SITE_URL`, and `BASE_URL` on the auth
+service for OAuth and signed sessions. Register `BASE_URL/auth/callback` as the Google OAuth redirect URI.
+Configure `B2_KEY_ID`, `B2_APP_KEY`, `B2_BUCKET`, and `B2_ENDPOINT` for persistent account storage. Set
+`ADMIN_EMAILS` on that service before using `/admin`; every admin API request is server-authorized. Email
+verification and password-reset endpoints, account deletion, and an opaque user ID are
+not exposed by the current auth API. The admin page shows the verification state returned by the service, but
+password accounts remain unverified until the service implements a verification flow. Do not treat frontend
+controls as a substitute for those missing server capabilities.

@@ -210,6 +210,11 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .table td { color: #43534a; }
 .table tbody tr:hover { background: #f5f9f6; }
 .user-name { color: var(--text) !important; }
+.user-provider { display: block; margin-top: 4px; color: var(--faint); font-size: 10px; font-weight: 500; }
+.status.verified { margin-left: 6px; border-color: #c6e1d1; background: #f1f8f3; color: #176b50; }
+.status.verified::before { background: #27835e; }
+.status.unverified { margin-left: 6px; border-color: #efd9b7; background: #fffaf1; color: #875a19; }
+.status.unverified::before { background: #a7641d; }
 .status { border-color: var(--line); background: #f7faf8; color: var(--muted); }
 .status::before { width: 6px; height: 6px; border-radius: 50%; background: #7d8b83; content: ""; }
 .status.active { border-color: #c6e1d1; background: #f1f8f3; color: #176b50; }
@@ -219,6 +224,13 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
 .row-actions { align-items: center; }
 .row-actions .select { min-height: 30px; padding: 4px 7px; }
 .row-actions .btn { min-height: 30px; padding: 4px 8px; }
+.user-dialog { width: min(520px, calc(100vw - 28px)); max-height: min(80vh, 680px); padding: 0; border: 1px solid var(--line); border-radius: 10px; background: var(--panel); color: var(--text); box-shadow: 0 24px 80px #10201845; }
+.user-dialog::backdrop { background: #10191499; backdrop-filter: blur(3px); }
+.user-dialog .card-head { position: sticky; top: 0; background: var(--panel); }
+.user-details-list { display: grid; grid-template-columns: minmax(120px, .7fr) minmax(0, 1fr); gap: 0; margin: 0; padding: 8px 18px 18px; }
+.user-details-list dt, .user-details-list dd { margin: 0; padding: 10px 0; border-bottom: 1px solid #e8eeea; font-size: 12px; overflow-wrap: anywhere; }
+.user-details-list dt { color: var(--muted); }
+.user-details-list dd { color: var(--text); }
 
 .model-grid { gap: 12px; }
 .model-card { padding: 15px; }
@@ -256,6 +268,7 @@ button:focus-visible, a:focus-visible, input:focus-visible, select:focus-visible
   .stat-note { font-size: 9px; }
   .view-head h2 { font-size: 21px; }
   .toolbar .input { min-width: 0; }
+  .toolbar .select { flex: 1 1 145px; }
 }
 @media (prefers-reduced-motion: reduce) {
   *, *::before, *::after { animation: none !important; scroll-behavior: auto !important; transition-duration: .01ms !important; }

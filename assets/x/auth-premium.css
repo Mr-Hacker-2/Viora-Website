@@ -15,6 +15,20 @@ body[data-page="login"] .auth-email{box-sizing:border-box;width:100%;height:52px
 body[data-page="login"] .auth-email::placeholder{color:#776e84}
 body[data-page="login"] .auth-email:focus{border-color:#a77aff;background:#171020;box-shadow:0 0 0 4px #9b6bff20}
 body[data-page="login"] .auth-email[aria-invalid="true"]{border-color:#ff718b;box-shadow:0 0 0 3px #ff718b20}
+body[data-page="login"] #email-auth-form{display:grid;gap:0}
+body[data-page="login"] .auth-password-label{margin-top:17px}
+body[data-page="login"] .auth-password-wrap{position:relative}
+body[data-page="login"] .auth-password-wrap .auth-email{padding-right:54px}
+body[data-page="login"] .auth-password-toggle{position:absolute;right:9px;top:50%;display:grid;place-items:center;width:36px;height:36px;transform:translateY(-50%);border:0;border-radius:9px;background:transparent;color:#b8accb;cursor:pointer}
+body[data-page="login"] .auth-password-toggle:hover{background:#ffffff0b;color:#fff}
+body[data-page="login"] .auth-password-toggle .i{width:18px;height:18px}
+body[data-page="login"] .btn-auth-submit{margin-top:19px;min-height:52px;border:1px solid #a77aff55;border-radius:13px;background:linear-gradient(120deg,#8a5cf2,#6440c9);color:#fff;font-weight:700;box-shadow:0 10px 28px #5a37bf30;transition:transform .18s,filter .18s,opacity .18s}
+body[data-page="login"] .btn-auth-submit:hover{transform:translateY(-1px);filter:brightness(1.09)}
+body[data-page="login"] .btn-auth-submit:disabled{opacity:.6;cursor:wait;transform:none}
+body[data-page="login"] .btn-auth-submit[data-busy="true"]::after{content:"";width:16px;height:16px;margin-left:3px;border:2px solid #ffffff55;border-top-color:#fff;border-radius:50%;animation:auth-spin .7s linear infinite}
+body[data-page="login"] .auth-divider{display:flex;align-items:center;gap:14px;margin:22px 0 5px;color:#92879f;font-size:11px;font-weight:700;letter-spacing:.14em}
+body[data-page="login"] .auth-divider::before,body[data-page="login"] .auth-divider::after{content:"";height:1px;flex:1;background:#ffffff17}
+body[data-page="login"] .auth-divider span{padding:0 3px}
 body[data-page="login"] .auth-consent{display:flex;align-items:flex-start;gap:10px;margin:15px 0;color:#c7bed5;font-size:13px;line-height:1.55}
 body[data-page="login"] .auth-consent[hidden]{display:none}
 body[data-page="login"] .auth-consent input{width:17px;height:17px;margin:2px 0 0;accent-color:#9a70ff;flex:none}

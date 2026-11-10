@@ -54,3 +54,16 @@ test('monitoring view shows request count and chart on first load', async () => 
   assert.equal($('.health-pill').dataset.state, 'online');
   assert.deepEqual(cleared, ['#overview-error', '#monitor-error']);
 });
+
+test('user management shows provider and verification metadata without exposing credentials', async () => {
+  const html = await readFile(new URL('../admin/index.html', import.meta.url), 'utf8');
+  const users = await readFile(new URL('../admin/users.js', import.meta.url), 'utf8');
+  assert.match(html, /id="user-method-filter"/);
+  assert.match(html, /id="user-sort"/);
+  assert.match(html, /id="user-details"/);
+  assert.match(users, /user\.provider === 'password'/);
+  assert.match(users, /user\.emailVerified/);
+  assert.match(users, /\/api\/admin\/users/);
+  assert.match(users, /User ID.*Not returned by the account API/);
+  assert.doesNotMatch(users, /passwordHash|password\s*:/i);
+});

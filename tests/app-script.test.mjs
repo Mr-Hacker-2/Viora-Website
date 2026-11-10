@@ -25,13 +25,24 @@ test('planner commands use the authenticated Planner service', async () => {
   assert.match(html, /\/api\/planner\/assistant\/confirm/);
 });
 
-test('login explains that Google verifies the email and password', async () => {
+test('login and signup expose separate email-password and Google authentication', async () => {
   const html = await readFile(new URL('../login.html', import.meta.url), 'utf8');
+  const signup = await readFile(new URL('../signup.html', import.meta.url), 'utf8');
   const auth = await readFile(new URL('../assets/app.js', import.meta.url), 'utf8');
-  assert.match(html, /id="auth-email"[^>]*type="email"[^>]*required/);
-  assert.match(html, /Enter your Google email above/);
+  for (const page of [html, signup]) {
+    assert.match(page, /id="auth-email"[^>]*type="email"[^>]*required/);
+    assert.match(page, /id="auth-password"[^>]*type="password"/);
+    assert.match(page, /id="auth-password-toggle"[^>]*aria-label="Show password"/);
+    assert.match(page, /<span>OR<\/span>/);
+    assert.match(page, /id="google"[^>]*type="button"/);
+  }
+  assert.match(signup, /id="email-auth"[^>]*>Create account<\/button>/);
+  assert.match(html, /id="email-auth"[^>]*>Log in<\/button>/);
   assert.match(auth, /googleUrl\(mode, email, termsAccepted = false\)/);
   assert.match(auth, /Auth\.googleUrl\(mode\(\), value, consent\.checked\)/);
+  assert.match(auth, /\/api\/auth\/.*signup.*login/s);
+  assert.match(auth, /Auth\.finish\(data\.token, 'password'\)/);
+  assert.match(auth, /provider, at: Date\.now\(\)/);
 });
 
 test('Pro Search exposes real Quick and Deep modes and streams server activity into progress', async () => {

@@ -101,9 +101,10 @@
         <div class="view-head"><div><div class="eyebrow">Accounts</div><h2>User management</h2><p>Search account records and update roles or account access. Conversations are not included.</p></div></div>
         <div class="notice">Role and suspension changes require a server-confirmed admin session and an explicit confirmation. Bootstrap administrators are managed through the server’s <code>ADMIN_EMAILS</code> setting.</div>
         <div id="users-error" class="error" role="alert"></div>
-        <div class="toolbar"><input class="input" id="user-search" type="search" placeholder="Search name or email" aria-label="Search users"><button class="btn primary" id="user-search-btn">Search</button><button class="btn" id="user-reload">Refresh</button></div>
-        <article class="card"><div class="card-head"><h3>Registered accounts</h3><span class="subtle" id="users-count">—</span></div><div class="table-wrap"><table class="table"><thead><tr><th>User</th><th>Email</th><th>Created</th><th>Last sign-in</th><th>Sign-ins</th><th>Status</th><th>Role</th><th>Change access</th></tr></thead><tbody id="users-body"><tr><td colspan="8" class="empty">Open this section to load accounts.</td></tr></tbody></table></div><div class="card-head"><button class="btn" id="users-prev">← Previous</button><span class="subtle" id="users-page">Page 1</span><button class="btn" id="users-next">Next →</button></div></article>
+        <div class="toolbar"><input class="input" id="user-search" type="search" placeholder="Search name or email" aria-label="Search users"><button class="btn primary" id="user-search-btn">Search</button><select class="select" id="user-method-filter" aria-label="Filter by authentication method"><option value="all">All methods</option><option value="password">Email and password</option><option value="google">Google</option></select><select class="select" id="user-sort" aria-label="Sort users"><option value="lastLoginAt">Sort: Last login</option><option value="createdAt">Sort: Created date</option><option value="email">Sort: Email</option><option value="provider">Sort: Auth method</option></select><button class="btn" id="user-reload">Refresh</button></div>
+        <article class="card"><div class="card-head"><h3>Registered accounts</h3><span class="subtle" id="users-count">—</span></div><div class="table-wrap"><table class="table"><thead><tr><th>Account / auth method</th><th>Email</th><th>Created</th><th>Last login</th><th>Sign-ins</th><th>Email verified / status</th><th>Role</th><th>Manage</th></tr></thead><tbody id="users-body"><tr><td colspan="8" class="empty">Open this section to load accounts.</td></tr></tbody></table></div><div class="card-head"><button class="btn" id="users-prev">← Previous</button><span class="subtle" id="users-page">Page 1</span><button class="btn" id="users-next">Next →</button></div></article>
         <div class="notice" style="margin-top:14px"><strong>Suspension enforcement:</strong> Existing tokens are checked against the server account record on protected app requests; the server cache is refreshed within 10 seconds.</div>
+        <dialog class="user-dialog" id="user-details"><div class="card-head"><h3 id="user-details-title">Account details</h3><button class="btn" id="user-details-close" type="button" aria-label="Close account details">Close</button></div><dl class="user-details-list" id="user-details-list"></dl></dialog>
       </section>
 
       <section class="view" id="view-models">
@@ -234,5 +235,6 @@ $('#nav').addEventListener('click',e=>{const button=e.target.closest('[data-view
 addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('nav-open')){document.body.classList.remove('nav-open');$('#sidebar').classList.remove('open');$('#menu').focus()}});
 })();
 </script>
+<script src="users.js"></script>
 </body>
 </html>
