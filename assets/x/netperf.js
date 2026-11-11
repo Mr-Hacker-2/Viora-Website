@@ -13,7 +13,7 @@ export const DEFAULTS = Object.freeze({
   firstByteSec: 60,   // allow cold starts; retrying early can make slow hosts slower
   retries: 1,         // one retry for transient failures instead of repeated long waits
   stallSec: 90,       // allow slow reasoning and research between streamed tokens (0 = never)
-  history: 4,         // keep prompts shorter for faster processing (0 = all)
+  history: 12,        // retain more cross-turn context when switching assistants (0 = all)
   keepWarm: true,     // ping the server every ~8 minutes while the app is open
   restoreOnFail: true,// put your message back in the box if it could not be sent
   saveDraft: true     // remember what you were typing if the page is closed or reloads
@@ -46,8 +46,8 @@ export function load() {
     const stored = JSON.parse(localStorage.getItem(KEY));
     if (!stored || typeof stored !== 'object') return normalize();
     const p = { ...stored };
-    // Move untouched stock settings to the faster 8-message default; preserve custom choices.
-    if (p.firstByteSec === 60 && p.retries === 1 && (p.stallSec === 25 || p.stallSec === 90) && p.history === 12) p.history = 8;
+    // Older stock profiles used four or twelve messages; preserve custom history choices.
+    if (p.firstByteSec === 60 && p.retries === 1 && (p.stallSec === 25 || p.stallSec === 90) && (p.history === 4 || p.history === 12)) p.history = 12;
     return normalize(p);
   } catch (e) { return normalize(); }
 }

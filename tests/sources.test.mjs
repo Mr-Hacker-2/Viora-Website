@@ -40,9 +40,11 @@ test('ordinary answers without citations are not unnecessarily flagged', () => {
 test('source cards distinguish fetched pages from snippets without claiming verification', () => {
   const fetched = cardHtml({ title: 'Fetched', url: 'https://example.com/a', pageFetched: true }, 1);
   const snippetOnly = cardHtml({ title: 'Unavailable', url: 'https://example.org/b', pageFetched: false }, 2);
+  const failed = cardHtml({ title: 'Retry later', url: 'https://example.net/c', pageFetched: false, pageFetchStatus: 'page retrieval failed: HTTP 503' }, 3);
   assert.match(fetched, /Page retrieved/);
   assert.match(snippetOnly, /Search snippet only/);
-  assert.doesNotMatch(fetched + snippetOnly, /Verified claim/);
+  assert.match(failed, /page retrieval failed: HTTP 503/);
+  assert.doesNotMatch(fetched + snippetOnly + failed, /Verified claim/);
 });
 
 test('source cards expose retrieved excerpts in an escaped expandable preview', () => {

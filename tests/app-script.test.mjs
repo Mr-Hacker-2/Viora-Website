@@ -42,6 +42,11 @@ test('Pro Search exposes real Quick and Deep modes and streams server activity i
   assert.match(html, /researchRequestId: web2 \? researchRequestId : undefined/);
   assert.match(html, /API \+ '\/api\/progress\?id='/);
   assert.match(html, /m\.research\.queryCount/);
+  assert.match(html, /m\.research\.outcome === 'sources_retrieved'/);
+  assert.match(html, /Web search failed: '\s*\+\s*String\(m\.research\.error/);
+  assert.match(html, /m\.research\.sourceAnalysisStatus = outcome === 'done' \? 'completed' : 'incomplete'/);
+  assert.match(html, /if \(Array\.isArray\(e\.viora_sources\)\)/);
+  assert.match(html, /AI provider did not complete the answer/);
 });
 
 test('research report copy and Markdown export include source status and evidence limits', async () => {
@@ -50,6 +55,8 @@ test('research report copy and Markdown export include source status and evidenc
   assert.match(html, /Page retrieved/);
   assert.match(html, /Search snippet only/);
   assert.match(html, /Claim support was not independently verified/);
+  assert.match(html, /Sources provided for analysis/);
+  assert.match(html, /Search queries: '\s*\+\s*m\.research\.queries\.join/);
   assert.match(html, /data-export/);
   assert.match(html, /text\/markdown;charset=utf-8/);
 });
