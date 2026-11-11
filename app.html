@@ -1014,7 +1014,7 @@ async function send(text) {
   let eff = autoRoute ? autoRoute.assistant : asst;
   const humanizerOnly = eff === 'human';
   const hasTextAttachment = !selectedHumanizer && !!(c.page && c.page.files.some(f => f.kind === 'file' || f.kind === 'web'));
-  const verifyAnswer = eff === 'search' || eff === 'math' || hasTextAttachment;
+  const verifyAnswer = eff === 'search' && researchDepth === 'deep'; /* the second-model quality pass roughly doubles the wait, so it only runs for Deep Research */
   /* capability check: the Humanizer panel rewrites its text draft; unrelated chat attachments do not switch its model */
   const pk = pickModel(eff, selectedHumanizer ? [] : (c.page ? c.page.files : []), Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
@@ -1109,7 +1109,7 @@ async function send(text) {
     // Keep streaming updates responsive without repainting the full reply on every frame.
     const schedulePaint = () => {
       if (raf || paintTimer) return;
-      const delay = Math.max(0, 120 - (performance.now() - lastPaintAt));
+      const delay = Math.max(0, 60 - (performance.now() - lastPaintAt));
       if (delay) {
         paintTimer = setTimeout(() => { paintTimer = 0; schedulePaint(); }, delay);
         return;
