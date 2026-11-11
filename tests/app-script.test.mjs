@@ -76,6 +76,12 @@ test('chat history supports manual names, persistence, switching, and title sear
   assert.match(html, /const titleMatch = String\(x\.title \|\| ''\)\.toLowerCase\(\)\.includes\(filter\)/);
 });
 
+test('a streamed reply cannot repaint a different conversation after switching chats', async () => {
+  const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
+  const send = html.slice(html.indexOf('async function send(text)'), html.indexOf('async function generateConversationTitle(c)'));
+  assert.match(send, /paint = \(\) => \{ if \(chat\(\) !== c\) return;/);
+});
+
 test('message editing has a cancel state and replaces only the selected latest turn', async () => {
   const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
   assert.match(html, /data-edit-user=/);

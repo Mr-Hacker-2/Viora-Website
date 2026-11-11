@@ -85,6 +85,17 @@ export function splitStreamLines(buffer, flush = false) {
   return flush ? { lines, rest: '' } : { lines: lines.slice(0, -1), rest: lines.at(-1) };
 }
 
+export function isStreamTerminal(data) {
+  return Array.isArray(data?.choices) && data.choices.some(choice => choice && choice.finish_reason != null);
+}
+
+export function streamFinalizationError({ terminal, malformed = false, incomplete = '' } = {}) {
+  if (incomplete) return String(incomplete);
+  if (malformed) return 'The response stream contained invalid data and could not be verified as complete. Use Regenerate to try again.';
+  if (!terminal) return 'The connection closed before Viora confirmed the answer was complete. Use Regenerate to try again.';
+  return '';
+}
+
 /* fetch() with a first-byte timeout and automatic retries.
    `signal` is the person's Stop button: it is never retried. onWait(text) reports each pause. */
 export async function request(url, init, { signal, onWait = () => {}, perf = current } = {}) {

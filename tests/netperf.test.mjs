@@ -1,6 +1,6 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
-import { DEFAULTS, normalize, matchPreset, trimHistory, summarizeHistory, describeHttpFailure, splitStreamLines } from '../assets/x/netperf.js';
+import { DEFAULTS, normalize, matchPreset, trimHistory, summarizeHistory, describeHttpFailure, splitStreamLines, isStreamTerminal, streamFinalizationError } from '../assets/x/netperf.js';
 
 test('normalize clamps numeric settings and rejects invalid values', () => {
   assert.equal(normalize({ retries: 99 }).retries, 6);
@@ -64,4 +64,13 @@ test('stream line splitting preserves chunk boundaries and flushes a final unter
   const first = splitStreamLines('data: first\r\ndata: final');
   assert.deepEqual(first, { lines: ['data: first'], rest: 'data: final' });
   assert.deepEqual(splitStreamLines(first.rest, true), { lines: ['data: final'], rest: '' });
+});
+
+test('stream completion requires the terminal marker and rejects malformed or incomplete events', () => {
+  assert.equal(isStreamTerminal({ choices: [{ finish_reason: 'stop' }] }), true);
+  assert.equal(isStreamTerminal({ choices: [{ delta: { content: 'still writing' }, finish_reason: null }] }), false);
+  assert.equal(streamFinalizationError({ terminal: true }), '');
+  assert.match(streamFinalizationError({ terminal: false }), /closed before Viora confirmed/i);
+  assert.match(streamFinalizationError({ terminal: true, malformed: true }), /invalid data/i);
+  assert.equal(streamFinalizationError({ terminal: false, incomplete: 'Provider stream interrupted.' }), 'Provider stream interrupted.');
 });

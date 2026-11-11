@@ -979,7 +979,7 @@ async function send(text) {
   const idx = c.messages.length - 1, m = c.messages[idx], ctl = new AbortController(); let timingStart = 0; busy = ctl; m.stage = 'Starting task…'; sendState(true); syncHumanizer();
   /* Activity record for the thinking panel: a step is added only where that thing really happens below. */
   const tr = m.trace = T.createTrace(); let outcome = 'done'; T.begin(tr, 'understand', 'Understanding your question');
-  const th = $('#thread'), paint = () => { const near = th.scrollHeight - th.scrollTop - th.clientHeight < 32, b = $('#b' + idx); if (b) { paintBody(b, m); if (busy === ctl) thinkSync(idx, m, true); /* a paint queued during streaming can fire after the reply ended: it must never put the panel back into a live state */ if (near) th.scrollTop = th.scrollHeight; } if (asst === 'human') syncHumanizer(); };
+  const th = $('#thread'), paint = () => { if (chat() !== c) return; const near = th.scrollHeight - th.scrollTop - th.clientHeight < 32, b = $('#b' + idx); if (b) { paintBody(b, m); if (busy === ctl) thinkSync(idx, m, true); /* a paint queued during streaming can fire after the reply ended: it must never put the panel back into a live state */ if (near) th.scrollTop = th.scrollHeight; } if (asst === 'human') syncHumanizer(); };
   if (isPlannerChatRequest(text)) {
     m.eff = 'flash'; m.stage = 'Checking your Planner…'; T.detail(tr, 'understand', 'Authenticated Planner tools'); paint();
     const command = text.replace(/^\s*@planner\b\s*[:,]?\s*/i, '').trim() || text;
@@ -1101,7 +1101,7 @@ async function send(text) {
     T.end(tr, 'connect');
     if (searchAsked) beginSearchStep(tr, 'Waiting for Viora’s server to return sources'); else waitStep();
     paint();
-    const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0, paintTimer = 0, lastPaintAt = 0, streamEnded = false, wrote = 0;
+    const rd = r.body.getReader(), dec = new TextDecoder(); let buf = '', raf = 0, paintTimer = 0, lastPaintAt = 0, streamEnded = false, streamMalformed = false, wrote = 0;
     /* Stop must work after the reply has started too: netperf drops its abort link once the headers arrive, so the
        reader is cancelled here and the loop below ends instead of carrying on to the end of the answer. */
     ctl.signal.addEventListener('abort', () => { try { rd.cancel(); } catch {} }, { once: true });
@@ -1120,8 +1120,10 @@ async function send(text) {
       if (!l.startsWith('data:')) return;
       const d = l.slice(5).trim(); if (!d) return;
       if (d === '[DONE]') { streamEnded = true; return; }
+      let j;
+      try { j = JSON.parse(d); } catch { streamMalformed = true; return; }
+      if (NP.isStreamTerminal(j)) streamEnded = true;
       try {
-        const j = JSON.parse(d);
         if (j.viora_meta) { m.model = j.viora_meta.model; m.timing = { ...m.timing, modelHeaderMs: j.viora_meta.modelHeaderMs }; render(); }
         else if (j.viora_progress) {
           const step = j.viora_progress.step, detail = String(j.viora_progress.detail || '').slice(0, 140);
@@ -1163,6 +1165,7 @@ async function send(text) {
     }
     if (ctl.signal.aborted) throw Object.assign(new Error('Stopped'), { name: 'AbortError' }); /* keep what arrived; the catch below marks it stopped */
     NP.splitStreamLines(buf + dec.decode(), true).lines.forEach(handleLine);
+    m.incomplete = NP.streamFinalizationError({ terminal: streamEnded, malformed: streamMalformed, incomplete: m.incomplete });
     if (m.incomplete) { outcome = 'failed'; m.err = true; health.fail(m.eff || eff); throw new Error(m.incomplete); }
     if (!m.content.trim() && m.providerError) { health.fail(m.eff || eff); throw new Error('The AI provider returned an error: ' + m.providerError); }
     if (m.providerError && m.content.trim()) m.note = 'The AI provider reported an error after starting this reply: ' + m.providerError;
