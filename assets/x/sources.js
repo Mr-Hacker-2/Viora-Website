@@ -103,7 +103,7 @@ export function cardHtml(src, n) {
   const date = src.publishedAt ? new Date(src.publishedAt) : null;
   const dateLabel = date && !Number.isNaN(date.getTime()) ? date.toLocaleDateString(undefined, { month: 'short', day: 'numeric', year: 'numeric' }) : '';
   const retrievalLabel = [
-    src.pageFetched === true ? 'Page retrieved' : src.pageFetched === false ? 'Search snippet only' : '',
+    src.pageFetched === true ? 'Page retrieved' : src.pageFetchStatus || (src.pageFetched === false ? 'Search snippet only' : ''),
     src.relevance ? src.relevance + ' topic match' : '',
     src.sourceType && src.sourceType !== 'other' ? src.sourceType + ' source type' : ''
   ].filter(Boolean).join(' · ');

@@ -123,9 +123,9 @@ test('every label in app.html corresponds to a real event, and nothing is claime
   /* The search activity step has one shared start helper and is used only for a real web request. */
   assert.match(html, /const beginSearchStep = \(trace, detail\) =>[\s\S]{0,180}T\.begin\(trace, 'search', 'Searching the web'/);
   assert.match(html, /if \(searchAsked\) beginSearchStep\(tr,/);
-  assert.match(html, /T\.note\(tr, 'sources', 'Reading sources'/);
+  assert.match(html, /T\.note\(tr, 'sources', 'Sources supplied to answer'/);
   assert.equal((html.match(/'Searching the web'/g) || []).length, 1, 'the search step has exactly one start point');
-  assert.equal((html.match(/'Reading sources'/g) || []).length, 1);
+  assert.equal((html.match(/'Sources supplied to answer'/g) || []).length, 1);
   /* The run always ends with finish(), outside the try/catch. */
   assert.match(html, /T\.finish\(tr, outcome\);[\s\S]{0,400}busy = null;/);
 });

@@ -52,7 +52,7 @@ it is used first. `site`/`snippet` fields are also honoured.
 * Failed/interrupted answers get a Retry button that replaces the failed answer.
 
 ### Chat service boundary and research limits
-The chat/auth API runs separately from this static website in the `Viora-auth` repository. The backend now fetches up to four search-result pages through its guarded reader and supplies bounded page text and publication dates to the research model. It reports the selected provider model, search/page-fetch timing, and whether each page was retrieved.
+The chat/auth API runs separately from this static website in the `Viora-auth` repository. The backend now fetches up to four search-result pages through its guarded reader and supplies bounded page text and publication dates to the research model. Book-content searches use Google Books records with exact-title matching; all results pass relevance filtering before being shown or sent to the model. Stream metadata distinguishes a successful search from an empty relevant-result set or provider failure, and includes page-read failures and the actual provider error.
 
 Page retrieval is not independent claim verification: the API does not prove that every cited statement is supported, and the interface explicitly reports claim support as unverified. Standalone audio-file transcription and full-document page-by-page vision are not implemented. PDF visual analysis samples up to eight pages; conclusions about unrendered pages may be incomplete. Keep `caps.js` aligned with the actual backend capabilities.
 
@@ -137,8 +137,8 @@ Same palette, type and shapes as the extension's side panel / tab:
 - **Quick Search / Deep Research**: Pro Search adds a per-device depth selector. Quick keeps a single search pass. Deep makes up to three bounded queries, deduplicates and ranks up to 10 results, and attempts to read up to six pages. Comparison prompts are split into focused subject searches; technical, scientific, and current-news topics add a tailored query.
 - **Source context**: cards show the page retrieval state, expandable retrieved-page excerpts, a broad topic-match label, and broad source-type hints (government, academic, documentation). These hints affect ranking modestly; they are not a reliability verdict.
 - **Live activity and Stop**: the website polls the authenticated, short-lived `/api/progress` route while research is running. Stopping the chat aborts search, page retrieval, and provider requests. The progress route only returns a caller's own request state.
-- **Reports**: research replies can be copied with their question and source list or exported as Markdown, including snippets, retrieval status, search count, and evidence limitations.
-- **Evidence limits**: Viora still does not independently verify claim-by-claim citation support or conduct an open-ended search loop. Search providers are Bing RSS and Google News RSS, with DuckDuckGo HTML as fallback. Search is bounded and source ranking uses heuristics; verify consequential claims independently.
+- **Reports**: research replies can be copied with their question and source list or exported as Markdown, including search execution status, relevant sources, page retrieval errors, and evidence limitations.
+- **Evidence limits**: Viora still does not independently verify claim-by-claim citation support or conduct an open-ended search loop. Search providers include Google Books for title-specific book searches, Bing RSS and Google News RSS, with DuckDuckGo HTML as fallback. Search is bounded and source ranking uses heuristics; verify consequential claims independently.
 - **Backend**: the interface is in this repository; query expansion, ranking, guarded page retrieval, progress state, and cancellation are in the separate `Viora-auth` repository. Deploy both repositories for the full workflow.
 
 ---

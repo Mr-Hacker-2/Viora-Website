@@ -827,10 +827,23 @@ function researchReport(c, index) {
   for (let j = index - 1; j >= 0; j--) if (c.messages[j].role === 'user') { question = c.messages[j].content || ''; break; }
   const sources = Src.cleanSources(m.src || []);
   const lines = ['# ' + (c.title || 'Viora research report'), '', '## Research question', question || 'Not recorded', '', '## Findings', m.content || 'No report text was returned.'];
+  if (m.research) {
+    lines.push('', '## Search status', 'Outcome: ' + (m.research.outcome || 'not reported'),
+      'Search executed: ' + (m.research.executed === true ? 'yes' : 'no'),
+      'Provider succeeded: ' + (m.research.providerSucceeded === true ? 'yes' : 'no'),
+      'Relevant sources retrieved: ' + (Number.isFinite(m.research.relevantSources) ? m.research.relevantSources : sources.length),
+      'Sources provided for analysis: ' + (Number.isFinite(m.research.sourcesProvided) ? m.research.sourcesProvided : sources.length),
+      'Source analysis status: ' + (m.research.sourceAnalysisStatus || 'not reported'),
+      'Sources analyzed after completion: ' + (Number.isFinite(m.research.sourcesAnalyzed) ? m.research.sourcesAnalyzed : 0));
+    if (m.research.queries?.length) lines.push('Search queries: ' + m.research.queries.join(' | '));
+    if (m.research.error) lines.push('Search error: ' + m.research.error);
+    if (m.research.providerErrors?.length) lines.push('Other provider errors: ' + m.research.providerErrors.join('; '));
+    if (Number.isFinite(m.research.pageFetchFailures)) lines.push('Page retrieval failures: ' + m.research.pageFetchFailures);
+  }
   if (sources.length) {
     lines.push('', '## Sources');
     sources.forEach((s, i) => {
-      const state = s.pageFetched === true ? 'Page retrieved' : s.pageFetched === false ? 'Search snippet only' : 'Retrieval status unavailable';
+      const state = s.pageFetched === true ? 'Page retrieved' : s.pageFetchStatus || (s.pageFetched === false ? 'Search snippet only' : 'Retrieval status unavailable');
       lines.push('', (i + 1) + '. **' + (s.title || Src.hostOf(s.url)) + '**' + (s.publishedAt ? ' · ' + s.publishedAt : ''), '   ' + s.url,
         '   ' + [s.sourceType && s.sourceType !== 'other' ? s.sourceType + ' source type' : '', s.relevance ? s.relevance + ' topic match' : '', state].filter(Boolean).join(' · '));
       if (s.snippet) lines.push('   > ' + String(s.snippet).replace(/\s+/g, ' ').trim());
@@ -839,7 +852,9 @@ function researchReport(c, index) {
   }
   if (m.research) lines.push('', '## Research details', 'Mode: ' + (m.research.mode === 'deep' ? 'Deep Research' : 'Quick Search'),
     'Search queries: ' + (Number.isFinite(m.research.queryCount) ? m.research.queryCount : 'not reported'),
-    'Pages retrieved: ' + (Number.isFinite(m.research.fetchedPages) ? m.research.fetchedPages : 0) + ' of ' + (Number.isFinite(m.research.totalSources) ? m.research.totalSources : sources.length),
+    'Pages attempted: ' + (Number.isFinite(m.research.pagesAttempted) ? m.research.pagesAttempted : 0),
+    'Pages retrieved: ' + (Number.isFinite(m.research.fetchedPages) ? m.research.fetchedPages : 0),
+    'Relevant sources retrieved: ' + (Number.isFinite(m.research.totalSources) ? m.research.totalSources : sources.length),
     '', '## Evidence limits', 'Source ranking uses topic match and broad source-type hints. These are not reliability guarantees. Claim support was not independently verified.');
   return lines.join('\n');
 }
@@ -861,7 +876,7 @@ function msgHtml(m, i, last, enter, live, editable = false) {
     : (citationAudit.missingResearchSources
       ? '<div class="switch-note" role="status">This research-style reply included numbered citations, but no valid source links were provided. The citations could not be checked.</div>'
       : '');
-  const researchNote = m.research ? `${m.research.mode === 'deep' ? 'Deep Research' : 'Quick Search'} · ${m.research.queryCount || 1} search quer${m.research.queryCount === 1 ? 'y' : 'ies'} · fetched ${m.research.fetchedPages} of ${m.research.totalSources} source pages · claim support not independently verified.` : '';
+  const researchNote = m.research ? `${m.research.mode === 'deep' ? 'Deep Research' : 'Quick Search'} · ${m.research.outcome === 'sources_retrieved' ? `search succeeded · ${m.research.relevantSources} relevant source${m.research.relevantSources === 1 ? '' : 's'} retrieved` : m.research.outcome === 'no_relevant_sources' ? 'search completed · no relevant sources found' : m.research.outcome === 'not_executed' ? 'no search query was available' : m.research.outcome === 'failed' ? `search failed${m.research.error ? ': ' + m.research.error : ''}` : 'search status unavailable'} · analysis ${m.research.sourceAnalysisStatus || 'pending'} · read ${m.research.fetchedPages || 0} of ${m.research.pagesAttempted || 0} attempted pages · claim support not independently verified.` : '';
   const note = [m.mode ? 'Auto chose ' + A[m.mode].n : '', m.model ? 'Model ' + m.model : '', researchNote, m.note || ''].filter(Boolean).join(' · ');
   const timingParts = m.timing ? [['Search', m.timing.searchMs], ['Page fetch', m.timing.sourceFetchMs], ['Model headers', m.timing.modelHeaderMs], ['Browser first text', m.timing.firstTokenMs], ['Server first chunk', m.timing.firstStreamChunkMs], ['Server total', m.timing.totalServerMs], ['Browser total', m.timing.totalMs]]
     .filter(([, ms]) => Number.isFinite(ms)).map(([label, ms]) => `${label} ${(ms / 1000).toFixed(1)}s`) : [];
@@ -1121,7 +1136,22 @@ async function send(text) {
     }
     m.wait = '';
     if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
-    if (!r.ok) { const e = await r.json().catch(() => ({})); throw new Error(NP.describeHttpFailure(r.status, e.error || '')); }
+    if (!r.ok) {
+      const e = await r.json().catch(() => ({}));
+      if (Array.isArray(e.viora_sources)) {
+        m.searching = false; m.src = e.viora_sources; m.research = e.viora_research || null;
+        m.timing = { ...m.timing, ...(e.viora_timings || {}) };
+        m.note = m.research?.outcome === 'failed'
+          ? 'Web search failed: ' + String(m.research.error || 'The search provider returned an error.')
+          : m.research?.outcome === 'sources_retrieved'
+            ? 'Web search succeeded and its sources are available, but the AI provider did not complete the answer.'
+            : m.research?.outcome === 'not_executed'
+              ? 'Web search was requested, but no search query could be formed.'
+              : 'Search completed, but no relevant sources were retrieved.';
+        render();
+      }
+      throw new Error(NP.describeHttpFailure(r.status, e.error || ''));
+    }
     m.stage = 'Reading the response…';
     /* The request was accepted. What Viora is doing now depends on what it was actually given, never on guesswork. */
     const modelName = A[m.eff || eff].n, searchAsked = !!(A[m.eff || eff].web && useWeb), plural = (n, w) => n + ' ' + w + (n === 1 ? '' : 's');
@@ -1174,10 +1204,16 @@ async function send(text) {
         else if (Object.hasOwn(j, 'viora_sources')) {
           m.searching = false; m.stage = 'Checking source links…'; m.src = j.viora_sources;
           m.research = j.viora_research || null; m.timing = { ...m.timing, ...(j.viora_timings || {}) };
-          if (!m.src.length) m.note = 'Web search returned no source links. Treat live claims as unverified.';
+          if (!m.src.length) {
+            m.note = m.research?.outcome === 'failed'
+              ? 'Web search failed: ' + String(m.research.error || 'The search provider returned an error.')
+              : m.research?.outcome === 'not_executed'
+                ? 'Web search was requested, but no search query could be formed.'
+                : 'Search completed, but no relevant sources were retrieved.';
+          }
           /* the server has now told us what the search found, so these steps carry real numbers */
-          T.end(tr, 'search', m.src.length ? plural(m.src.length, 'result') + ' found' : 'No source links were returned');
-          if (m.src.length) { const rs = m.research, ok = rs && Number.isFinite(rs.fetchedPages) && Number.isFinite(rs.totalSources); T.note(tr, 'sources', 'Reading sources', ok ? 'Read ' + rs.fetchedPages + ' of ' + rs.totalSources + ' source pages' : 'Checking source links', { tool: 1, dur: m.timing && m.timing.sourceFetchMs }); }
+          T.end(tr, 'search', m.src.length ? plural(m.src.length, 'relevant source') + ' retrieved' : m.research?.outcome === 'failed' ? 'Search provider failed' : m.research?.outcome === 'not_executed' ? 'No query was sent' : 'No relevant sources found');
+          if (m.src.length) { const rs = m.research, ok = rs && Number.isFinite(rs.fetchedPages) && Number.isFinite(rs.pagesAttempted); T.note(tr, 'sources', 'Sources supplied to answer', ok ? (Number.isFinite(rs.sourcesProvided) ? rs.sourcesProvided : m.src.length) + ' provided · read ' + rs.fetchedPages + ' of ' + rs.pagesAttempted + ' attempted pages' : 'Checking source links', { tool: 1, dur: m.timing && m.timing.sourceFetchMs }); }
           if (!m.content) waitStep();
           render();
         }
@@ -1210,11 +1246,19 @@ async function send(text) {
     if (useWeb && !Array.isArray(m.src)) {
       m.note = 'Web search was requested, but the reply did not include source links. Treat live claims as unverified.';
     } else if (useWeb && Array.isArray(m.src) && m.src.length === 0) {
-      m.note = 'Web search returned no source links. Treat live claims as unverified.';
+      m.note = m.research?.outcome === 'failed'
+        ? 'Web search failed: ' + String(m.research.error || 'The search provider returned an error.')
+        : m.research?.outcome === 'not_executed'
+          ? 'Web search was requested, but no search query could be formed.'
+          : 'Search completed, but no relevant sources were retrieved.';
     }
   } catch (e) {
     if (e.name === 'AbortError') { outcome = 'stopped'; if (!m.content) m.content = '_Stopped._'; }
     else { outcome = 'failed'; if (!m.content && NP.get().restoreOnFail && !$('#input').value) { $('#input').value = text; grow(); } m.err = true; m.content = (m.content ? m.content + '\n\n' : '') + '⚠️ ' + (/fetch|network/i.test(e.message) ? 'Could not reach Viora. The server may be waking up, so try again in 30 seconds.' : e.message); }
+  }
+  if (useWeb && m.research?.outcome === 'sources_retrieved') {
+    m.research.sourceAnalysisStatus = outcome === 'done' ? 'completed' : 'incomplete';
+    m.research.sourcesAnalyzed = outcome === 'done' ? (m.research.sourcesProvided || 0) : 0;
   }
   if (timingStart && m.timing) m.timing.totalMs = Math.round(performance.now() - timingStart);
   T.finish(tr, outcome); /* always runs: whatever was still active is closed, so no indicator can be left running */

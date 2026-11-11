@@ -29,13 +29,16 @@ test('trimHistory keeps the newest messages and starts on a user message', () =>
   assert.equal(trimHistory(messages, 0), messages);
 });
 
-test('default history sends only the latest four messages', () => {
+test('default history retains the latest twelve messages across assistant switches', () => {
   const messages = Array.from({ length: 12 }, (_, index) => ({
     role: index % 2 ? 'assistant' : 'user',
     content: String(index)
   }));
-  assert.equal(DEFAULTS.history, 4);
-  assert.deepEqual(trimHistory(messages), messages.slice(8));
+  assert.equal(DEFAULTS.history, 12);
+  assert.deepEqual(trimHistory(messages), messages);
+  assert.deepEqual(trimHistory([...messages, { role: 'assistant', content: '12' }, { role: 'user', content: '13' }]), [
+    { role: 'user', content: '2' }, ...messages.slice(3), { role: 'assistant', content: '12' }, { role: 'user', content: '13' }
+  ]);
 });
 
 test('summarizeHistory preserves older conversation turns in a bounded extract', () => {
