@@ -7,7 +7,7 @@ The website repo is a static front end with unit tests and routing evaluations. 
 |---|---|---|
 | Chat lifecycle | `app.html` `send()` → `NP.request` → SSE stream | Handles text, source, model, research and server timing events |
 | Assistants | `A` in `app.html`; capabilities in `assets/x/caps.js`; model chains in `Viora-auth/server.js` | Viora lanes map to provider models; client and server both have compatible fallbacks |
-| Routing | `assets/x/router.js` | Heuristic classifier with tests; Auto searches only for fresh-info/research prompts while explicit Pro Search remains searchable |
+| Routing | `assets/x/router.js`; `Viora-auth/research.js`, `intelligence.js` | Client routes Auto and predicts progress; the API makes the authoritative research decision for every web-capable assistant, using request context and a fast classifier for ambiguous facts |
 | Retries/timeouts | `assets/x/netperf.js`, `assets/x/router.js`, backend provider chains | Network/HTTP retries, stream-stall handling, client assistant fallback and server model fallback; Stop is not retried |
 | Attachments | `app.html` + `assets/x/media.js` | Magic-byte checks, PDF text/OCR, image vision, and up to 8 timestamped video frames. Audio and video audio are not analyzed |
 | Memory/projects | `assets/x/memory.js`, localStorage and IndexedDB | Relevant memories/notes are retrieved per prompt; editable, project-scoped and device-local |
@@ -53,6 +53,7 @@ Server planner with verification → audio/PDF-page/video-audio support → serv
 - Added bounded query planning, parallel provider passes for Deep Research, URL deduplication, relevance ranking, and broad government/academic/documentation source-type hints in `Viora-auth/research.js`.
 - Deep mode: up to 3 queries, 10 distinct result URLs, and 6 guarded page fetches; Quick mode: 1 query, 6 results, and 4 page fetches.
 - Added authenticated owner-scoped progress polling at `GET /api/progress?id=...`, short-lived in-memory status, and cancellation of search/page/provider fetches when the chat connection closes.
+- Centralized the decision to research on the server: stable or task-focused questions skip the web, explicit/current requests search across answer models, and ambiguous factual questions get a fast intent check. Quick Search retries once with a focused query if its first pass finds nothing relevant; source-backed answers are quality-reviewed before completion.
 - Added expandable retrieved-page excerpts, plus research report copy and Markdown export with the research question, findings, sources, retrieval labels, search count, and evidence limitations.
 - Search provider integrations remain Bing RSS, Google News RSS, and a DuckDuckGo HTML fallback. This iteration does not add user-defined preferred-domain settings or open-ended agentic follow-up searches.
 - Claim-level citation support is still not independently verified. Ranking hints are heuristics and do not establish source reliability.

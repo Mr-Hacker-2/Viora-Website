@@ -30,7 +30,9 @@ test('web search is reserved for research signals or explicit research mode', ()
   assert.equal(shouldSearch('Why does this Python loop never end?', { assistant: 'math' }), false);
   assert.equal(shouldSearch('What happened in tech news today?', { assistant: 'auto' }), true);
   assert.equal(shouldSearch('Find recent studies on sleep', { assistant: 'flash' }), true);
-  assert.equal(shouldSearch('Explain photosynthesis', { assistant: 'search' }), true);
+  assert.equal(shouldSearch('Explain photosynthesis', { assistant: 'search' }), false);
+  assert.equal(shouldSearch('Who wrote Fancy Bear Goes Phishing?', { assistant: 'search' }), false);
+  assert.equal(shouldSearch('Search the internet for the contents of Fancy Bear Goes Phishing', { assistant: 'flash' }), true);
   assert.equal(shouldSearch('What is the latest figure in this report?', { assistant: 'flash', hasPage: true }), false);
   assert.equal(shouldSearch('Search outside this report for current figures', { assistant: 'flash', hasPage: true }), true);
   assert.equal(shouldSearch('What is the latest news?', { assistant: 'auto', enabled: false }), false);

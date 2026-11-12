@@ -34,7 +34,7 @@ export function classify(text, { hasPage = false, hasVisual = false } = {}) {
 /** Use web search only for explicit research mode or prompts classified as needing fresh evidence. */
 export function shouldSearch(text, { assistant = 'auto', enabled = true, hasPage = false, hasVisual = false } = {}) {
   if (!enabled || assistant === 'human') return false;
-  return assistant === 'search' || classify(text, { hasPage, hasVisual }).assistant === 'search';
+  return classify(text, { hasPage, hasVisual }).assistant === 'search';
 }
 
 /* Provider health: a small circuit breaker. Three failures in a row open it for 60 s. */

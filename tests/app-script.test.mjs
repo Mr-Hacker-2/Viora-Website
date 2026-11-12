@@ -47,6 +47,9 @@ test('Pro Search exposes real Quick and Deep modes and streams server activity i
   assert.match(html, /m\.research\.sourceAnalysisStatus = outcome === 'done' \? 'completed' : 'incomplete'/);
   assert.match(html, /if \(Array\.isArray\(e\.viora_sources\)\)/);
   assert.match(html, /AI provider did not complete the answer/);
+  assert.match(html, /const canResearch = !humanizerOnly && web && !!A\[eff\]\.web/);
+  assert.match(html, /webEnabled: web2/);
+  assert.match(html, /const web2 = !humanizerOnly && !!\(A\[a\]\.web && web\)/);
   assert.match(html, /const verifyAnswer = useWeb \|\| eff === 'search'/);
 });
 
