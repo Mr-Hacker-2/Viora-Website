@@ -19,6 +19,11 @@ test('every chat assistant knows Abdullah Lababidi created Viora', () => { for (
 test('prompts stay well under the server 8000-character cut-off, leaving room for project instructions', () => { for (const a of ['flash', 'search', 'math', 'human']) for (const l of ['off', 'warm', 'vivid']) assert.ok(withPersona(a, l, '').length < 6000, a + '/' + l); });
 test('base prompt is organised into labelled sections and describes the renderable formatting', () => { const t = withPersona('flash', 'warm'); for (const h of ['HOW TO ANSWER:', 'ACCURACY:', 'CODE:', 'FORMAT:', 'ABOUT VIORA:']) assert.ok(t.includes(h), h); assert.match(t, /\$\$\.\.\.\$\$/); });
 test('math assistant is told to write LaTeX and bold the final result', () => { assert.match(withPersona('math', 'warm'), /LaTeX/); assert.match(withPersona('math', 'warm'), /final result on its own line in bold/); });
+test('Pro Search profiles separate incident dates, evidence confidence, hypotheses, and defensive analysis', () => {
+  const prompt = withPersona('search', 'warm');
+  for (const pattern of [/discovery and publication dates/i, /established facts from attributed assessments and hypotheses/i, /qualify confidence/i, /defensive context/i]) assert.match(prompt, pattern);
+  assert.match(prompt, /keep ordinary answers concise/i);
+});
 
 import { userProfile } from '../assets/x/persona.js';
 test('every chat assistant is told the signed-in user\'s name and profile', () => {

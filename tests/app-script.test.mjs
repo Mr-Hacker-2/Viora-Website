@@ -47,6 +47,7 @@ test('Pro Search exposes real Quick and Deep modes and streams server activity i
   assert.match(html, /m\.research\.sourceAnalysisStatus = outcome === 'done' \? 'completed' : 'incomplete'/);
   assert.match(html, /if \(Array\.isArray\(e\.viora_sources\)\)/);
   assert.match(html, /AI provider did not complete the answer/);
+  assert.match(html, /const verifyAnswer = useWeb \|\| eff === 'search'/);
 });
 
 test('research report copy and Markdown export include source status and evidence limits', async () => {

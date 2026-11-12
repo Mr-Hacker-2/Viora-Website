@@ -1063,12 +1063,12 @@ async function send(text) {
   let eff = autoRoute ? autoRoute.assistant : asst;
   const humanizerOnly = eff === 'human';
   const hasTextAttachment = !selectedHumanizer && !!(c.page && c.page.files.some(f => f.kind === 'file' || f.kind === 'web'));
-  const verifyAnswer = eff === 'search' || eff === 'math' || hasTextAttachment;
   /* capability check: the Humanizer panel rewrites its text draft; unrelated chat attachments do not switch its model */
   const pk = pickModel(eff, selectedHumanizer ? [] : (c.page ? c.page.files : []), Object.fromEntries(Object.entries(A).map(([k, v]) => [k, v.n])));
   if (pk.switched) { eff = pk.assistant; m.sw = 'Switched to ' + A[eff].n + ': ' + pk.why + '.'; }
   m.eff = eff; if (asst === 'auto') { m.mode = eff; } render();
   const useWeb = shouldSearch(text, { assistant: eff, enabled: web && !!A[eff].web, hasPage: !!c.page, hasVisual: visualFiles(c).length > 0 }), pj = D.projects.find(x => x.id === c.pid);
+  const verifyAnswer = useWeb || eff === 'search' || eff === 'math' || hasTextAttachment;
   const researchRequestId = useWeb ? 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12) : '';
   const remembered = D.autoMem && eff !== 'human' ? rememberPersonalDetails(text) : 0;
   if (remembered) toast('Saved ' + remembered + (remembered === 1 ? ' detail to Memory.' : ' details to Memory.') + ' You can review or remove them in Memory.');
