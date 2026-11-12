@@ -242,7 +242,7 @@ if (page === 'login') {
   })();
   btn.onclick = () => {
     const value = email.value.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { email.setAttribute('aria-invalid', 'true'); email.focus(); return fail('Enter a valid email address to continue.'); }
+    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { email.setAttribute('aria-invalid', 'true'); email.focus(); return fail('Type your email address in the box below, then choose Google again. Google uses it to check your account.'); }
     email.removeAttribute('aria-invalid');
     if (mode() === 'signup' && !consent.checked) return fail('Please accept the Terms and Privacy Policy to create your account.');
     btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode(), value, consent.checked);
