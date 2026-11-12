@@ -89,6 +89,18 @@ export function isStreamTerminal(data) {
   return Array.isArray(data?.choices) && data.choices.some(choice => choice && choice.finish_reason != null);
 }
 
+/* The provider's stated reason for ending a reply, or '' while it is still writing. */
+export function streamFinishReason(data) {
+  if (!Array.isArray(data?.choices)) return '';
+  const hit = data.choices.find(choice => choice && choice.finish_reason != null);
+  return hit ? String(hit.finish_reason) : '';
+}
+
+/* True when the model stopped because it ran out of room, not because it finished its answer. */
+export function isTruncatedFinish(reason) {
+  return /^(length|max[_-]?tokens?|max_output_tokens)$/i.test(String(reason || ''));
+}
+
 export function streamFinalizationError({ terminal, malformed = false, incomplete = '' } = {}) {
   if (incomplete) return String(incomplete);
   if (malformed) return 'The response stream contained invalid data and could not be verified as complete. Use Regenerate to try again.';

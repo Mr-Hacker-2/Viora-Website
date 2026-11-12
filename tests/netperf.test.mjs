@@ -77,3 +77,13 @@ test('stream completion requires the terminal marker and rejects malformed or in
   assert.match(streamFinalizationError({ terminal: true, malformed: true }), /invalid data/i);
   assert.equal(streamFinalizationError({ terminal: false, incomplete: 'Provider stream interrupted.' }), 'Provider stream interrupted.');
 });
+
+import { streamFinishReason, isTruncatedFinish } from '../assets/x/netperf.js';
+test('a length finish is reported as truncated, a normal stop is not', () => {
+  assert.equal(streamFinishReason({ choices: [{ delta: { content: 'x' }, finish_reason: null }] }), '');
+  assert.equal(streamFinishReason({ choices: [{ finish_reason: 'length' }] }), 'length');
+  assert.equal(isTruncatedFinish('length'), true);
+  assert.equal(isTruncatedFinish('MAX_TOKENS'), true);
+  assert.equal(isTruncatedFinish('stop'), false);
+  assert.equal(isTruncatedFinish(''), false);
+});

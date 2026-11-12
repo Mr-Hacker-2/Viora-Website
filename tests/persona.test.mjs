@@ -44,3 +44,8 @@ test('profile text is cleaned and capped so the prompt stays under the server cu
   for (const a of ['flash', 'search', 'math']) assert.ok(withPersona(a, 'vivid', '', who).length < 8000, a);
 });
 test('without a name the profile still says the user is signed in', () => { assert.match(userProfile({ about: 'I like chess' }), /has not shared their name/); });
+
+test('chat assistants get the structured briefing style; the Humanizer does not', () => {
+  for (const a of ['flash', 'search', 'math', 'auto']) assert.match(withPersona(a, 'warm'), /REPLY STYLE:/);
+  assert.doesNotMatch(withPersona('human', 'warm'), /REPLY STYLE:/);
+});
