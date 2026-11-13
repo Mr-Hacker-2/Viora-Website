@@ -728,7 +728,7 @@ import { pick as pickModel } from './assets/x/caps.js';
 import { classify, shouldSearch, chain, Health, shouldFallback } from './assets/x/router.js';
 import { withPersona, normLevel, LEVELS, userProfile } from './assets/x/persona.js';
 import { cleanRewrite } from './assets/x/humanize-post.js';
-import { signalsHtml } from './assets/x/humanize-stats.js';
+import { factCheck, signalsHtml } from './assets/x/humanize-stats.js';
 import { chatVoiceSample } from './assets/x/voice.js';
 import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories, preferredName } from './assets/x/memory.js';
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes, validateVisualPayload } from './assets/x/media.js';
@@ -980,15 +980,23 @@ function render() {
 /* "Latest" button: appears when you have scrolled well above the newest message */
 function syncHumanizer() {
   const c = chat(), last = c && [...c.messages].reverse().find(m => m.role === 'assistant'), out = $('#hz-output'); if (!out) return;
-  out.value = cleanRewrite(last && last.content || '');
-  const active = !!busy && asst === 'human', has = !!out.value.trim(), words = has ? out.value.trim().split(/\s+/).filter(Boolean).length : 0, sourceWords = $('#hz-input').value.trim().split(/\s+/).filter(Boolean).length, incomplete = !active && sourceWords >= 40 && words < Math.max(20, Math.ceil(sourceWords * 0.35)), card = out.closest('.hz-output-card'), sig = $('#hz-signals');
+  const source = $('#hz-input').value, sourceWords = source.trim().split(/\\s+/).filter(Boolean).length;
+  const raw = cleanRewrite(last && last.content || ''), candidateWords = raw.trim().split(/\\s+/).filter(Boolean).length;
+  const facts = sourceWords && candidateWords ? factCheck(source, raw) : { missing: [], added: [] };
+  const minWords = sourceWords ? Math.min(sourceWords, Math.max(1, Math.ceil(sourceWords * 0.55))) : 0;
+  const active = !!busy && asst === 'human';
+  const generationFailed = !!(last && (last.err || last.incomplete));
+  const incomplete = !active && sourceWords > 0 && (generationFailed || !candidateWords || candidateWords < minWords || facts.missing.length > 0 || facts.added.length > 0);
+  out.value = !active && !incomplete && sourceWords ? raw : '';
+  const has = !!out.value.trim(), words = has ? out.value.trim().split(/\\s+/).filter(Boolean).length : 0, card = out.closest('.hz-output-card'), sig = $('#hz-signals');
   $('#hz-run').textContent = active ? 'Stop rewriting' : 'Polish my draft ↗'; $('#hz-run').classList.toggle('is-stop', active);
-  $('#hz-copy').disabled = !has || active || incomplete; $('#hz-replace').disabled = !has || active || incomplete; $('#hz-again').disabled = !has || active;
+  $('#hz-copy').disabled = !has || active; $('#hz-replace').disabled = !has || active; $('#hz-again').disabled = active || !sourceWords;
   if (card) { card.classList.toggle('is-working', active); card.classList.toggle('is-incomplete', incomplete); }
-  $('#hz-live-text').textContent = active ? 'WORKING' : incomplete ? 'REVIEW' : has ? 'DONE' : 'READY';
+  $('#hz-live-text').textContent = active ? 'WORKING' : incomplete ? 'RETRY' : has ? 'DONE' : 'READY';
+  const errorMessage = last && last.incomplete ? String(last.incomplete) : generationFailed ? 'The rewrite did not pass completeness checks. Your draft is unchanged; try again or split it into shorter sections.' : '';
   const phase = active ? (last && (last.wait || last.stage) || 'Connecting to Viora…') : '';
-  $('#hz-status').textContent = active ? (has ? 'Rewriting… ' + words + (words === 1 ? ' word' : ' words') + ' so far' : phase) : incomplete ? 'This rewrite is much shorter than your draft and may be incomplete. Try again; the Copy and Use buttons are disabled.' : has ? 'Done · ' + words + (words === 1 ? ' word' : ' words') + ' · ready to use or copy.' : 'Your rewritten text will appear here.';
-  if (sig) { const html = !active && has ? signalsHtml($('#hz-input').value, out.value) : ''; sig.innerHTML = html; sig.hidden = !html; }
+  $('#hz-status').textContent = active ? (words ? 'Rewriting… ' + words + (words === 1 ? ' word' : ' words') + ' so far' : phase) : incomplete ? errorMessage || 'The rewrite was too short or omitted details. Your draft is unchanged; try again.' : has ? 'Done · ' + words + (words === 1 ? ' word' : ' words') + ' · ready to use or copy.' : 'Your rewritten text will appear here.';
+  if (sig) { const html = !active && has ? signalsHtml(source, out.value) : ''; sig.innerHTML = html; sig.hidden = !html; }
 }
 function jump() { const th = $('#thread'), c = chat(); $('#to-bottom').classList.toggle('show', !!(c && c.messages.length) && th.scrollHeight - th.scrollTop - th.clientHeight > 240); }
 function sendState(on) { $('#send').innerHTML = on ? ic('stop') : SEND; $('#send').setAttribute('aria-label', on ? 'Stop' : 'Send'); $('#send').disabled = false; }
