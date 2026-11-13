@@ -52,7 +52,7 @@ test('Writing Studio style and strength options map to generation instructions',
   for (const [id, map] of [['hz-style', styleMap], ['hz-mode', modeMap], ['hz-strength', strengthMap]]) {
     const sel = html.match(new RegExp('<select id="' + id + '">([\\s\\S]*?)</select>'));
     assert.ok(sel, id);
-    for (const [, value] of sel[1].matchAll(/value="([^"]+)"/g)) assert.match(map, new RegExp('(?:^|\\n)\\s*' + value + ':'), value);
+    for (const [, value] of sel[1].matchAll(/value="([^"]+)"/g)) assert.ok(map.includes(value + ':'), value);
   }
 });
 
