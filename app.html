@@ -980,15 +980,15 @@ function render() {
 /* "Latest" button: appears when you have scrolled well above the newest message */
 function syncHumanizer() {
   const c = chat(), last = c && [...c.messages].reverse().find(m => m.role === 'assistant'), out = $('#hz-output'); if (!out) return;
-  const source = $('#hz-input').value, sourceWords = source.trim().split(/\\s+/).filter(Boolean).length;
-  const raw = cleanRewrite(last && last.content || ''), candidateWords = raw.trim().split(/\\s+/).filter(Boolean).length;
+  const source = $('#hz-input').value, sourceWords = source.trim().split(/\s+/).filter(Boolean).length;
+  const raw = cleanRewrite(last && last.content || ''), candidateWords = raw.trim().split(/\s+/).filter(Boolean).length;
   const facts = sourceWords && candidateWords ? factCheck(source, raw) : { missing: [], added: [] };
   const minWords = sourceWords ? Math.min(sourceWords, Math.max(1, Math.ceil(sourceWords * 0.55))) : 0;
   const active = !!busy && asst === 'human';
   const generationFailed = !!(last && (last.err || last.incomplete));
   const incomplete = !active && sourceWords > 0 && (generationFailed || !candidateWords || candidateWords < minWords || facts.missing.length > 0 || facts.added.length > 0);
   out.value = !active && !incomplete && sourceWords ? raw : '';
-  const has = !!out.value.trim(), words = has ? out.value.trim().split(/\\s+/).filter(Boolean).length : 0, card = out.closest('.hz-output-card'), sig = $('#hz-signals');
+  const has = !!out.value.trim(), words = has ? out.value.trim().split(/\s+/).filter(Boolean).length : 0, card = out.closest('.hz-output-card'), sig = $('#hz-signals');
   $('#hz-run').textContent = active ? 'Stop rewriting' : 'Polish my draft ↗'; $('#hz-run').classList.toggle('is-stop', active);
   $('#hz-copy').disabled = !has || active; $('#hz-replace').disabled = !has || active; $('#hz-again').disabled = active || !sourceWords;
   if (card) { card.classList.toggle('is-working', active); card.classList.toggle('is-incomplete', incomplete); }
