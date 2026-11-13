@@ -1,6 +1,6 @@
 import test from 'node:test'; import assert from 'node:assert/strict';
 import { DEFAULT_LEVEL, personaFor, withPersona, normLevel } from '../assets/x/persona.js';
-test('default level is warm and keeps emotional responses natural', () => { assert.equal(DEFAULT_LEVEL, 'warm'); assert.match(personaFor('flash'), /emojis/i); assert.match(personaFor('flash'), /do not infer a personal emotional state from a neutral question/i); assert.match(withPersona('flash'), /Answer the user's actual request/); });
+test('default level is expressive and keeps emotional responses natural', () => { assert.equal(DEFAULT_LEVEL, 'expressive'); assert.match(personaFor('flash'), /emojis/i); assert.match(personaFor('flash'), /without guessing emotions from neutral questions/i); assert.match(withPersona('flash'), /Answer the user's actual request/); });
 test('Flash idea suggestions respect explicit user constraints', () => {
   const prompt = withPersona('flash');
   assert.match(prompt, /unless they request a different number or format/);
@@ -10,13 +10,13 @@ test('Flash idea suggestions respect explicit user constraints', () => {
 test('off adds nothing', () => assert.equal(personaFor('flash', 'off'), ''));
 test('rewriting and unknown assistants stay plain', () => { for (const a of ['human', 'humanize', 'legacy']) assert.equal(personaFor(a, 'vivid'), ''); });
 test('code safety rule is always present', () => { for (const l of ['warm', 'vivid']) assert.match(withPersona('math', l), /code in fenced blocks/); });
-test('vivid differs from warm', () => assert.notEqual(personaFor('flash', 'vivid'), personaFor('flash', 'warm')));
-test('emoji levels keep emojis out of code and away from distress', () => { for (const l of ['warm', 'vivid']) { assert.match(personaFor('flash', l), /code blocks/); assert.match(personaFor('flash', l), /distress/); } });
-test('emoji use stays optional and has no quota', () => { assert.match(withPersona('flash', 'warm'), /Emojis are optional/); assert.match(withPersona('flash', 'vivid'), /no fixed number/); assert.doesNotMatch(withPersona('flash', 'vivid'), /6 to 12 per answer/i); });
-test('unknown or corrupt saved value falls back to the default', () => { assert.equal(normLevel('nonsense'), 'warm'); assert.equal(normLevel(null), 'warm'); assert.equal(normLevel(undefined), 'warm'); });
+test('expressive and very expressive levels differ from warm and each other', () => { assert.notEqual(personaFor('flash', 'expressive'), personaFor('flash', 'warm')); assert.notEqual(personaFor('flash', 'very'), personaFor('flash', 'expressive')); });
+test('emoji levels keep emojis out of code and away from distress', () => { for (const l of ['warm', 'expressive', 'very']) { assert.match(personaFor('flash', l), /code/); assert.match(personaFor('flash', l), /serious medical, legal, or safety topics/); } });
+test('emoji frequency follows the selected level without a fixed quota', () => { assert.match(withPersona('flash', 'warm'), /occasional relevant emoji/i); assert.match(withPersona('flash', 'expressive'), /frequently/i); assert.match(withPersona('flash', 'very'), /generously/i); for (const level of ['warm','expressive','very']) assert.doesNotMatch(withPersona('flash', level), /one or two emojis|one or two per reply/i); });
+test('unknown or corrupt saved value falls back to the default', () => { assert.equal(normLevel('nonsense'), 'expressive'); assert.equal(normLevel(null), 'expressive'); assert.equal(normLevel(undefined), 'expressive'); assert.equal(normLevel('off'), 'plain'); assert.equal(normLevel('vivid'), 'expressive'); });
 test('project instructions are kept after the persona', () => { const t = withPersona('flash', 'warm', 'Answer in French.'); assert.ok(t.endsWith('Answer in French.')); assert.ok(withPersona('human', 'warm', 'X').endsWith('X')); });
 test('every chat assistant knows Abdullah Lababidi created Viora', () => { for (const a of ['flash', 'search', 'math']) assert.match(withPersona(a, 'warm'), /created by Abdullah Lababidi/); });
-test('prompts stay well under the server 8000-character cut-off, leaving room for project instructions', () => { for (const a of ['flash', 'search', 'math', 'human']) for (const l of ['off', 'warm', 'vivid']) assert.ok(withPersona(a, l, '').length < 6000, a + '/' + l); });
+test('prompts stay well under the server 8000-character cut-off, leaving room for project instructions', () => { for (const a of ['flash', 'search', 'math', 'human']) for (const l of ['plain', 'warm', 'expressive', 'very']) assert.ok(withPersona(a, l, '').length < 6000, a + '/' + l); });
 test('base prompt is organised into labelled sections and describes the renderable formatting', () => { const t = withPersona('flash', 'warm'); for (const h of ['HOW TO ANSWER:', 'ACCURACY:', 'CODE:', 'FORMAT:', 'ABOUT VIORA:']) assert.ok(t.includes(h), h); assert.match(t, /\$\$\.\.\.\$\$/); });
 test('math assistant is told to write LaTeX and bold the final result', () => { assert.match(withPersona('math', 'warm'), /LaTeX/); assert.match(withPersona('math', 'warm'), /final result on its own line in bold/); });
 test('Pro Search profiles separate incident dates, evidence confidence, hypotheses, and defensive analysis', () => {
@@ -41,7 +41,7 @@ test('profile comes before project instructions, and nothing is added when nothi
 test('profile text is cleaned and capped so the prompt stays under the server cut-off', () => {
   const who = userProfile({ name: 'A<b>\nB'.repeat(50), about: 'x'.repeat(5000), facts: Array(50).fill(0).map((_, i) => 'fact ' + i + ' ' + 'y'.repeat(400)) });
   assert.doesNotMatch(who, /[<>\n]/);
-  for (const a of ['flash', 'search', 'math']) assert.ok(withPersona(a, 'vivid', '', who).length < 8000, a);
+  for (const a of ['flash', 'search', 'math']) assert.ok(withPersona(a, 'expressive', '', who).length < 8000, a);
 });
 test('without a name the profile still says the user is signed in', () => { assert.match(userProfile({ about: 'I like chess' }), /has not shared their name/); });
 
