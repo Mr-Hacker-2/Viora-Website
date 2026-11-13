@@ -230,7 +230,7 @@ if (page === 'login') {
   (async () => {
     if (hp.get('error')) {
       if (friendlyError(hp.get('error'))) return;
-      const messages = { storage_unavailable: 'Viora could not reach secure account storage. Please try again shortly.', account_suspended: 'This account is currently unavailable. Contact Viora support for help.', unverified_email: 'Google did not verify this email. Please choose a verified Google account.' };
+      const messages = { storage_unavailable: 'Viora could not reach secure account storage. Please try again shortly.', account_suspended: 'This account is currently unavailable. Contact Viora support for help.', unverified_email: 'Google did not verify this email. Please choose a verified Google account.', email_mismatch: 'Google signed in with a different email. Please try again with the email entered above.' };
       return fail(messages[hp.get('error')] || (hp.get('error') === 'access_denied' ? 'Google sign-in was cancelled. You can try again any time.' : 'Google sign-in failed. Please try again.'));
     }
     if (hp.get('token')) {
