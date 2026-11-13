@@ -42,18 +42,20 @@ test('Humanizer prompt covers the main AI tells and keeps facts intact', () => {
 test('Humanizer prompt fits the server limit with room for project instructions', () => { assert.ok(HUMANIZER.length < 4000, String(HUMANIZER.length)); });
 test('project instructions still follow the Humanizer prompt', () => { assert.ok(withPersona('human', 'warm', 'Keep it British.').endsWith('Keep it British.')); });
 test('removes invisible characters', () => { assert.equal(cleanRewrite('in\u200Bvis\u200Dible\uFEFF text\u00AD.'), 'invisible text.'); });
-test('Humanizer prompt explains every style and strength the studio offers', () => {
-  for (const re of [/natural =/, /casual =/, /professional =/, /academic =/, /simple =/, /confident =/, /light =/, /balanced =/, /strong =/]) assert.match(HUMANIZER, re);
-});
-test('every Humanizer style and strength option in app.html is described in the prompt', async () => {
+test('Writing Studio style and strength options map to generation instructions', async () => {
   const { readFile } = await import('node:fs/promises');
   const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
-  for (const id of ['hz-style', 'hz-strength']) {
+  const styleStart = html.indexOf('const styleGuide = {'), modeStart = html.indexOf('const modeGuide = {'), strengthStart = html.indexOf('const strengthGuide = {');
+  const styleMap = html.slice(styleStart, modeStart), modeMap = html.slice(modeStart, strengthStart);
+  const strengthMap = html.slice(strengthStart, html.indexOf('const complexityGuide =', strengthStart));
+  assert.ok(styleStart >= 0 && modeStart > styleStart && strengthStart > modeStart);
+  for (const [id, map] of [['hz-style', styleMap], ['hz-mode', modeMap], ['hz-strength', strengthMap]]) {
     const sel = html.match(new RegExp('<select id="' + id + '">([\\s\\S]*?)</select>'));
     assert.ok(sel, id);
-    for (const [, v] of sel[1].matchAll(/value="([^"]+)"/g)) assert.match(HUMANIZER, new RegExp('\\b' + v + ' ='), v);
+    for (const [, value] of sel[1].matchAll(/value="([^"]+)"/g)) assert.match(map, new RegExp('(?:^|\\n)\\s*' + value + ':'), value);
   }
 });
+
 test('Humanizer copies a user voice sample\'s style but never its content', () => {
   assert.match(HUMANIZER, /VOICE SAMPLE/); assert.match(HUMANIZER, /Copy its style only, never its content/);
   assert.match(HUMANIZER, /Preserve who is speaking, who is being addressed/);
