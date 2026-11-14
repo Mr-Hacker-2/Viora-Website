@@ -41,3 +41,13 @@ test('Google and email/password are independent: Google never needs, reads or se
     assert.doesNotMatch(form, /id="google"/, `${page}: the Google button is outside the email/password form`);
   }
 });
+
+
+test('the session token travels in the Authorization header, never in a URL', async () => {
+  const { readFileSync } = await import('node:fs');
+  for (const file of ['assets/app.js', 'app.html']) {
+    const src = readFileSync(new URL('../' + file, import.meta.url), 'utf8');
+    assert.doesNotMatch(src, /\/api\/verify\?token=/, file + ' must not put the token in the query string');
+    assert.match(src, /\/api\/verify', \{ headers: \{ Authorization: 'Bearer ' \+/, file + ' verifies with the header');
+  }
+});
