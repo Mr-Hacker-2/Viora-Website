@@ -30,8 +30,8 @@ test('login offers Google (which verifies the email) and email + password', asyn
   const auth = await readFile(new URL('../assets/app.js', import.meta.url), 'utf8');
   assert.match(html, /id="auth-email"[^>]*type="email"[^>]*required/);
   assert.match(html, /Sign in with Google, or with your email and password/);
-  assert.match(auth, /googleUrl\(mode, email, termsAccepted = false\)/);
-  assert.match(auth, /Auth\.googleUrl\(mode\(\), value, consent\.checked\)/);
+  assert.match(auth, /googleUrl\(mode, termsAccepted = false\)/);
+  assert.match(auth, /Auth\.googleUrl\(mode\(\), consent\.checked\)/);
 });
 
 test('Pro Search exposes real Quick and Deep modes and streams server activity into progress', async () => {
