@@ -43,7 +43,7 @@ test('Humanizer prompt fits the server limit with room for project instructions'
 test('project instructions still follow the Humanizer prompt', () => { assert.ok(withPersona('human', 'warm', 'Keep it British.').endsWith('Keep it British.')); });
 test('removes invisible characters', () => { assert.equal(cleanRewrite('in\u200Bvis\u200Dible\uFEFF text\u00AD.'), 'invisible text.'); });
 test('Humanizer prompt explains every style and strength the studio offers', () => {
-  for (const re of [/natural =/, /casual =/, /professional =/, /academic =/, /simple =/, /confident =/, /light =/, /balanced =/, /strong =/]) assert.match(HUMANIZER, re);
+  for (const re of [/natural =/, /casual =/, /professional =/, /academic =/, /student =/, /simple =/, /creative =/, /storytelling =/, /friendly =/, /persuasive =/, /confident =/, /light =/, /balanced =/, /strong =/]) assert.match(HUMANIZER, re);
 });
 test('every Humanizer style and strength option in app.html is described in the prompt', async () => {
   const { readFile } = await import('node:fs/promises');
@@ -72,6 +72,6 @@ test('Humanizer Voice option offers chats, natural and sample, and falls back to
   assert.deepEqual([...sel[1].matchAll(/value="([^"]+)"/g)].map(m => m[1]), ['chats', 'natural', 'sample']);
   assert.match(html, /chatVoiceSample\(chats\)/); assert.match(html, /Viora uses a natural human voice/);
   assert.match(html, /const voiceGuide = voice \? '' : 'Use a natural human voice\. '/);
-  assert.match(html, /strengthGuide \+ '\. ' \+ voiceGuide/);
+  assert.match(html, /complexityGuide \+ ' ' \+ voiceGuide/, 'the natural-voice instruction is appended to the prompt');
   assert.match(HUMANIZER, /requested style sets formality/);
 });
