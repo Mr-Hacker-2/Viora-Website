@@ -49,3 +49,20 @@ test('chat assistants get the structured briefing style; the Humanizer does not'
   for (const a of ['flash', 'search', 'math', 'auto']) assert.match(withPersona(a, 'warm'), /REPLY STYLE:/);
   assert.doesNotMatch(withPersona('human', 'warm'), /REPLY STYLE:/);
 });
+
+test('Flash is conversation-first: no mandatory expert-briefing layout, while Search and Math keep it', () => {
+  const flash = withPersona('flash', 'warm');
+  assert.match(flash, /REPLY STYLE: Sound like a sharp, friendly person, not a report/);
+  assert.doesNotMatch(flash, /write like an expert briefing|titled numbered sections/);
+  assert.doesNotMatch(flash, /End with a brief conclusion/);
+  for (const a of ['search', 'math']) assert.match(withPersona(a, 'warm'), /write like an expert briefing/, a);
+});
+test('Flash reply craft: answer-first, exact constraints, a clear pick, no filler, one follow-up at most, brief self-correction', () => {
+  const flash = withPersona('flash', 'warm');
+  for (const re of [/Reply craft:/, /keep exact constraints/, /pick one and say why/, /give the actual steps/, /Great question/, /I hope this helps/, /at most one follow-up question/, /Own a mistake in one line/]) assert.match(flash, re);
+});
+test('Flash keeps its accuracy rules and emoji guardrails after the style change', () => {
+  const flash = withPersona('flash', 'vivid');
+  assert.match(flash, /ACCURACY:/); assert.match(flash, /never claim to have run code/); assert.match(flash, /created by Abdullah Lababidi/);
+  for (const l of ['off', 'warm', 'vivid']) assert.ok(withPersona('flash', l, '').length < 6000, 'Flash/' + l + ' stays under the headroom cap');
+});
