@@ -121,7 +121,7 @@ const Auth = {
   /** Ask the server to confirm the token, and trust ITS answer, not the URL. */
   async finish(token, provider = 'google') {
     let r;
-    try { r = await fetch(VIORA.authApi + '/api/verify?token=' + encodeURIComponent(token)); }
+    try { r = await fetch(VIORA.authApi + '/api/verify', { headers: { Authorization: 'Bearer ' + token } }); }
     catch { throw new Error('Could not reach the sign-in server. It may be waking up, so try again in 30 seconds.'); }
     if (!r.ok) throw new Error('That sign-in could not be verified. Please try again.');
     const d = await r.json();
@@ -283,7 +283,7 @@ if (page === 'account') {
     $('#kv-since').textContent = new Date(s.at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
     $('#signout').onclick = () => { Auth.signOut(); location.href = 'index.html'; };
     // If the server no longer accepts this session, sign out instead of showing stale details.
-    fetch(VIORA.authApi + '/api/verify?token=' + encodeURIComponent(s.token || '')).then(r => { if (r.status === 401) { Auth.signOut(); location.replace('login.html'); } }).catch(() => {});
+    fetch(VIORA.authApi + '/api/verify', { headers: { Authorization: 'Bearer ' + (s.token || '') } }).then(r => { if (r.status === 401) { Auth.signOut(); location.replace('login.html'); } }).catch(() => {});
   }
 }
 

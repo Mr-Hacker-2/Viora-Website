@@ -1860,8 +1860,8 @@ $('#a-dl').onclick = () => { const a = document.createElement('a'); a.href = URL
 
 const name = S.name || S.email.split('@')[0];
 $('#nm').textContent = name; $('#av').innerHTML = S.picture ? `<img src="${esc(S.picture)}" alt="" referrerpolicy="no-referrer">` : esc(name[0].toUpperCase());
-fetch(API + '/api/verify?token=' + encodeURIComponent(S.token)).then(r => { if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); } }).catch(() => {});
-NP.keepWarm(API + '/api/verify?token=' + encodeURIComponent(S.token));
+fetch(API + '/api/verify', { headers: { Authorization: 'Bearer ' + S.token } }).then(r => { if (r.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); } }).catch(() => {});
+NP.keepWarm(API + '/api/verify'); // only wakes the server; it needs no token
 /* draft: what you were typing survives a reload */
 const dkeyDraft = 'viora_draft_' + S.email;
 try { const d = localStorage.getItem(dkeyDraft); if (d && NP.get().saveDraft) $('#input').value = d; } catch {}

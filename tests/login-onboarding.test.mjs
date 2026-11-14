@@ -23,3 +23,12 @@ test('the login page offers Google and email + password, and the password never 
   assert.match(app, /\/api\/auth\/signup/); assert.match(app, /\/api\/auth\/login/);
   assert.doesNotMatch(app, /localStorage[^;\n]*password|LS\.set\([^)]*secret/i, 'the password is never saved in the browser');
 });
+
+test('the session token travels in the Authorization header, never in a URL', async () => {
+  const { readFileSync } = await import('node:fs');
+  for (const file of ['assets/app.js', 'app.html']) {
+    const src = readFileSync(new URL('../' + file, import.meta.url), 'utf8');
+    assert.doesNotMatch(src, /\/api\/verify\?token=/, file + ' must not put the token in the query string');
+    assert.match(src, /\/api\/verify', \{ headers: \{ Authorization: 'Bearer ' \+/, file + ' verifies with the header');
+  }
+});
