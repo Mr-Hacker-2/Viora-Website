@@ -84,10 +84,10 @@ const LS = {
 };
 const session = () => LS.get('viora_session', null);
 const Auth = {
-  googleUrl(mode, email, termsAccepted = false) {
+  /** Google sign-in is independent of the email/password box: Google tells the server which account this is. */
+  googleUrl(mode, termsAccepted = false) {
     const url = new URL(VIORA.authApi + '/auth/google');
     url.searchParams.set('site', '1'); url.searchParams.set('mode', mode === 'signup' ? 'signup' : 'signin');
-    if (email) url.searchParams.set('email', email);
     if (mode === 'signup' && termsAccepted) url.searchParams.set('terms', '1');
     return url.href;
   },
@@ -240,14 +240,15 @@ if (page === 'login') {
       finishLogin(sess);
     } else if (s) finishLogin(s);
   })();
+  // Google: opens straight away. It never reads or needs the email/password fields.
   btn.onclick = () => {
-    const value = email.value.trim().toLowerCase();
-    if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(value)) { email.setAttribute('aria-invalid', 'true'); email.focus(); return fail('Type your email address in the box below, then choose Google again. Google uses it to check your account.'); }
-    email.removeAttribute('aria-invalid');
     if (mode() === 'signup' && !consent.checked) return fail('Please accept the Terms and Privacy Policy to create your account.');
-    btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode(), value, consent.checked);
+    err.classList.remove('show');
+    btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode(), consent.checked);
   };
-  email.addEventListener('keydown', event => { if (event.key === 'Enter') { event.preventDefault(); if (pass && pass.value) pwForm.requestSubmit(); else btn.click(); } });
+  // Coming back with the Back button restores this page as it was; make the Google button usable again.
+  addEventListener('pageshow', event => { if (event.persisted) { btn.dataset.busy = 'false'; btn.disabled = mode() === 'signup' && !consent.checked; btn.lastChild.textContent = label(); } });
+  // Email + password: the form submits natively on Enter or on the button, and only ever uses its own fields.
   if (pwForm) pwForm.addEventListener('submit', async event => {
     event.preventDefault();
     const value = email.value.trim().toLowerCase(), secret = pass.value, creating = mode() === 'signup';
