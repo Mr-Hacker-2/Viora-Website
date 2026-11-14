@@ -43,3 +43,9 @@ body[data-page="login"] .auth-top .btn{border-color:#ffffff15;color:#dcd4e9}
 .auth-pw .btn{margin-top:10px}
 .auth-pw [hidden]{display:none!important}
 body[data-page="login"] .btn-google{margin-top:0}
+/* Email + password live in their own box, fully independent of the Google button above. */
+body[data-page="login"] .auth-box{padding:clamp(16px,4vw,22px);border:1px solid #ffffff14;border-radius:16px;background:#ffffff06}
+body[data-page="login"] .auth-pw .auth-label:not(:first-child){margin-top:8px}
+body[data-page="login"] .auth-or{margin:20px 0;color:#8f859f;letter-spacing:.08em}
+body[data-page="login"] .auth-or::before,body[data-page="login"] .auth-or::after{background:#ffffff14}
+@media(max-width:420px){body[data-page="login"] .auth-box{padding:16px 14px;border-radius:14px}body[data-page="login"] .auth-email{height:50px}}
