@@ -915,7 +915,7 @@ function render() {
   $('#video-note').hidden = !videos.length && !audioFiles.length;
   $('#video-note-copy').textContent = videos.length
     ? videos.length === 1 ? (videos[0].nativeVideo ? `Native video and audio, plus ${videos[0].ni || 0} preview frames, ready.` : `${videos[0].ni || 0} timestamped frames ready. Sampled frames do not include the video’s audio.`) : `${videos.length} videos attached. Native MP4 clips include audio; sampled frames do not.`
-    : 'Audio ready for transcription and sound analysis.';
+    : 'Audio ready. Viora’s multimodal model listens to it directly, so transcripts can contain mistakes.';
   const shouldStickToBottom = th.scrollHeight - th.scrollTop - th.clientHeight < 32;
   /* Only messages that have not been on screen yet fade in. The whole thread is rebuilt on every state change, so
      animating every message made the chat flash several times per reply. Opening another chat animates nothing. */
@@ -1317,7 +1317,7 @@ async function send(text) {
     }
   } catch (e) {
     if (e.name === 'AbortError') { outcome = 'stopped'; if (!m.content) m.content = '_Stopped._'; }
-    else { outcome = 'failed'; if (!m.content && NP.get().restoreOnFail && !$('#input').value) { $('#input').value = text; grow(); } m.err = true; m.content = (m.content ? m.content + '\n\n' : '') + '⚠️ ' + (/fetch|network/i.test(e.message) ? 'Could not reach Viora. The server may be waking up, so try again in 30 seconds.' : e.message); }
+    else { outcome = 'failed'; if (!m.content && NP.get().restoreOnFail && !$('#input').value) { $('#input').value = text; grow(); } m.err = true; m.content = (m.content ? m.content + '\n\n' : '') + '⚠️ ' + NP.describeSendError(e); }
   }
   if (useWeb && m.research?.outcome === 'sources_retrieved') {
     m.research.sourceAnalysisStatus = outcome === 'done' ? 'completed' : 'incomplete';
