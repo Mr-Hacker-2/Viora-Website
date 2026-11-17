@@ -77,3 +77,16 @@ test('Humanizer Voice option offers chats, natural and sample, and falls back to
   assert.match(html, /strengthGuide \+ ' Complexity: ' \+ complexityGuide \+ ' ' \+ voiceGuide/);
   assert.match(HUMANIZER, /requested style sets formality/);
 });
+
+test('every style and strength option in the Humanizer panel is explained in the system prompt', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
+  for (const id of ['hz-style', 'hz-strength']) {
+    const sel = html.match(new RegExp('<select id="' + id + '">([\\s\\S]*?)</select>'));
+    assert.ok(sel, id + ' select exists');
+    const values = [...sel[1].matchAll(/value="([^"]+)"/g)].map(m => m[1]);
+    assert.ok(values.length >= 3, id + ' has options');
+    for (const v of values) assert.ok(HUMANIZER.includes(v + ' ='), 'the Humanizer prompt does not explain the "' + v + '" ' + id.slice(3) + ' option');
+  }
+  assert.doesNotMatch(HUMANIZER, /confident =/, 'the prompt must not describe a style the panel does not offer');
+});
