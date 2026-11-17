@@ -80,6 +80,15 @@ export function describeHttpFailure(status, detail = '') {
   return detail || `The request failed (HTTP ${status}). Please try again.`;
 }
 
+/* The message shown in the chat when a send fails. Only the browser's own "could not connect" failures are described as
+   Viora being unreachable. Every other message (a provider error, a timeout, an HTTP failure) is shown as written,
+   because blaming the connection for those hides what actually happened. */
+export function describeSendError(err) {
+  const message = String(err && typeof err === 'object' ? err.message || '' : err || '').trim();
+  if (/^(failed to fetch|load failed|networkerror|network request failed|the network connection was lost)/i.test(message)) return 'Could not reach Viora. The server may be waking up, so try again in 30 seconds.';
+  return message || 'Something went wrong. Please try again.';
+}
+
 export function splitStreamLines(buffer, flush = false) {
   const lines = String(buffer).split(/\r?\n/);
   return flush ? { lines, rest: '' } : { lines: lines.slice(0, -1), rest: lines.at(-1) };

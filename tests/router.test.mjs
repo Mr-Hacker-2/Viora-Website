@@ -69,3 +69,15 @@ test('fallback only for server trouble, never for user abort or client errors', 
   assert.equal(shouldFallback(0, new Error('first-byte timeout')), true);
 });
 test('caps.pick still switches when images are not supported', () => assert.equal(pick('human', img).switched, true));
+
+test('programming and maths questions that use the words "search" or "verify" are not sent to web research', () => {
+  for (const q of ['write a binary search function in python', 'implement depth first search in javascript', 'how do I search an array in JavaScript?', 'solve x^2 + 5x + 6 = 0 and verify the roots'])
+    assert.equal(classify(q).assistant, 'math', q);
+  for (const q of ['explain how a search engine ranks pages', 'verify that my proof by induction is correct'])
+    assert.notEqual(classify(q).assistant, 'search', q);
+  assert.equal(shouldSearch('write a binary search function in python', { assistant: 'auto' }), false);
+});
+test('genuine requests to use the web still reach research', () => {
+  for (const q of ['search the web for the best laptops', 'Search the internet for this book', 'look it up online', 'Verify this claim with citations', 'fact-check this statement', 'verify the figures in this article'])
+    assert.equal(classify(q).assistant, 'search', q);
+});

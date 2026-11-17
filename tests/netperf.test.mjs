@@ -87,3 +87,19 @@ test('a length finish is reported as truncated, a normal stop is not', () => {
   assert.equal(isTruncatedFinish('stop'), false);
   assert.equal(isTruncatedFinish(''), false);
 });
+
+test('send errors: only browser connection failures are described as Viora being unreachable', async () => {
+  const { describeSendError } = await import('../assets/x/netperf.js');
+  for (const m of ['Failed to fetch', 'NetworkError when attempting to fetch resource.', 'Load failed', 'The network connection was lost.'])
+    assert.match(describeSendError(new TypeError(m)), /^Could not reach Viora/, m);
+  for (const m of ['The AI provider returned an error: network timeout', 'Viora timed out waiting for an AI provider.', 'You appear to be offline. Check your connection, then try again.'])
+    assert.equal(describeSendError(new Error(m)), m, 'shown as written: ' + m);
+  assert.equal(describeSendError(new Error('')), 'Something went wrong. Please try again.');
+  assert.equal(describeSendError(null), 'Something went wrong. Please try again.');
+});
+test('app.html reports send failures through describeSendError', async () => {
+  const { readFile } = await import('node:fs/promises');
+  const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
+  assert.match(html, /NP\.describeSendError\(e\)/);
+  assert.doesNotMatch(html, /\/fetch\|network\/i\.test\(e\.message\)/, 'the broad fetch|network match must not come back');
+});
