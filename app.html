@@ -1092,7 +1092,7 @@ async function send(text) {
   const researchRequestId = canResearch ? 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12) : '';
   const remembered = D.autoMem && eff !== 'human' ? rememberPersonalDetails(text) : 0;
   if (remembered) toast('Saved ' + remembered + (remembered === 1 ? ' detail to Memory.' : ' details to Memory.') + ' You can review or remove them in Memory.');
-  const context = humanizerOnly ? { instructions: withPersona(eff, 'off', ''), notes: '', memory: [], summary: '' } : { instructions: withPersona(eff, tone, pj ? pj.instr : '', who()), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [], summary: NP.summarizeHistory(c.messages.slice(0, -1)) };
+  const context = humanizerOnly ? { instructions: withPersona(eff, 'off', ''), notes: '', memory: [], summary: '' } : { instructions: withPersona(eff, tone, pj ? pj.instr : '', who(), c.messages.slice(-5, -1).map(x => x.content || '').join('\n').slice(-3000) + ' ' + (c.page ? c.page.files.map(f => f.name).join(' ') : '')), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [], summary: NP.summarizeHistory(c.messages.slice(0, -1)) };
   m.searching = useWeb; m.stage = canResearch ? 'Understanding whether web research is needed…' : 'Preparing your files and context…';
   { /* what Viora is working with, said plainly: routing and the context that was actually attached */
     const parts = [asst === 'auto' ? 'Routed to ' + A[eff].n : 'Using ' + A[eff].n];
