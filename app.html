@@ -705,6 +705,12 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   <div id="derr" role="alert"></div>
   <div class="dl"><label class="btn">Upload .html / .txt<input type="file" id="d-file" accept=".html,.htm,.txt,.md,.csv,.json,.xml,.yml,.yaml,.js,.ts,.py,.css,.java,.c,.cpp,.sql,.sh,.log" hidden></label><span style="flex:1"></span><button class="btn" id="d-x" type="button">Cancel</button><button class="btn p" id="d-ok" type="button">Read page</button></div>
 </dialog>
+<dialog id="locdlg" aria-labelledby="loc-h">
+  <h3 id="loc-h">Use your location?</h3>
+  <p>This question depends on where you are. If you share your location, your browser will ask for permission first, and Viora will send your exact location with your messages so the AI can answer.</p>
+  <p><b>Viora’s administrator can see your exact location and IP address, and may share them with law enforcement</b> as described in the <a href="terms.html" target="_blank" rel="noopener">Terms</a> and <a href="privacy.html" target="_blank" rel="noopener">Privacy Policy</a>. You can clear it any time on your <a href="account.html" target="_blank" rel="noopener">account page</a>, or say no and just tell Viora your city or area.</p>
+  <div class="dl"><button class="btn" id="loc-no" type="button">Not now</button><span style="flex:1"></span><button class="btn p" id="loc-yes" type="button">Share my location</button></div>
+</dialog>
 <dialog id="kdlg">
   <h3>Keyboard shortcuts</h3><p>Move faster without leaving the keyboard.</p>
   <div class="keys">
@@ -733,6 +739,7 @@ import { chatVoiceSample } from './assets/x/voice.js';
 import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories, preferredName } from './assets/x/memory.js';
 import { LIMITS, fmtSize, fmtTime, sniff, IMG_OK, VID_OK, videoSampleTimes, validateVisualPayload } from './assets/x/media.js';
 import * as NP from './assets/x/netperf.js';
+import * as LOC from './assets/x/location.js';
 import * as T from './assets/x/think.js';
 import { readThink, writeThink, thinkApplies, thinkRequestFlag, thinkButtonState, thinkNote } from './assets/x/think-mode.js';
 import { fallbackTitle, shouldGenerateTitle, renameConversation, finishTitleGeneration } from './assets/x/chat-title.js';
@@ -1027,8 +1034,25 @@ function notifyPlannerChanged() {
   try { localStorage.setItem('viora_planner_changed', String(Date.now())); } catch {}
   try { const channel = new BroadcastChannel('viora-planner'); channel.postMessage({type:'changed'}); channel.close(); } catch {}
 }
+/* Location-based questions: say what sharing means, then let the browser ask. Never silent; "Not now" is remembered for half an hour. */
+let locAsking = false;
+function askForLocation() {
+  return new Promise(done => {
+    const d = $('#locdlg'), yes = $('#loc-yes'); let settled = false;
+    const finish = result => { if (settled) return; settled = true; if (result !== 'shared') LOC.markDeclined(); if (d.open) d.close(); yes.disabled = false; done(result); };
+    yes.onclick = async () => {
+      yes.disabled = true;
+      try { const loc = await LOC.getPosition(); LOC.store(loc); void LOC.sendToServer(API, S.token, loc); toast('Location shared. You can clear it on your account page.'); finish('shared'); }
+      catch (e) { toast(LOC.describeFailure(e)); finish('failed'); }
+    };
+    $('#loc-no').onclick = () => finish('declined');
+    d.addEventListener('close', () => finish('declined'), { once: true });
+    d.showModal();
+  });
+}
 async function send(text) {
-  text = (text || '').trim(); if (!text || busy) return;
+  text = (text || '').trim(); if (!text || busy || locAsking) return;
+  if (asst !== 'human' && LOC.needsLocation(text) && !LOC.getStored() && !LOC.declinedRecently()) { locAsking = true; try { await askForLocation(); } finally { locAsking = false; } }
   const selectedHumanizer = asst === 'human';
   if (!selectedHumanizer && pending.some(p => !p.err)) { toast('Wait for your attachments to finish processing, or cancel them.'); return; }
   let c = chat();
@@ -1092,7 +1116,7 @@ async function send(text) {
   const researchRequestId = canResearch ? 'r' + Date.now().toString(36) + Math.random().toString(36).slice(2, 12) : '';
   const remembered = D.autoMem && eff !== 'human' ? rememberPersonalDetails(text) : 0;
   if (remembered) toast('Saved ' + remembered + (remembered === 1 ? ' detail to Memory.' : ' details to Memory.') + ' You can review or remove them in Memory.');
-  const context = humanizerOnly ? { instructions: withPersona(eff, 'off', ''), notes: '', memory: [], summary: '' } : { instructions: withPersona(eff, tone, pj ? pj.instr : '', who(), c.messages.slice(-5, -1).map(x => x.content || '').join('\n').slice(-3000) + ' ' + (c.page ? c.page.files.map(f => f.name).join(' ') : '')), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [], summary: NP.summarizeHistory(c.messages.slice(0, -1)) };
+  const context = humanizerOnly ? { instructions: withPersona(eff, 'off', ''), notes: '', memory: [], summary: '' } : { instructions: withPersona(eff, tone, pj ? pj.instr : '', who(), c.messages.slice(-5, -1).map(x => x.content || '').join('\n').slice(-3000) + ' ' + (c.page ? c.page.files.map(f => f.name).join(' ') : '')), notes: pj ? retrieveNotes(pj.notes, text) : '', memory: D.memOn ? retrieveMemory(D.memory, text, { pid: c.pid }) : [], summary: NP.summarizeHistory(c.messages.slice(0, -1)), location: LOC.contextFor() };
   m.searching = useWeb; m.stage = canResearch ? 'Understanding whether web research is needed…' : 'Preparing your files and context…';
   { /* what Viora is working with, said plainly: routing and the context that was actually attached */
     const parts = [asst === 'auto' ? 'Routed to ' + A[eff].n : 'Using ' + A[eff].n];
