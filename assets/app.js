@@ -283,6 +283,15 @@ if (page === 'account') {
     $('#kv-prov').textContent = s.provider === 'password' ? 'Email and password' : 'Google';
     $('#kv-since').textContent = new Date(s.at).toLocaleDateString(undefined, { year: 'numeric', month: 'long', day: 'numeric' });
     $('#signout').onclick = () => { Auth.signOut(); location.href = 'index.html'; };
+    // Remove a location shared with Viora, on this device and on the account the administrator can see.
+    const clearLoc = $('#clear-location');
+    if (clearLoc) clearLoc.onclick = async () => {
+      LS.del('viora_location'); LS.del('viora_location_declined');
+      try {
+        const r = await fetch(VIORA.authApi + '/api/location', { method: 'POST', headers: { 'Content-Type': 'application/json', Authorization: 'Bearer ' + (s.token || '') }, body: JSON.stringify({ clear: true }) });
+        toast(r.ok ? 'Your shared location was cleared.' : 'Cleared on this device, but the server could not confirm it. Try again in a moment.');
+      } catch { toast('Cleared on this device, but Viora could not be reached to clear it on your account. Try again in a moment.'); }
+    };
     // If the server no longer accepts this session, sign out instead of showing stale details.
     fetch(VIORA.authApi + '/api/verify', { headers: { Authorization: 'Bearer ' + (s.token || '') } }).then(r => { if (r.status === 401) { Auth.signOut(); location.replace('login.html'); } }).catch(() => {});
   }
