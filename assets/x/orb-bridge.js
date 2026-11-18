@@ -5,8 +5,10 @@
      .vt-step[data-st=active] data-h     the step that is really running ("search|Searching the web|…")
      .vt[data-out]    failed | stopped   how the reply ended
      #hz-run.is-stop / #hz-output        the same, for the Humanizer studio
-     #input focus + text                 the person is typing */
-import { Orb } from './viora-orb.js';
+     #input focus + text                 the person is typing
+   Expressions: typing → listening · waiting for the model → thinking · searching → eyes sweep side to side ·
+   answer streaming → speaking (pulsed by each real chunk) · reply finished → happy · failed → concerned. */
+import { Orb, restingState } from './viora-orb.js';
 
 const $ = s => document.querySelector(s);
 const mounted = new Set();
@@ -41,13 +43,19 @@ function liveState() {
 function update() {
   raf = 0; place();
   const busy = busyNow();
-  if (busy) { clearTimeout(settling); settling = 0; Orb.set(liveState()); }
+  if (busy) {
+    clearTimeout(settling); settling = 0;
+    const live = liveState(); Orb.set(live);
+    if (live === 'responding') Orb.pulse(.45);       // update() runs as answer text really arrives, so each chunk nudges the talking animation
+  }
   else if (prevBusy) {
     /* The reply just ended. Give the thread one beat to render its final outcome, then show it. */
     clearTimeout(settling);
     settling = setTimeout(() => { settling = 0; const out = lastVt()?.dataset.out; Orb.set(out === 'failed' ? 'error' : out === 'stopped' ? 'idle' : 'done'); }, 160);
-  } else if (!settling && Orb.get() !== 'error') {
-    const i = $('#input'); Orb.set(i && document.activeElement === i && i.value.trim() ? 'listening' : 'idle');
+  } else if (!settling) {
+    /* Typing = listening. An error and the short happy beat after a finished reply are left to finish on their own. */
+    const i = $('#input'), next = restingState(Orb.get(), !!(i && document.activeElement === i && i.value.trim()));
+    if (next) Orb.set(next);
   }
   prevBusy = busy;
 }
