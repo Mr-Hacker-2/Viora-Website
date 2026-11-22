@@ -151,6 +151,7 @@ const MESSAGES = {
   provider_failed: 'Transcription is unavailable right now. Type your message instead.',
   timeout: 'Transcription took too long. Try a shorter message.',
   busy: 'Viora is busy transcribing. Try again in a moment.',
+  disabled: 'Voice input is switched off right now. Type your message instead.',
   rate_limited: 'You are recording very quickly. Wait a few seconds and try again.'
 };
 export async function transcribeAudio(blob, { api, token, language = '', signal, fetchImpl = globalThis.fetch, timeoutMs = DEFAULTS.uploadTimeoutMs } = {}) {
