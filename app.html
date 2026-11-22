@@ -515,7 +515,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 <link rel="stylesheet" href="assets/x/viora-think.css?v=20261102-1">
 <link rel="stylesheet" href="assets/x/think-mode.css?v=20261112-1">
 <link rel="stylesheet" href="assets/x/mobile-first.css?v=20261103-1">
-<link rel="stylesheet" href="assets/x/voice-ui.css?v=20261121-1">
+<link rel="stylesheet" href="assets/x/voice-ui.css?v=20261122-2">
 <script src="assets/x/mobile-viewport.js?v=20261103-1" defer></script>
 <style id="app-compact">
 :root[data-model] #thread .welcome-v2{padding-block:clamp(18px,3.5vh,38px) 16px;gap:18px}
@@ -614,7 +614,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
       <div id="attach-tray" class="attach-chips" hidden></div>
       <div id="video-note" class="video-note" hidden role="status"><span data-ic="camera"></span><span id="video-note-copy"></span></div>
       <div id="edit-banner" class="edit-banner" hidden><span>Editing your last message. Sending replaces its current reply.</span><button id="edit-cancel" type="button" aria-label="Cancel editing">Cancel</button></div>
-      <div id="vi-bar" class="vi-bar" hidden role="status" aria-live="polite"><span class="vi-dot" aria-hidden="true"></span><span id="vi-text" class="vi-text"></span><span class="vi-meter" aria-hidden="true"><i></i></span><button type="button" id="vi-done" class="vi-btn vi-primary" hidden>Done</button><button type="button" id="vi-undo" class="vi-btn" hidden>Undo</button><button type="button" id="vi-cancel" class="vi-btn" hidden>Cancel</button><button type="button" id="vi-dismiss" class="vi-btn" hidden aria-label="Dismiss">Dismiss</button></div>
+      <div id="vi-bar" class="vi-bar" hidden role="status" aria-live="polite"><span class="vi-dot" aria-hidden="true"></span><span id="vi-text" class="vi-text"></span><canvas id="vi-wave" class="vi-wave" aria-hidden="true"></canvas><span id="vi-time" class="vi-time" aria-hidden="true">0:00</span><span class="vi-meter" aria-hidden="true"><i></i></span><button type="button" id="vi-done" class="vi-btn vi-primary" hidden>Done</button><button type="button" id="vi-undo" class="vi-btn" hidden>Undo</button><button type="button" id="vi-cancel" class="vi-btn" hidden>Cancel</button><button type="button" id="vi-dismiss" class="vi-btn" hidden aria-label="Dismiss">Dismiss</button></div>
       <textarea id="input" rows="1" aria-label="Message" autocomplete="off" spellcheck="true"></textarea>
       <div id="research-mode-wrap" class="research-mode" hidden>
         <label for="research-mode">Research depth</label>
