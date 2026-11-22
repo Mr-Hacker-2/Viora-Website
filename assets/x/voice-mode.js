@@ -62,6 +62,22 @@ export function initVoice(host, { win = window, doc = document } = {}) {
   /* ================= 1. dictation ================= */
   const micBtn = $('#mic'), bar = $('#vi-bar'), barText = $('#vi-text'), barMeter = bar ? $('.vi-meter i', bar) : null, input = $('#input');
   const dict = { state: 'idle', rec: null, ctl: null, undo: null, hideTimer: 0 };
+  /* Live waveform for the recording pill: one thin bar per 50 ms level sample, newest on the right. */
+  const wave = $('#vi-wave'), timeEl = $('#vi-time'); const levels = [];
+  function drawWave() {
+    if (!wave || !wave.isConnected || wave.offsetWidth === 0) return;
+    const dpr = win.devicePixelRatio || 1, w = wave.clientWidth, h = wave.clientHeight;
+    if (wave.width !== Math.round(w * dpr)) { wave.width = Math.round(w * dpr); wave.height = Math.round(h * dpr); }
+    const g = wave.getContext('2d'); if (!g) return; g.setTransform(dpr, 0, 0, dpr, 0, 0); g.clearRect(0, 0, w, h);
+    const step = 6, n = Math.max(8, Math.floor(w / step)), mid = h / 2;
+    g.fillStyle = getComputedStyle(wave).color; g.lineCap = 'round'; g.lineWidth = 2.2; g.strokeStyle = g.fillStyle;
+    for (let i = 0; i < n; i++) {
+      const v = levels[levels.length - n + i] || 0, half = Math.max(1.2, Math.min(mid - 1, Math.sqrt(v) * mid * 1.15));
+      const x = w - (n - i) * step + step / 2; g.globalAlpha = v < .03 ? .45 : 1;
+      g.beginPath(); g.moveTo(x, mid - half); g.lineTo(x, mid + half); g.stroke();
+    }
+    g.globalAlpha = 1;
+  }
 
   const showBar = (kind, text, { done = false, cancel = false, undo = false, dismiss = false } = {}) => {
     if (!bar) return; clearTimeout(dict.hideTimer);
@@ -91,15 +107,15 @@ export function initVoice(host, { win = window, doc = document } = {}) {
     setMicUi('starting'); showBar('info', 'Starting the microphone…', { cancel: true });
     const rec = new Recorder({
       maxSeconds: cfg.maxSeconds || 300,
-      onLevel: l => { micBtn?.style.setProperty('--lvl', l.toFixed(3)); barMeter?.style.setProperty('--lvl', l.toFixed(3)); },
-      onTick: sec => { if (dict.state === 'recording') barText.textContent = 'Recording ' + mmss(sec) + '. Tap the mic or Done when finished'; },
+      onLevel: l => { micBtn?.style.setProperty('--lvl', l.toFixed(3)); barMeter?.style.setProperty('--lvl', l.toFixed(3)); levels.push(l); if (levels.length > 240) levels.splice(0, levels.length - 120); drawWave(); },
+      onTick: sec => { if (dict.state === 'recording') { barText.textContent = 'Recording ' + mmss(sec) + '. Tap the mic or Done when finished'; if (timeEl) timeEl.textContent = mmss(sec); } },
       onAutoStop: reason => { if (reason === 'max_length') finishDictation(); },
       onError: e => { if (dict.rec === rec) { dict.rec = null; fail(e); } }
     }, win);
     dict.rec = rec;
     try { await rec.start(); } catch (e) { if (dict.rec === rec) { dict.rec = null; if (e.code === 'cancelled') { setMicUi('idle'); hideBar(); } else fail(e); } return; }
     if (dict.rec !== rec) { rec.cancel(); return; }
-    setMicUi('recording'); showBar('rec', 'Recording 0:00. Tap the mic or Done when finished', { done: true, cancel: true });
+    levels.length = 0; if (timeEl) timeEl.textContent = '0:00'; setMicUi('recording'); showBar('rec', 'Recording 0:00. Tap the mic or Done when finished', { done: true, cancel: true });
   }
   async function finishDictation() {
     const rec = dict.rec; if (!rec || dict.state !== 'recording') return;
