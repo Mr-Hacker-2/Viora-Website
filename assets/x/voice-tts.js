@@ -178,9 +178,10 @@ export class TTSManager {
   constructor({ providers } = {}) {
     this.providers = (providers && providers.length ? providers : [new BrowserSpeechProvider()]);
     this.provider = this.providers.find(p => { try { return p.isSupported(); } catch { return false; } }) || null;
-    this.status = 'idle'; this.id = null; this.handle = null; this.token = 0; this.listeners = new Set();
+    this.status = 'idle'; this.id = null; this.handle = null; this.token = 0; this.listeners = new Set(); this.lastError = '';
   }
   get supported() { return !!this.provider; }
+  get providerId() { return this.provider ? this.provider.id : ''; }
   subscribe(fn) { this.listeners.add(fn); return () => this.listeners.delete(fn); }
   state() { return { status: this.status, id: this.id, canPause: !!this.handle?.canPause }; }
   _emit() { const s = this.state(); for (const fn of [...this.listeners]) { try { fn(s); } catch {} } }
@@ -191,15 +192,17 @@ export class TTSManager {
   /* Speaks `text`. Anything already being spoken is stopped first, so two replies can never overlap.
      Resolves with how it ended: 'end' (finished), 'cancel' (stopped or replaced) or 'error'. */
   async speak(text, { id = null, voiceURI = '', rate = 1, lang = '' } = {}) {
+    this.lastError = '';
     if (!this.provider) return 'error';
     const clean = String(text || '').trim();
     if (!clean) return 'end';
-    this.stop();
+    this.stop(); this.lastError = '';
     const token = ++this.token;
     let handle;
     try { handle = this.provider.speak(clean, { voiceURI, rate, lang }); } catch { return 'error'; }
     this.handle = handle; this.id = id; this.status = 'speaking'; this._emit();
     const reason = await handle.done;
+    if (token === this.token) this.lastError = reason === 'error' ? String((handle.error && handle.error()) || '') : ''; // why it failed, in words the person can read
     if (token === this.token) { this.handle = null; this.id = null; this.status = 'idle'; this._emit(); } // only the newest speech may reset the state
     return reason;
   }
