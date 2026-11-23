@@ -97,7 +97,7 @@ test('the admin dashboard shows the IP address and shared location safely', asyn
   assert.match(admin, /<th>IP address<\/th><th>Shared location<\/th>/);
   assert.match(admin, /ip\.textContent=user\.lastIp/);
   assert.match(admin, /loc\.append\(a,meta\)/);
-  assert.match(admin, /tr\.append\(name,email,method,created,last,ip,loc,logins,status,role,action\)/);
+  assert.match(admin, /tr\.append\(name,email,method,created,last,ip,loc,logins,plan,status,role,action\)/);
   assert.doesNotMatch(admin, /colSpan=9|colspan="8"/, 'every placeholder row spans the new column count');
   assert.match(admin, /written to the audit log/);
   assert.doesNotMatch(admin.slice(admin.indexOf('async function loadUsers')), /innerHTML\s*=\s*[^;]*user\./, 'user data is never put in with innerHTML');

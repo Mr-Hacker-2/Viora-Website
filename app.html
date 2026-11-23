@@ -321,7 +321,7 @@ button:disabled{cursor:not-allowed;opacity:.55}
 @media(prefers-reduced-motion:reduce){html:focus-within{scroll-behavior:auto}}
 
 </style>
-<link rel="stylesheet" href="assets/x/chat-surface.css">
+<link rel="stylesheet" href="assets/x/chat-surface.css?v=20261123-1">
 <link rel="stylesheet" href="assets/x/humanizer.css?v=20261031-2">
 
 <style id="app-final">
@@ -756,6 +756,7 @@ import { readThink, writeThink, thinkApplies, thinkRequestFlag, thinkButtonState
 import { fallbackTitle, shouldGenerateTitle, renameConversation, finishTitleGeneration } from './assets/x/chat-title.js';
 import { editableUserIndex, historyBeforeEditedTurn } from './assets/x/chat-edit.js';
 import { initVoice } from './assets/x/voice-mode.js';
+import { suggestFollowUps, looksCutOff, CONTINUE_PROMPT } from './assets/x/suggest.js';
 (() => {
 'use strict';
 const API = 'https://viora-auth-website.onrender.com';
@@ -905,7 +906,12 @@ function msgHtml(m, i, last, enter, live, editable = false) {
     .filter(([, ms]) => Number.isFinite(ms)).map(([label, ms]) => `${label} ${(ms / 1000).toFixed(1)}s`) : [];
   const timing = timingParts.length ? `<div class="response-metrics" title="Server timings come from the API; browser timings cover the client request lifecycle.">${esc(timingParts.join(' · '))}</div>` : '';
   const sw = m.sw ? `<div class="switch-note" role="status">${esc(m.sw)}</div>` : '';
-  return `<div class="msg assistant${last && busy ? ' streaming' : ''}${live && !m.content ? ' thinking' : ''}${enter ? ' enter' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${evidenceNote}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}${m.trace ? T.thinkHtml(m.trace, { id: 't' + i, phase: thinkPhase(m, live), open: thinkOpen.has(m) }) : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : ''}</div>${plannerCardsHtml(m.planner)}${srcs}${timing}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${m.content && !m.err && !(last && busy) ? `<button class="msg-act msg-speak" type="button" data-speak="${i}" title="Read aloud" aria-label="Read this reply aloud" aria-pressed="false">${ic('speaker')}</button>` : ''}${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy && !m.planner) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}<button class="msg-act" data-remember="${i}" title="Save the question and context to Memory" aria-label="Save context to Memory">${ic('note')}</button></div></div>`;
+  const atEnd = last && !busy && !live && m.content && !m.planner;
+  const cutOff = atEnd && (m.incomplete || looksCutOff(m.content));
+  const fuList = atEnd && !m.err && !cutOff ? suggestFollowUps(m.content, { assistant: m.eff || m.mode || 'flash', userText: (chat()?.messages[i - 1]?.content) || '', hasSources: safeSrcs.length > 0 }) : [];
+  const followUps = fuList.length ? `<div class="fu-row" role="group" aria-label="Suggested follow-ups">${fuList.map(t => `<button type="button" class="fu-chip" data-fu="${esc(t)}">${esc(t)}</button>`).join('')}</div>` : '';
+  const contBtn = cutOff ? `<button class="msg-act msg-continue" type="button" data-continue title="Continue generating" aria-label="Continue generating">${ic('bolt')}<span>Continue</span></button>` : '';
+  return `<div class="msg assistant${last && busy ? ' streaming' : ''}${live && !m.content ? ' thinking' : ''}${enter ? ' enter' : ''}"><span class="who">${icon(A[m.eff || 'flash'].ic)}</span>${sw}${evidenceNote}${note ? `<div class="sources-head">${esc(note)}</div>` : ''}${m.trace ? T.thinkHtml(m.trace, { id: 't' + i, phase: thinkPhase(m, live), open: thinkOpen.has(m) }) : ''}<div class="body" id="b${i}">${m.content ? mdx(m.content, m.src) : ''}</div>${plannerCardsHtml(m.planner)}${srcs}${timing}<div class="msg-actions"><button class="msg-act" data-copy="${i}" title="Copy" aria-label="Copy">${ic('copy')}</button>${m.content && !m.err && !(last && busy) ? `<button class="msg-act msg-speak" type="button" data-speak="${i}" title="Read aloud" aria-label="Read this reply aloud" aria-pressed="false">${ic('speaker')}</button>` : ''}${/```/.test(m.content || '') ? `<button class="msg-act" data-art="${i}" title="Open in the code editor" aria-label="Open in the code editor">${ic('edit')}</button>` : ''}${(last && !busy && !m.planner) || m.err ? `<button class="msg-act" data-regen title="Regenerate" aria-label="Regenerate">${ic('undo')}</button>` : ''}<button class="msg-act" data-remember="${i}" title="Save the question and context to Memory" aria-label="Save context to Memory">${ic('note')}</button>${contBtn}</div>${followUps}</div>`;
 }
 let shown = null, rendered = { id: null }, lastAsst = null; const painted = new WeakSet();
 function syncThink() {
@@ -1832,6 +1838,8 @@ $('#thread').onclick = async e => {
   const ex = e.target.closest('[data-export]'); if (ex) { const c = chat(), md = researchReport(c, +ex.dataset.export); if (!md) return; const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([md], { type: 'text/markdown;charset=utf-8' })); a.download = 'viora-research-report.md'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000); return; }
   const cp = e.target.closest('.msg-act[data-copy]'); if (cp) { const c = chat(), i = Number(cp.dataset.copy), m = c?.messages[i]; if (!m) return; const value = m.research ? researchReport(c, i) : m.content; if (await copyText(value)) { cp.innerHTML = ic('check'); setTimeout(() => { cp.innerHTML = ic('copy'); }, 1200); } else toast('Could not copy automatically. Select the response and copy it.'); return; } const rm = e.target.closest('[data-remember]'); if (rm) { if (!D.memOn) { toast('Turn on Memory in the Memory panel before saving context.'); return; } const c = chat(), at = +rm.dataset.remember; let u = null; for (let j = at - 1; j >= 0; j--) if (c.messages[j].role === 'user') { u = c.messages[j]; break; } if (!u || !u.content.trim()) { toast('There is no question to save for this reply.'); return; } const t = ('Context: ' + u.content.trim()).slice(0, 300); if (D.memory.some(x => x.t.toLowerCase() === t.toLowerCase() && (x.pid || null) === (c.pid || null))) { toast('That context is already saved in Memory.'); return; } D.memory.unshift({ id: 'm' + Date.now(), t, pid: c.pid || null }); saveD(); toast(c.pid ? 'Saved to this project’s Memory.' : 'Saved to Memory for future chats.'); return; }
   const ar = e.target.closest('[data-art]'); if (ar) { const mm = /```(\w*)\n?([\s\S]*?)(```|$)/.exec(chat().messages[+ar.dataset.art].content); if (mm) openArt(mm[2].replace(/\n$/, ''), mm[1] || 'text'); return; }
+  const fu = e.target.closest('[data-fu]'); if (fu) { if (!busy) send(fu.dataset.fu); return; }
+  if (e.target.closest('[data-continue]')) { if (!busy) send(CONTINUE_PROMPT); return; }
   if (e.target.closest('[data-regen]')) { const c = chat(); c.messages.pop(); const u = c.messages.pop(); send(u.content); }
 };
 $('#tone-sel').innerHTML = Object.entries(LEVELS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
