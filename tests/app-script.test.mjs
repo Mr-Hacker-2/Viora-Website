@@ -20,7 +20,7 @@ test('the app inline module parses before the chat UI can initialize', async () 
 test('planner commands use the authenticated Planner service', async () => {
   const html = await readFile(new URL('../app.html', import.meta.url), 'utf8');
   assert.match(html, /function isPlannerChatRequest\(text\)/);
-  assert.match(html, /if \(isPlannerChatRequest\(text\)\)/);
+  assert.match(html, /if \(!selectedHumanizer && isPlannerChatRequest\(text\)\)/);
   assert.match(html, /\/api\/planner\/assistant/);
   assert.match(html, /\/api\/planner\/assistant\/confirm/);
 });

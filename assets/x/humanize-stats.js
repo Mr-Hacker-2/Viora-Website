@@ -64,7 +64,9 @@ function factsOf(t) {
 /** Which facts from the draft are missing from the rewrite, and which numbers the rewrite made up. */
 export function factCheck(before, after) {
   const A = factsOf(before), B = factsOf(after), low = String(after || '').toLowerCase();
-  const has = (k, v) => B.has(k) || (k[0] === 'w' ? new RegExp('\\b' + v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b').test(after) : k[0] !== 'n' && low.includes(v.toLowerCase()));
+  const WORDS = ['zero', 'one', 'two', 'three', 'four', 'five', 'six', 'seven', 'eight', 'nine', 'ten', 'eleven', 'twelve', 'thirteen', 'fourteen', 'fifteen', 'sixteen', 'seventeen', 'eighteen', 'nineteen', 'twenty'];
+  /* A name only has to still be there: a rewrite may move it to the start of a sentence or lower-case a common noun ("Internet"), and "10" may become "ten". Acronyms must match exactly. */
+  const has = (k, v) => B.has(k) || (k[0] === 'w' ? new RegExp('\\b' + v.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '\\b', /^[A-Z0-9]{2,}$/.test(v) ? '' : 'i').test(after) : k[0] === 'n' ? (/^\d+$/.test(v) && +v <= 20 && new RegExp('\\b' + WORDS[+v] + '\\b', 'i').test(after)) : low.includes(v.toLowerCase()));
   const lost = [...A].filter(([k, v]) => !has(k, v)).map(([, v]) => v);
   const missing = lost.filter(v => !lost.some(o => o !== v && o.includes(v)));
   const added = [...B].filter(([k]) => k[0] === 'n' && !A.has(k)).map(([, v]) => v);
