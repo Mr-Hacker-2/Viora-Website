@@ -736,6 +736,7 @@ import { withPersona, normLevel, LEVELS, userProfile } from './assets/x/persona.
 import { cleanRewrite } from './assets/x/humanize-post.js';
 import { factCheck, signalsHtml } from './assets/x/humanize-stats.js';
 import { extraGuides } from './assets/x/humanize-prompt.js';
+import { isPlannerRequest, followUpTaskIds, verifyAgainstState, failedResults } from './assets/x/planner-intent.js';
 import { splitDocument, needsChunks, minWordsFor, partNote } from './assets/x/humanize-chunks.js';
 import { chatVoiceSample } from './assets/x/voice.js';
 import { retrieveMemory, retrieveNotes, wrapUntrusted, extractPersonalMemories, preferredName } from './assets/x/memory.js';
@@ -1045,10 +1046,18 @@ const beginSearchStep = (trace, detail) => {
   if (T.current(trace)?.k !== 'search') T.begin(trace, 'search', 'Searching the web', detail, { tool: 1 });
 };
 function isPlannerChatRequest(text) {
-  if (/^\s*@planner\b/i.test(text)) return true;
-  const plannerSubject = /\b(task|tasks|planner|schedule|calendar|deadline|to[- ]?do|homework|study|meeting|reminder|project|overdue|upcoming)\b/i.test(text) || /\b(everything i need to do|my week|plan my day)\b/i.test(text);
-  const plannerVerb = /\b(add|create|make|plan|organize|schedule|reschedule|move|finish|complete|mark|show|list|find|search|update|delete|remove|what'?s|what is|tell me)\b/i.test(text);
-  return plannerSubject && plannerVerb;
+  const c = chat(), prev = c && [...c.messages].reverse().find(x => x.role === 'assistant');
+  return isPlannerRequest(text, { lastWasPlanner: !!(prev && prev.planner) });
+}
+/* After a change, read the Planner back and compare: Flash only says "done" for what is really saved. */
+async function verifyPlannerWrites(tasks, signal) {
+  if (!tasks.length) return { checked: false, ok: true };
+  try {
+    const r = await fetch(API + '/api/planner/state', { headers: { Authorization: 'Bearer ' + S.token }, cache: 'no-store', signal });
+    if (!r.ok) return { checked: false, ok: true };
+    const j = await r.json(), list = Array.isArray(j.tasks) ? j.tasks : Array.isArray(j.state?.tasks) ? j.state.tasks : null;
+    return list ? { checked: true, ...verifyAgainstState(tasks, list) } : { checked: false, ok: true };
+  } catch { return { checked: false, ok: true }; }
 }
 function notifyPlannerChanged() {
   try { localStorage.setItem('viora_planner_changed', String(Date.now())); } catch {}
@@ -1096,7 +1105,7 @@ async function send(text) {
     const command = text.replace(/^\s*@planner\b\s*[:,]?\s*/i, '').trim() || text;
     const plannerTimeout = setTimeout(() => ctl.abort(), 70000);
     try {
-      let response = await fetch(API + '/api/planner/assistant', { method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+S.token}, body:JSON.stringify({command,selectedTaskIds:[],timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone}), signal:ctl.signal });
+      let response = await fetch(API + '/api/planner/assistant', { method:'POST', headers:{'Content-Type':'application/json',Authorization:'Bearer '+S.token}, body:JSON.stringify({command,selectedTaskIds:followUpTaskIds(command, (([...c.messages].reverse().find(x => x.role === 'assistant' && x !== m)) || {}).planner),requestId:'c' + c.id + 'm' + idx,timeZone:Intl.DateTimeFormat().resolvedOptions().timeZone}), signal:ctl.signal });
       let data = await response.json().catch(()=>({}));
       if (response.status === 401) { localStorage.removeItem('viora_session'); location.replace('login.html'); return; }
       if (!response.ok) throw new Error(data.error || 'Planner could not complete that request.');
@@ -1108,7 +1117,13 @@ async function send(text) {
         if (!response.ok) throw new Error(data.error || 'The confirmed Planner change could not be saved.');
       }
       m.content = String(data.message || 'Planner request complete.');
+      const bad = failedResults(data.results);
       if (Array.isArray(data.results) && data.results.length) notifyPlannerChanged();
+      if (Array.isArray(data.results) && data.results.length && Array.isArray(data.tasks)) {
+        const check = await verifyPlannerWrites(data.tasks, ctl.signal);
+        if (check.checked && !check.ok) m.content += '\n\nI could not confirm that these were saved: ' + [...check.missing, ...check.mismatched].slice(0, 5).join(', ') + '. Open Planner to check, then ask me to try again.';
+      }
+      if (bad.length) { m.err = true; m.content = 'Not everything was saved (' + bad.length + ' of ' + data.results.length + ' changes failed): ' + String(bad[0].error || bad[0].message || 'the Planner service refused it') + '. ' + m.content; }
       const tasks = Array.isArray(data.tasks) ? data.tasks.slice(0,8).map(task=>({id:String(task.id||''),title:String(task.title||'').slice(0,180),status:String(task.status||'todo'),priority:String(task.priority||'normal'),dueDate:String(task.dueDate||''),progress:Number(task.progress)||0})) : [];
       const projects = Array.isArray(data.projects) ? data.projects.slice(0,4).map(project=>({id:String(project.id||''),name:String(project.name||'').slice(0,180)})) : [];
       if (tasks.length || projects.length) m.planner = { tasks, projects };
