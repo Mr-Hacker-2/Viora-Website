@@ -200,3 +200,78 @@ test('TTSManager: one voice at a time, and the failure reason is kept for the UI
   assert.equal(bad.lastError, 'Needs terms.');
   assert.equal(await bad.speak('   '), 'end'); assert.equal(bad.lastError, '');
 });
+
+/* ---------- review additions: the browser voice is the safety net ---------- */
+function fakeBrowser() {
+  const log = { spoken: [], handles: [], primed: 0 };
+  const b = { isSupported: () => true, prime() { log.primed++; }, speak(text, o) {
+    let settle; const done = new Promise(r => { settle = r; }), h = { done, canPause: true, paused: false, cancelled: false, pause() { h.paused = true; }, resume() { h.paused = false; }, cancel() { h.cancelled = true; settle('cancel'); }, finish: r => settle(r) };
+    log.spoken.push({ text, o }); log.handles.push(h); return h; } };
+  return { b, log };
+}
+
+test('fallback: when Viora’s voice is down, the whole reply is read by the browser voice', async () => {
+  const { b, log } = fakeBrowser(); const notices = [];
+  const { p, audio } = setup(() => fail(503, { code: 'not_configured', error: 'Spoken replies are not set up on the server yet.' }), { browser: b, onFallback: m => notices.push(m) });
+  const h = p.speak('First sentence here. Second sentence here.', { rate: 1.1 });
+  await until(() => log.spoken.length === 1);
+  assert.equal(log.spoken[0].text, 'First sentence here. Second sentence here.');
+  assert.equal(log.spoken[0].o.rate, 1.1);
+  assert.equal(h.usedFallback(), true);
+  assert.equal(notices.length, 1); assert.match(notices[0], /not set up/i); assert.match(notices[0], /this device/i);
+  log.handles[0].finish('end');
+  assert.equal(await h.done, 'end');
+  assert.ok(!audio() || audio().paused, 'no neural audio is playing');
+});
+
+test('fallback: a failure part-way continues from the piece that failed, not from the start', async () => {
+  const { b, log } = fakeBrowser(); let n = 0;
+  const { p, audio, calls } = setup(c => (c.body.text.includes('number 3 ') ? fail(500, { code: 'provider_failed', error: 'Speech is unavailable right now.' }) : ok()), { browser: b });
+  const h = p.speak(LONG);
+  await until(() => audio()?.plays.length >= 1);
+  while (!log.spoken.length) { audio().end(); await tick(4); }
+  const said = log.spoken[0].text;
+  assert.ok(said.startsWith('This is sentence number 3 '), 'starts at the failed piece: ' + said.slice(0, 40));
+  assert.ok(said.includes('number 12 '), 'and carries on to the end');
+  assert.ok(!said.includes('number 1 of'), 'what was already heard is not repeated');
+  log.handles[0].finish('end'); assert.equal(await h.done, 'end');
+});
+
+test('fallback: pause, resume and stop reach the browser voice; stopping never restarts anything', async () => {
+  const { b, log } = fakeBrowser();
+  const { p } = setup(() => fail(502, { code: 'provider_failed', error: 'x' }), { browser: b });
+  const h = p.speak('One sentence to say.');
+  await until(() => log.spoken.length === 1);
+  h.pause(); assert.equal(log.handles[0].paused, true);
+  h.resume(); assert.equal(log.handles[0].paused, false);
+  h.cancel(); assert.equal(await h.done, 'cancel'); assert.equal(log.handles[0].cancelled, true);
+  assert.equal(log.spoken.length, 1);
+});
+
+test('fallback: not used for a sign-in problem, a blocked browser, or when the person stopped it', async () => {
+  const { b, log } = fakeBrowser();
+  const a = setup(() => fail(401, { error: 'Please sign in again.' }), { browser: b }).p.speak('Hello there friend.');
+  assert.equal(await a.done, 'error'); assert.match(a.error(), /sign in/i);
+  const orig = FakeAudio.prototype.play; FakeAudio.prototype.play = () => Promise.reject(Object.assign(new Error('b'), { name: 'NotAllowedError' }));
+  try { const c = setup(() => ok(), { browser: b }).p.speak('Hello there friend.'); assert.equal(await c.done, 'error'); assert.match(c.error(), /blocked/i); } finally { FakeAudio.prototype.play = orig; }
+  const gate = setup(call => new Promise((_, no) => call.signal.addEventListener('abort', () => no(Object.assign(new Error('a'), { name: 'AbortError' })))), { browser: b, requestTimeoutMs: 5000 });
+  const d = gate.p.speak('Stopped while waiting.'); await until(() => gate.calls.length >= 1); d.cancel();
+  assert.equal(await d.done, 'cancel');
+  assert.equal(log.spoken.length, 0, 'the browser voice never started in any of these cases');
+});
+
+test('fallback: a browser without speech gives the readable error instead (text stays on screen)', async () => {
+  const none = { isSupported: () => false, prime() {}, speak() { throw new Error('no'); } };
+  const h = setup(() => fail(503, { code: 'terms_required', error: 'Needs terms.' }), { browser: none }).p.speak('Hello there friend.');
+  assert.equal(await h.done, 'error'); assert.equal(h.error(), 'Needs terms.');
+  const { b } = fakeBrowser(); b.speak = () => { throw new Error('browser voice crashed'); };
+  const h2 = setup(() => fail(503, { code: 'terms_required', error: 'Needs terms.' }), { browser: b }).p.speak('Hello there friend.');
+  assert.equal(await h2.done, 'error'); assert.equal(h2.error(), 'Needs terms.', 'the original reason is kept when the fallback fails too');
+});
+
+test('fallback notice is shown at most once a minute during an outage', async () => {
+  const { b, log } = fakeBrowser(); const notices = [];
+  const { p } = setup(() => fail(503, { code: 'not_configured', error: 'Down.' }), { browser: b, onFallback: m => notices.push(m) });
+  for (let i = 0; i < 3; i++) { const h = p.speak('Sentence number ' + i + ' to read.'); await until(() => log.spoken.length === i + 1); log.handles[i].finish('end'); await h.done; }
+  assert.equal(notices.length, 1);
+});

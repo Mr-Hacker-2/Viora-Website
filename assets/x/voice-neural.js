@@ -13,6 +13,10 @@
    - Pause, resume, stop and speed work on that one element. Stopping aborts the requests still in flight and releases every
      object URL, so nothing keeps playing or leaking.
 
+   If Viora's voice cannot be reached or refuses (server down, not set up, rate limited, a piece that will not decode), the rest of the
+   reply is read by the browser's own voice instead, so the person still hears the answer. Not done for a sign-in problem or a browser
+   that blocks sound (the browser voice would be blocked too), and never after the person stopped it.
+
    The Orpheus model speaks English only. Replies written in another script (Japanese, Arabic, Russian ...) are handed to the
    browser's own voice instead, because reading them with an English voice would be unintelligible. */
 import { chunkSpeech, guessLang } from './voice-tts.js';
@@ -41,10 +45,10 @@ const MESSAGES = {
 };
 
 export class NeuralSpeechProvider {
-  constructor({ api = '', token = () => '', fetchImpl = globalThis.fetch?.bind(globalThis), AudioImpl = globalThis.Audio, urlApi = globalThis.URL, browser = null, requestTimeoutMs = 30000, lookahead = 2, cacheBytes = 24 * 1024 * 1024 } = {}) {
+  constructor({ api = '', token = () => '', fetchImpl = globalThis.fetch?.bind(globalThis), AudioImpl = globalThis.Audio, urlApi = globalThis.URL, browser = null, onFallback = null, requestTimeoutMs = 30000, lookahead = 2, cacheBytes = 24 * 1024 * 1024 } = {}) {
     this.id = 'neural'; this.label = 'Viora voice';
-    Object.assign(this, { api, token, fetchImpl, AudioImpl, urlApi, browser, requestTimeoutMs, lookahead, cacheBytes });
-    this.el = null; this.cache = new Map(); this.cacheSize = 0; this.active = 0;
+    Object.assign(this, { api, token, fetchImpl, AudioImpl, urlApi, browser, onFallback, requestTimeoutMs, lookahead, cacheBytes });
+    this.el = null; this.cache = new Map(); this.cacheSize = 0; this.active = 0; this.lastNotice = 0;
   }
   isSupported() { return typeof this.fetchImpl === 'function' && typeof this.AudioImpl === 'function' && !!this.urlApi?.createObjectURL; }
   voices() { return NEURAL_VOICES.map(v => ({ voiceURI: v.voiceURI, name: v.name + ' · ' + v.note, lang: 'en-US', localService: false, default: v.voiceURI === DEFAULT_NEURAL_VOICE })); }
@@ -112,7 +116,7 @@ export class NeuralSpeechProvider {
     const pieces = chunkSpeech(text, MAX_PIECE), voice = this._voice(voiceURI), el = this._element(), urlApi = this.urlApi;
     const abort = new AbortController(), fetches = new Map();
     this.active++;
-    let finished = false, paused = false, settle, errorMessage = '', currentUrl = '';
+    let finished = false, paused = false, settle, errorMessage = '', currentUrl = '', at = 0, delegate = null, usedFallback = false;
     const done = new Promise(r => { settle = r; });
     const request = i => { if (i < pieces.length && !fetches.has(i)) { const p = this._fetchPiece(pieces[i], voice, abort.signal); p.catch(() => {}); fetches.set(i, p); } return fetches.get(i); };
     const release = () => { if (currentUrl) { try { urlApi.revokeObjectURL(currentUrl); } catch {} currentUrl = ''; } };
@@ -122,10 +126,26 @@ export class NeuralSpeechProvider {
       release(); try { el.removeAttribute('src'); el.load?.(); } catch {}
       settle(reason);
     };
-    const fail = (e) => { if (finished) return; errorMessage = e instanceof SpeechError && e.message ? e.message : MESSAGES.generic; finish(e?.code === 'cancelled' ? 'cancel' : 'error'); };
+    const fail = (e) => {
+      if (finished) return;
+      const code = e && e.code;
+      if (!delegate && code !== 'cancelled' && code !== 'auth' && code !== 'blocked' && this.browser?.isSupported?.()) { // keep going with the browser's voice from the piece that failed
+        const rest = pieces.slice(at).join(' ');
+        try {
+          abort.abort(); el.onended = el.onerror = null; try { el.pause(); } catch {} release();
+          delegate = this.browser.speak(rest, { voiceURI: '', rate, lang: 'en-US' }); usedFallback = true;
+          if (paused) delegate.pause();
+          delegate.done.then(r => finish(r), () => finish('error'));
+          const now = Date.now();
+          if (this.onFallback && now - this.lastNotice > 60000) { this.lastNotice = now; try { this.onFallback((e && e.message ? e.message.replace(/\.$/, '') + '. ' : '') + 'Using this device\u2019s voice for now.'); } catch {} }
+          return;
+        } catch { /* the browser voice failed too: report the original problem below */ }
+      }
+      errorMessage = e instanceof SpeechError && e.message ? e.message : MESSAGES.generic; finish(code === 'cancelled' ? 'cancel' : 'error');
+    };
 
     const play = async i => {
-      if (finished) return;
+      if (finished || delegate) return; at = i;
       if (i >= pieces.length) return finish('end');
       let blob;
       try { const current = request(i); for (let k = 1; k <= this.lookahead; k++) request(i + k); blob = await current; } catch (e) { return fail(e); } // the piece needed now is always asked for first
@@ -145,11 +165,11 @@ export class NeuralSpeechProvider {
     };
     play(0);
     return {
-      done, canPause: true,
-      error: () => errorMessage,
-      pause: () => { if (finished || paused) return; paused = true; try { el.pause(); } catch {} },
-      resume: () => { if (finished || !paused) return; paused = false; try { const p = el.play(); p?.catch?.(() => {}); } catch {} },
-      cancel: () => finish('cancel')
+      done, get canPause() { return delegate ? !!delegate.canPause : true; },
+      error: () => errorMessage, usedFallback: () => usedFallback,
+      pause: () => { if (finished || paused) return; paused = true; if (delegate) return delegate.pause(); try { el.pause(); } catch {} },
+      resume: () => { if (finished || !paused) return; paused = false; if (delegate) return delegate.resume(); try { const p = el.play(); p?.catch?.(() => {}); } catch {} },
+      cancel: () => { if (delegate) { try { delegate.cancel(); } catch {} } finish('cancel'); }
     };
   }
 }
