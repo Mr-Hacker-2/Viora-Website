@@ -10,10 +10,11 @@
    The app also dispatches `viora:reply-done` ({ chatId, index, ok, text }) on window when an answer has finished. */
 import { Recorder, transcribeAudio, mergeTranscript, micSupport, VoiceInputError } from './voice-input.js';
 import { TTSManager, BrowserSpeechProvider, speechText } from './voice-tts.js';
+import { SentenceStreamer, deliveryFor } from './voice-stream.js';
 import { NeuralSpeechProvider, NEURAL_VOICES, DEFAULT_NEURAL_VOICE } from './voice-neural.js';
 
 const SETTINGS_KEY = 'viora_voice';
-const DEFAULT_SETTINGS = { mode: true, speak: true, auto: true, voiceURI: '', rate: 1 };
+const DEFAULT_SETTINGS = { mode: true, speak: true, auto: true, voiceURI: '', rate: 1, expressive: 1 };
 
 export function loadSettings(storage = globalThis.localStorage) {
   try { const v = JSON.parse(storage.getItem(SETTINGS_KEY) || '{}'); return normalizeSettings(v); } catch { return { ...DEFAULT_SETTINGS }; }
@@ -24,6 +25,7 @@ export function normalizeSettings(v) {
     for (const k of ['mode', 'speak', 'auto']) if (typeof v[k] === 'boolean') s[k] = v[k];
     if (typeof v.voiceURI === 'string') s.voiceURI = v.voiceURI.slice(0, 200);
     const r = Number(v.rate); if (Number.isFinite(r)) s.rate = Math.min(1.5, Math.max(0.7, r));
+    const x = Number(v.expressive); if (v.expressive !== undefined && Number.isFinite(x)) s.expressive = Math.min(1.5, Math.max(0, x));
   }
   return s;
 }
@@ -33,7 +35,7 @@ export const VM_TEXT = {
   ready: ['Tap to talk', 'Viora will answer out loud'],
   listening: ['Listening…', 'Stop talking and I will answer. Tap to finish now'],
   transcribing: ['Processing your speech…', 'Tap to cancel'],
-  thinking: ['Viora is thinking…', 'Tap to stop'],
+  thinking: ['Thinking…', 'Tap to stop'],
   speaking: ['Speaking…', 'Tap to interrupt'],
   error: ['Something went wrong', 'Tap to try again']
 };
@@ -197,7 +199,7 @@ export function initVoice(host, { win = window, doc = document } = {}) {
     $('#vm-close', overlay).addEventListener('click', closeVoiceMode);
     $('#vm-end', overlay).addEventListener('click', closeVoiceMode);
     $('#vm-pause', overlay).addEventListener('click', () => { tts.toggle(); });
-    $('#vm-stop', overlay).addEventListener('click', () => { if (vm.state !== 'speaking') return; vm.turn++; tts.stop(); setVm('ready', 'Stopped. Tap to talk.', ''); });
+    $('#vm-stop', overlay).addEventListener('click', () => { if (vm.state !== 'speaking') return; vm.turn++; tts.stop(); tts.cancelPrefetch(); setVm('ready', 'Stopped. Tap to talk.', ''); });
     $('#vm-replay', overlay).addEventListener('click', replayLast);
     $('#vm-voice', overlay).addEventListener('click', () => { const t = $('#vm-tray', overlay); t.hidden = !t.hidden; $('#vm-voice', overlay).setAttribute('aria-expanded', String(!t.hidden)); syncVoiceChips(); });
     $('#vm-tray', overlay).addEventListener('click', e => {
@@ -264,7 +266,7 @@ export function initVoice(host, { win = window, doc = document } = {}) {
     vm.open = false; vm.turn++;
     if (vm.rec) { vm.rec.cancel(); vm.rec = null; }
     if (vm.ctl) { vm.ctl.abort(); vm.ctl = null; }
-    tts.stop(); // an answer still being written finishes in the chat, silently
+    tts.stop(); tts.cancelPrefetch(); // an answer still being written finishes in the chat, silently
     overlay.hidden = true; doc.body.classList.remove('vm-on'); setVm('ready', '', '');
     try { (vm.restore && vm.restore.isConnected ? vm.restore : $('#vm-open'))?.focus(); } catch {}
   }
@@ -310,19 +312,60 @@ export function initVoice(host, { win = window, doc = document } = {}) {
     if (vm.empties >= 2) { setVm('ready', why + ' Tap the circle when you are ready to talk.', ''); return; } // stop re-listening forever in a silent room
     listen(why + ' Still listening…');
   }
+  /* Speaks the answer while it is still being written: each finished sentence is queued (and fetched ahead) at once, so Viora starts
+     talking after the first sentence instead of after the whole reply. Interrupt, Stop and closing all bump vm.turn, which ends this. */
+  function streamSpeaker(turn) {
+    const streamer = new SentenceStreamer(), queue = []; let lock = null, ended = false, started = false, wake = null, spokeAny = false, failed = '';
+    const poke = () => { if (wake) { const w = wake; wake = null; w(); } };
+    const enqueue = pieces => { for (const p of pieces) { queue.push(p); tts.prefetch(p, { voiceURI: settings.voiceURI }); } if (pieces.length) poke(); };
+    const onDelta = e => {
+      const d = e.detail || {}; if (!vm.open || vm.turn !== turn || !speakEnabled()) return;
+      if (!lock) lock = { chatId: d.chatId, index: d.index }; else if (lock.chatId !== d.chatId || lock.index !== d.index) return;
+      enqueue(streamer.push(d.text));
+    };
+    win.addEventListener('viora:reply-delta', onDelta);
+    const run = async () => {
+      for (;;) {
+        if (!vm.open || vm.turn !== turn) return 'cancel';
+        if (!queue.length) { if (ended) return spokeAny ? 'end' : 'none'; await new Promise(r => { wake = r; }); continue; }
+        const piece = queue.shift();
+        if (!started) { started = true; setVm('speaking', '', ''); }
+        const { rate } = deliveryFor(piece, { expressiveness: settings.expressive });
+        const how = await tts.speak(piece, { id: lock ? key(lock.chatId, lock.index) : null, voiceURI: settings.voiceURI, rate: settings.rate * rate });
+        if (!vm.open || vm.turn !== turn) return 'cancel';
+        if (how === 'error') { failed = tts.lastError || 'I could not speak that.'; return 'error'; }
+        if (how === 'cancel') return 'cancel';
+        spokeAny = true;
+      }
+    };
+    return {
+      run, error: () => failed,
+      finish(finalText) { enqueue(streamer.finish(finalText)); ended = true; poke(); },
+      abort() { ended = true; queue.length = 0; poke(); },
+      dispose() { win.removeEventListener('viora:reply-delta', onDelta); tts.cancelPrefetch(); }
+    };
+  }
   async function converse(text, turn) {
     setVm('thinking', '', '“' + (text.length > 160 ? text.slice(0, 157) + '…' : text) + '”');
     let finished = null;
     const onDone = e => { finished = e.detail; };
     win.addEventListener('viora:reply-done', onDone);
+    const sp = speakEnabled() ? streamSpeaker(turn) : null, playing = sp ? sp.run() : null;
     try { await host.send(text); } catch { finished = null; } finally { win.removeEventListener('viora:reply-done', onDone); }
-    if (!vm.open || vm.turn !== turn) return;
-    if (!finished) { setVm('error', 'Viora could not send that. Try again.', ''); return; }
-    if (!finished.ok) { setVm('error', 'Viora could not finish that answer. Tap to try again.', ''); return; }
+    if (!vm.open || vm.turn !== turn) { if (sp) { sp.abort(); sp.dispose(); } return; }
+    if (!finished) { if (sp) { sp.abort(); sp.dispose(); } setVm('error', 'Viora could not send that. Try again.', ''); return; }
+    if (!finished.ok) { if (sp) { sp.abort(); sp.dispose(); } setVm('error', 'Viora could not finish that answer. Tap to try again.', ''); return; }
     const reply = speechText(finished.text), id = key(finished.chatId, finished.index);
     if (reply) vm.last = { text: reply, id };
-    if (!speakEnabled() || !reply) { setVm('ready', tts.supported ? 'Spoken replies are off. Here is the answer.' : 'Your browser cannot speak replies. Here is the answer.', reply || ''); return; } // the text is never lost
-    await speakReply(reply, id, turn);
+    if (!sp || !reply) { setVm('ready', tts.supported ? 'Spoken replies are off. Here is the answer.' : 'Your browser cannot speak replies. Here is the answer.', reply || ''); return; } // the text is never lost
+    setVm(vm.state === 'speaking' ? 'speaking' : 'thinking', '', '');
+    if (vm.state === 'thinking') setVm('thinking', 'Preparing your answer…', '');
+    sp.finish(finished.text);
+    const how = await playing; sp.dispose();
+    if (!vm.open || vm.turn !== turn) return;                 // interrupted or exited: whoever did that already moved on
+    if (how === 'error') { setVm('ready', (sp.error() || 'I could not speak that.') + ' The answer is below. Tap to talk.', reply); return; }
+    if (how === 'none') { await speakReply(reply, id, turn); return; }
+    if (settings.auto) listen(); else setVm('ready', '', '');
   }
   /* Speaks one answer. If the audio cannot be made, the answer stays on screen as text. */
   async function speakReply(reply, id, turn, { auto = true } = {}) {
@@ -343,7 +386,7 @@ export function initVoice(host, { win = window, doc = document } = {}) {
       case 'listening': if (vm.rec) finishListening(vm.turn, 'manual'); break;
       case 'transcribing': vm.turn++; if (vm.ctl) { vm.ctl.abort(); vm.ctl = null; } setVm('ready', '', ''); break;
       case 'thinking': vm.turn++; host.stop(); setVm('ready', 'Stopped. Tap to talk.', ''); break;
-      case 'speaking': vm.turn++; tts.stop(); listen(); break;          // interrupt Viora and start listening at once
+      case 'speaking': vm.turn++; tts.stop(); tts.cancelPrefetch(); listen(); break;          // interrupt Viora and start listening at once
       default: vm.empties = 0; listen();
     }
   }

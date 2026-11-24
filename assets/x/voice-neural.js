@@ -70,6 +70,14 @@ export class NeuralSpeechProvider {
     while (this.cacheSize > this.cacheBytes && this.cache.size > 1) { const [k, b] = this.cache.entries().next().value; this.cache.delete(k); this.cacheSize -= b.size; }
   }
   clearCache() { this.cache.clear(); this.cacheSize = 0; }
+  /* Fetch a piece ahead of time (voice mode streams sentences while the answer is still being written), so the next
+     sentence is already in memory when the current one ends. Nothing is played. Cancelled with cancelPrefetch(). */
+  prefetch(text, { voiceURI = '' } = {}) {
+    const t = String(text || '').trim(); if (!t || !this.isSupported() || t.length > MAX_PIECE) return;
+    if (!this.prefetchCtl || this.prefetchCtl.signal.aborted) this.prefetchCtl = new AbortController();
+    this._fetchPiece(t, this._voice(voiceURI), this.prefetchCtl.signal).catch(() => {});
+  }
+  cancelPrefetch() { try { this.prefetchCtl?.abort(); } catch {} this.prefetchCtl = null; }
 
   /* One request for one piece. Errors carry `retry` so only a passing server or network hiccup is tried a second time. */
   async _requestOnce(text, voice, signal) {

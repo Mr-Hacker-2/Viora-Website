@@ -188,6 +188,8 @@ export class TTSManager {
   voices() { return this.provider ? this.provider.voices() : []; }
   onVoicesChanged(cb) { return this.provider?.onVoicesChanged ? this.provider.onVoicesChanged(cb) : () => {}; }
   prime() { try { this.provider?.prime?.(); } catch {} }
+  prefetch(text, opts) { try { this.provider?.prefetch?.(text, opts); } catch {} }
+  cancelPrefetch() { try { this.provider?.cancelPrefetch?.(); } catch {} }
 
   /* Speaks `text`. Anything already being spoken is stopped first, so two replies can never overlap.
      Resolves with how it ended: 'end' (finished), 'cancel' (stopped or replaced) or 'error'. */

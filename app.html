@@ -1293,7 +1293,7 @@ async function send(text) {
         }
         else { const t = j.choices?.[0]?.delta?.content; if (t) { if (m.timing.firstTokenMs == null) m.timing.firstTokenMs = Math.round(performance.now() - timingStart);
           if (!m.content) { const cur = T.current(tr); if (cur && cur.k === 'search') T.end(tr, 'search', 'The reply started without a source list'); if (!cur || cur.k !== 'write') T.begin(tr, 'write', wrote++ ? 'Writing the improved answer' : 'Writing the response'); }
-          m.content += t; } }
+          m.content += t; voiceEvent('viora:reply-delta', { chatId: c.id, index: idx, text: m.content }); } }
       } catch {}
     };
     for (;;) {
