@@ -27,19 +27,15 @@
 <style>
 html,body{height:100%;margin:0}
 #sh-left{position:relative}
-.sh-signout{display:flex;align-items:center;gap:10px;width:100%;margin:8px 0 14px;padding:9px 12px;border:1px solid transparent;border-radius:11px;background:transparent;color:var(--muted);font:inherit;text-align:left;cursor:pointer}
-.sh-signout:hover{background:var(--raised);color:var(--paper)}
-.sh-signout:focus-visible{outline:2px solid var(--accent);outline-offset:2px}
+
+
 #umenu{top:84px;left:14px;right:14px;max-height:none}
-.sh-item{display:flex;align-items:center;gap:2px;min-width:0}
-.sh-item .sh-chat{flex:1;min-width:0;text-align:left;padding-right:6px!important}
-.sh-item .sh-tool{display:grid;place-items:center;flex:0 0 27px;width:27px;height:28px;padding:4px!important;border-radius:7px!important;color:var(--faint);opacity:.6;font-size:15px;line-height:1}
-.sh-item .sh-del{font-size:18px}
-.sh-item:hover .sh-tool,.sh-item:focus-within .sh-tool{opacity:1}
-@media(max-width:979px){.sh-item .sh-tool{opacity:.8}}
+
+
+@media(max-width:979px){}
 #projs button.on{color:var(--accent)}:root[data-theme=light] #projs button.on{color:var(--accent-ink)}
 .sh-sw[aria-checked=true]{background:var(--accent)}
-@media(max-width:979px){body.sb #sh-left{display:block!important;position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:40;background:var(--ink-2);border-right:1px solid var(--line);padding:18px;overflow:auto}}
+@media(max-width:979px){body.sb #sh-left{display:flex!important;flex-direction:column;position:fixed;inset:0 auto 0 0;width:min(300px,86vw);z-index:40;background:var(--ink-2);border-right:1px solid var(--line);padding:18px;overflow:auto}}
 @media(min-width:980px){#shell.no-left #open-full{display:grid!important}}
 #dropov{position:fixed;inset:14px;z-index:90;display:grid;place-items:center;border:2px dashed var(--accent);border-radius:22px;background:color-mix(in srgb,var(--ink) 92%,transparent);font-size:20px;font-weight:600;color:var(--accent-ink,var(--accent));pointer-events:none}
 dialog{background:var(--ink-2);color:var(--paper);border:1px solid var(--line);border-radius:20px;padding:22px;width:min(520px,92vw)}
@@ -103,7 +99,6 @@ dialog{max-height:calc(100dvh - 32px);overflow:auto}
 }
 
 
-.planner-nav-link{display:flex;align-items:center;gap:11px;min-height:42px;padding:8px 12px;margin:3px 0;border-radius:11px;color:var(--muted,#a69dbd);text-decoration:none;font:inherit;font-size:13px;transition:background .16s,color .16s,transform .16s}.planner-nav-link:hover{background:var(--raised,#201b30);color:var(--paper,#f4f0ff);transform:translateX(2px)}.planner-nav-link span{width:18px;text-align:center;color:var(--accent,#a98bff);font-size:18px}
 </style>
 <link rel="stylesheet" href="assets/x/pro-ui.css?v=20261026-2">
 <link rel="stylesheet" href="assets/x/layout-final.css?v=20261029-1">
@@ -119,7 +114,7 @@ body{background:var(--ink);color:var(--paper)}
 #sh-center{grid-column:1;grid-row:1;display:grid!important;grid-template-rows:auto minmax(0,1fr) auto!important;min-width:0;width:100%;height:100%;max-width:none;overflow:hidden}
 #sh-right{display:none!important}
 #sh-left{display:none!important;position:fixed!important;inset:0 auto 0 0!important;width:min(320px,88vw)!important;height:100dvh!important;z-index:101!important;overflow:auto!important;background:var(--ink-2)!important;border-right:1px solid var(--line)!important;box-shadow:var(--shadow-lg)!important;padding:16px!important}
-body.sb #sh-left,#shell:not(.no-left) #sh-left{display:block!important}
+body.sb #sh-left,#shell:not(.no-left) #sh-left{display:flex!important;flex-direction:column}
 body.sb:after{content:"";position:fixed;inset:0;background:#11142666;z-index:100}
 #shell:not(.no-left) #open-full{display:grid!important}
 .bar{position:relative;z-index:30;min-height:58px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:10px!important;padding:10px 14px!important;border-bottom:1px solid var(--line)!important;background:var(--ink)!important}
@@ -206,12 +201,8 @@ body{letter-spacing:-.008em;-webkit-font-smoothing:antialiased}
 .icon-btn:hover{background:var(--raised)!important;border-color:var(--viora-border)!important}
 .icon-btn:active{transform:scale(.96)}
 #sh-left{backdrop-filter:blur(24px);-webkit-backdrop-filter:blur(24px)}
-.sh-logo{padding-bottom:20px!important}
-.sh-search{border-radius:13px!important;border-color:var(--viora-border)!important;background:var(--ink)!important;transition:border-color .18s,box-shadow .18s}
-.sh-search:focus{border-color:var(--accent)!important;box-shadow:0 0 0 3px var(--viora-glow)}
-.sh-nav button,.sh-hist button{border-radius:11px!important;transition:background .15s,color .15s,transform .15s}
-.sh-nav button:hover,.sh-hist button:hover{background:var(--raised)!important}
-.sh-nav button.on{background:color-mix(in srgb,var(--accent) 12%,var(--ink-2))!important;color:var(--paper)!important}
+
+
 #sh-center>.thread{scrollbar-width:thin;scrollbar-color:color-mix(in srgb,var(--line) 80%,transparent) transparent}
 .welcome-main{gap:17px!important}
 .logo-stage{filter:drop-shadow(0 12px 24px color-mix(in srgb,var(--accent) 10%,transparent))}
@@ -266,7 +257,7 @@ button,a,input,textarea,select{outline-offset:3px}
 @media(min-width:980px){
  #shell{grid-template-columns:252px minmax(0,1fr)!important}
  #shell.no-left{grid-template-columns:minmax(0,1fr)!important}
- #sh-left{display:block!important;position:relative!important;inset:auto!important;width:auto!important;max-width:none!important;height:100%!important;z-index:1!important;overflow:auto!important;padding:22px 16px!important;border:0!important;border-right:1px solid var(--viora-border)!important;border-radius:0!important;background:color-mix(in srgb,var(--ink-2) 78%,var(--ink))!important;box-shadow:none!important}
+ #sh-left{display:flex!important;flex-direction:column;position:relative!important;inset:auto!important;width:auto!important;max-width:none!important;height:100%!important;z-index:1!important;overflow:auto!important;padding:22px 16px!important;border:0!important;border-right:1px solid var(--viora-border)!important;border-radius:0!important;background:color-mix(in srgb,var(--ink-2) 78%,var(--ink))!important;box-shadow:none!important}
  #shell.no-left #sh-left{display:none!important}
  #shell:not(.no-left) #open-full{display:none!important}
 }
@@ -468,8 +459,8 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 :root[data-model] #thread .welcome-v2 .suggestions{display:grid!important;grid-template-columns:repeat(2,minmax(0,1fr))!important;width:100%!important;max-width:760px!important}
 :root[data-model] #composer{width:100%!important;max-width:none!important;margin:0!important;padding:10px clamp(18px,4vw,48px) max(16px,env(safe-area-inset-bottom))!important;background:transparent!important;border:0!important}
 :root[data-model] #composer .composer-inner{width:min(100%,820px)!important;margin-inline:auto!important}
-:root[data-model] #sh-left .sh-user{display:flex!important;align-items:center!important}
-:root[data-model] #sh-left .sh-uname{display:block!important;flex:1 1 auto!important;min-width:0!important;color:var(--paper)!important}
+
+
 @media(max-width:979px){
  :root[data-model] #sh-center>.thread,:root[data-model] #sh-center>#thread{padding:16px 14px 10px!important}
  :root[data-model] #thread .welcome-v2{min-height:0!important;padding:22px 0!important}
@@ -503,12 +494,8 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 :root[data-model] #thread .src-card{box-shadow:0 4px 14px color-mix(in srgb,#171323 7%,transparent)}
 :root[data-model] #thread .src-card:hover{box-shadow:0 9px 22px color-mix(in srgb,var(--accent) 13%,transparent)}
 /* Keep sign-out anchored below the sidebar content and make it read as a deliberate, destructive action. */
-:root[data-model] #sh-left > .sh-invite{margin-top:18px!important}
-:root[data-model] #sh-left > .sh-signout{flex:0 0 auto;margin:auto 0 2px;padding:10px 12px;border:1px solid color-mix(in srgb,#e5484d 30%,var(--line));background:color-mix(in srgb,#e5484d 9%,var(--ink-2));color:color-mix(in srgb,#c92f3b 88%,var(--paper));font-weight:650;transition:background .16s,border-color .16s,transform .16s,box-shadow .16s}
-:root[data-theme="dark"][data-model] #sh-left > .sh-signout{color:#ff8189}
-:root[data-model] #sh-left > .sh-signout:hover{transform:translateY(-1px);border-color:#e5484d;background:color-mix(in srgb,#e5484d 17%,var(--ink-2));box-shadow:0 5px 16px color-mix(in srgb,#e5484d 12%,transparent)}
-:root[data-model] #sh-left > .sh-signout:focus-visible{outline-color:#e5484d}
-@media(max-width:979px){:root[data-model] body.sb #sh-left{display:flex!important;flex-direction:column!important}:root[data-model] body.sb #sh-left > .sh-signout{margin-top:auto!important}}
+
+
 @media(max-width:600px){:root[data-model] .dots i{width:6px;height:6px}:root[data-model] .msg.assistant.streaming > .body{animation-duration:4s}}
 @media(prefers-reduced-motion:reduce){:root[data-model] .dots i,:root[data-model] .msg.assistant.enter,:root[data-model] .msg.assistant.streaming::before,:root[data-model] .msg.assistant.streaming > .body,:root[data-model] .msg.streaming .body>p:last-child::after{animation:none!important}:root[data-model] .msg.assistant.streaming > .body{ text-shadow:none!important }}
 </style>
@@ -516,6 +503,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 <link rel="stylesheet" href="assets/x/think-mode.css?v=20261112-1">
 <link rel="stylesheet" href="assets/x/mobile-first.css?v=20261103-1">
 <link rel="stylesheet" href="assets/x/voice-ui.css?v=20261123-1">
+<link rel="stylesheet" href="assets/x/sidebar.css?v=20261124-1">
 <script src="assets/x/mobile-viewport.js?v=20261103-1" defer></script>
 <style id="app-compact">
 :root[data-model] #thread .welcome-v2{padding-block:clamp(18px,3.5vh,38px) 16px;gap:18px}
@@ -536,7 +524,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
 @media(min-width:701px){
   :root[data-model] #sh-center>.bar{min-height:60px}
   :root[data-model] #sh-left{padding:18px 12px}
-  :root[data-model] .sh-nav button,:root[data-model] .sh-hist button{min-height:38px;padding-block:8px}
+  
   :root[data-model] #composer #input{min-height:48px!important}
 }
 @media(max-width:700px){
@@ -564,15 +552,15 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
     <button type="button" class="sheet-action" id="open-settings"><span class="sheet-copy"><span class="sheet-title">Settings</span></span></button>
     <button type="button" class="sheet-action" id="out"><span class="sheet-copy"><span class="sheet-title">Sign out</span></span></button>
   </div>
-  <input id="sh-search" class="sh-search" type="search" placeholder="Search chats and messages…" autocomplete="off" spellcheck="false">
+  <input id="sh-search" class="sh-search" type="search" placeholder="Search chats…" aria-label="Search chats and messages" autocomplete="off" spellcheck="false">
   <h6>FEATURES</h6>
   <nav class="sh-nav">
     <button type="button" class="on" id="nav-chat" data-ic="chat"> AI Chat</button>
-    <a class="planner-nav-link" href="planner.html"><span aria-hidden="true">◫</span> Planner</a>
-    <button type="button" id="mem" data-ic="note"> About you &amp; memory</button>
+    <a href="planner.html" data-ic="planner"> Planner</a>
+    <button type="button" id="mem" data-ic="user"> About you &amp; memory</button>
     <button type="button" id="exp-chat" data-ic="note"> Export this chat</button>
     <button type="button" id="exp" data-ic="download"> Export my data</button>
-    <button type="button" id="keys-btn" data-ic="help"> Keyboard shortcuts</button>
+    <button type="button" id="keys-btn" data-ic="keyboard"> Keyboard shortcuts</button>
   </nav>
   <h6>CHAT HISTORY</h6>
   <div id="sh-hist" class="sh-hist"></div>
@@ -888,7 +876,7 @@ function plannerCardsHtml(card) {
   if (!taskItems.length && !projectItems.length) return '';
   const tasks = taskItems.slice(0, 8).map(task => `<article class="planner-chat-task"><div><strong>${esc(task.title)}</strong><small>${esc(task.status?.replaceAll('_',' ') || 'to do')}${task.dueDate ? ' · due ' + esc(new Date(task.dueDate + 'T12:00:00').toLocaleDateString(undefined,{month:'short',day:'numeric'})) : ''}</small></div><span class="priority-pill ${esc(task.priority || 'normal')}">${esc(task.priority || 'normal')}</span><a href="planner.html?task=${encodeURIComponent(task.id)}">Open →</a></article>`).join('');
   const projects = projectItems.slice(0, 4).map(project => `<article class="planner-chat-project"><span class="project-dot"></span><strong>${esc(project.name)}</strong><a href="planner.html?project=${encodeURIComponent(project.id)}">Open project →</a></article>`).join('');
-  return `<section class="planner-chat-card"><header><span class="planner-chat-icon">◫</span><div><strong>${tasks.length || projects.length ? 'Planner updated' : 'Planner'}</strong><small>${tasks.length} task${tasks.length === 1 ? '' : 's'} · ${projects.length} project${projects.length === 1 ? '' : 's'}</small></div><a href="planner.html">Open Planner ↗</a></header>${tasks}${projects}</section>`;
+  return `<section class="planner-chat-card"><header><span class="planner-chat-icon">${ic('planner')}</span><div><strong>${tasks.length || projects.length ? 'Planner updated' : 'Planner'}</strong><small>${tasks.length} task${tasks.length === 1 ? '' : 's'} · ${projects.length} project${projects.length === 1 ? '' : 's'}</small></div><a href="planner.html">Open Planner ↗</a></header>${tasks}${projects}</section>`;
 }
 function msgHtml(m, i, last, enter, live, editable = false) {
   if (m.role === 'user') return `<div class="msg user${enter ? ' enter' : ''}">${(m.att || []).length ? `<div class="msg-att">${m.att.map(f => `<span class="msg-att-i" title="${esc(f.name)}">${f.src && Src.parseUrl(f.src) ? Src.iconHtml({ url: f.src }, 14) : ''}${esc(f.name)}</span>`).join('')}</div>` : ''}<div class="user-text">${esc(m.content)}</div>${editable ? `<div class="msg-actions"><button class="msg-act" type="button" data-edit-user="${i}" title="Edit and resend this message" aria-label="Edit your last message">${ic('edit')}</button></div>` : ''}</div>`;
@@ -991,7 +979,12 @@ function render() {
     const messageMatch = (Array.isArray(x.messages) ? x.messages : []).some(m => String(m && m.content || '').toLowerCase().includes(filter));
     return titleMatch || messageMatch;
   });
-  $('#sh-hist').innerHTML = list.map(x => `<div class="sh-item"><button type="button" class="sh-chat${x.id === cur ? ' on' : ''}" data-id="${esc(x.id)}" title="${esc(x.title || 'New Conversation')}">${esc(x.title || 'New Conversation')}</button><button type="button" class="sh-tool" data-rename="${esc(x.id)}" title="Rename conversation" aria-label="Rename ${esc(x.title || 'conversation')}">${ic('edit')}</button><button type="button" class="sh-tool sh-del" data-del="${esc(x.id)}" title="Delete conversation" aria-label="Delete ${esc(x.title || 'conversation')}">×</button></div>`).join('') || `<span class="sh-empty">${filter ? 'No matches.' : 'Nothing saved yet.'}</span>`;
+  /* Day headings. A chat id holds the time it was created (base-36 or plain milliseconds) and the list is newest first, so the groups come out in order. */
+  const t0 = new Date().setHours(0, 0, 0, 0);
+  const dayOf = id => { const m = /^c([0-9a-z]{8})/.exec(id), ms = m ? parseInt(m[1], 36) : /^\d{13}$/.test(id) ? +id : NaN;
+    return !(ms > 1e12 && ms < 4e12) ? 'Earlier' : ms >= t0 ? 'Today' : ms >= t0 - 864e5 ? 'Yesterday' : ms >= t0 - 6 * 864e5 ? 'Previous 7 days' : ms >= t0 - 29 * 864e5 ? 'Previous 30 days' : 'Older'; };
+  let lastDay = '';
+  $('#sh-hist').innerHTML = list.map(x => { const day = dayOf(String(x.id)), head = day !== lastDay ? `<div class="sh-group" role="presentation">${day}</div>` : ''; lastDay = day; return head + `<div class="sh-item"><button type="button" class="sh-chat${x.id === cur ? ' on' : ''}" data-id="${esc(x.id)}" title="${esc(x.title || 'New Conversation')}">${esc(x.title || 'New Conversation')}</button><button type="button" class="sh-tool" data-rename="${esc(x.id)}" title="Rename conversation" aria-label="Rename ${esc(x.title || 'conversation')}">${ic('edit')}</button><button type="button" class="sh-tool sh-del" data-del="${esc(x.id)}" title="Delete conversation" aria-label="Delete ${esc(x.title || 'conversation')}">×</button></div>`; }).join('') || `<span class="sh-empty">${filter ? 'No matches.' : 'Nothing saved yet.'}</span>`;
   $('#projs').innerHTML = D.projects.map(p => `<button type="button" data-p="${p.id}" class="${p.id === curP ? 'on' : ''}">${ic('folder')} ${esc(p.name)}</button>`).join('') + (curP ? `<button type="button" class="add" data-pe="${curP}">${ic('edit')} Edit this project</button>` : '') + `<button type="button" class="add" id="np">${ic('plus')} Create project</button>`;
   $('#send').disabled = !busy && !$('#input').value.trim();
   /* The welcome screen always starts at the top (otherwise its logo and headline load scrolled out of view);

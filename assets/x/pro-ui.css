@@ -47,80 +47,10 @@
   scrollbar-width: thin;
   scrollbar-color: var(--line) transparent;
 }
-:root[data-model] .sh-logo {
-  min-height: 42px;
-  padding: 2px 3px 8px;
-  gap: 10px;
-  font-size: 19px;
-  font-weight: 750;
-  letter-spacing: -.04em;
-}
-:root[data-model] .sh-logo > img {
-  width: 30px !important;
-  height: 30px !important;
-  flex: 0 0 30px;
-  border-radius: 9px;
-}
-:root[data-model] .sh-collapse,
-:root[data-model] .sh-gear {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  display: inline-grid;
-  place-items: center;
-  border-radius: 10px;
-}
-:root[data-model] .sh-user {
-  min-width: 0;
-  min-height: 50px;
-  gap: 10px;
-  margin: 16px 0;
-  padding: 9px;
-  border: 1px solid color-mix(in srgb, var(--line) 85%, transparent);
-  border-radius: 13px;
-  background: color-mix(in srgb, var(--ink-2) 82%, transparent);
-}
-:root[data-model] .sh-av {
-  width: 36px;
-  height: 36px;
-  min-width: 36px;
-  font-size: 13px;
-}
-:root[data-model] .sh-uname {
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-:root[data-model] .sh-search {
-  box-sizing: border-box;
-  width: 100%;
-  min-height: var(--pro-control);
-  padding: 10px 12px;
-  border: 1px solid var(--line);
-  border-radius: 11px;
-  font-size: 13px;
-  transition: border-color .15s ease, box-shadow .15s ease;
-}
-:root[data-model] .sh-search:focus {
-  border-color: var(--accent);
-  box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 12%, transparent);
-  outline: 0;
-}
-:root[data-model] #sh-left h6 {
-  margin: 22px 8px 9px;
-  font-size: 10px;
-  font-weight: 750;
-  letter-spacing: .12em;
-}
-:root[data-model] .sh-nav {
-  display: grid;
-  gap: 4px;
-}
-:root[data-model] .sh-nav button,
-:root[data-model] .sh-hist button,
+
+
 :root[data-model] #projs button,
-:root[data-model] .sh-agents button {
+:root[data-model] .sh-agents button{
   min-width: 0;
   min-height: 40px;
   gap: 10px;
@@ -131,54 +61,16 @@
   text-align: left;
   transition: background .15s ease, color .15s ease, border-color .15s ease;
 }
-:root[data-model] .sh-nav button {
-  display: flex;
-  align-items: center;
-  font-weight: 550;
-}
-:root[data-model] .sh-nav button .ico,
-:root[data-model] .sh-nav button svg,
+
 :root[data-model] .sh-agents button .ico,
-:root[data-model] #projs button .ico {
+:root[data-model] #projs button .ico{
   width: 18px !important;
   height: 18px !important;
   min-width: 18px;
   flex: 0 0 18px;
 }
-:root[data-model] .sh-nav button.on {
-  box-shadow: inset 2px 0 0 var(--accent);
-}
-:root[data-model] .sh-hist {
-  display: grid;
-  gap: 3px;
-}
-:root[data-model] .sh-hist button {
-  position: relative;
-  padding-right: 30px;
-}
-:root[data-model] .sh-hist .hx { right: 8px; }
-:root[data-model] .sh-invite {
-  margin-top: 18px;
-  padding: 13px;
-  border: 1px solid color-mix(in srgb, var(--accent) 20%, var(--line));
-  border-radius: 13px;
-  background: color-mix(in srgb, var(--accent) 6%, var(--ink-2));
-}
-:root[data-model] .sh-invite b { display: block; font-size: 12.5px; }
-:root[data-model] .sh-invite small {
-  display: block;
-  margin: 5px 0 11px;
-  color: var(--muted);
-  font-size: 11.5px;
-  line-height: 1.5;
-}
-:root[data-model] .sh-invite button {
-  width: 100%;
-  min-height: 36px;
-  border-radius: 9px;
-  font-size: 12px;
-  font-weight: 650;
-}
+
+
 :root[data-model] .bar {
   min-height: 68px;
   align-items: center;
@@ -234,9 +126,7 @@
   height: 19px;
   stroke-width: 1.8;
 }
-:root[data-model] .icon-btn:hover,
-:root[data-model] .sh-collapse:hover,
-:root[data-model] .sh-gear:hover {
+:root[data-model] .icon-btn:hover{
   color: var(--paper);
   background: color-mix(in srgb, var(--accent) 9%, var(--ink-2));
   border-color: color-mix(in srgb, var(--accent) 24%, var(--line));
@@ -682,29 +572,8 @@
 :root[data-theme="light"][data-model] .sh-sw[aria-checked="true"]::after {
   transform: translateX(14px);
 }
-:root[data-theme="light"][data-model] .sh-invite {
-  margin-top: 16px;
-  padding: 12px;
-  border-radius: 12px;
-  background: #faf9ff;
-  border-color: #e5e0ff;
-  text-align: left;
-}
-:root[data-theme="light"][data-model] .sh-invite b {
-  color: #2b2e42;
-  font-size: 12px;
-}
-:root[data-theme="light"][data-model] .sh-invite small {
-  color: #737a90;
-  font-size: 11px;
-}
-:root[data-theme="light"][data-model] .sh-invite button {
-  min-height: 34px;
-  background: #7252f5;
-  color: #fff;
-  border-radius: 9px;
-  font-size: 11.5px;
-}
+
+
 @media (min-width: 1500px) {
   :root[data-theme="light"][data-model] #shell {
     grid-template-columns: 252px minmax(0, 1fr) 278px;

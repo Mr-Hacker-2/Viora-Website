@@ -15,18 +15,13 @@
   scrollbar-width: thin;
   scrollbar-color: var(--line) transparent;
 }
-:root[data-model] .sh-logo{padding-bottom: 5px}
-:root[data-model] .sh-nav button,
-:root[data-model] .sh-hist button,
+
 :root[data-model] #projs button{
   transition: background .16s ease, border-color .16s ease, transform .16s ease;
 }
-:root[data-model] .sh-nav button:hover,
-:root[data-model] .sh-hist button:hover,
 :root[data-model] #projs button:hover{
   background: color-mix(in srgb,var(--accent) 9%,var(--ink-2));
 }
-:root[data-model] .sh-nav button.on,
 :root[data-model] #projs button.on{
   border-color: color-mix(in srgb,var(--accent) 28%,transparent);
   background: color-mix(in srgb,var(--accent) 12%,var(--ink-2));
@@ -378,12 +373,12 @@
   width:38px;height:38px;border-radius:13px!important;
 }
 :root[data-model] #sh-left{padding:16px!important}
-:root[data-model] .sh-logo{margin-bottom:12px}
+
 :root[data-model] #sh-right{padding:20px!important}
 :root[data-model] #sh-right h2{font-size:16px!important;font-weight:750!important}
 :root[data-model] .sh-desc{line-height:1.6}
 :root[data-model] .sh-mode{padding:11px 0}
-:root[data-model] .sh-hist button{border-radius:10px!important}
+
 :root[data-model] .sheet{border:1px solid var(--line);box-shadow:0 20px 60px #0004}
 @media(max-width:979px){
   :root[data-model] #shell{padding:0!important;gap:0!important}

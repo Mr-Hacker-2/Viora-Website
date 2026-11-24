@@ -1,0 +1,209 @@
+/* Viora sidebar: the one place the inside of #sh-left is styled.
+
+   Before this file, the logo, user card, search box, navigation, chat history, phone-app card and Sign out button were each styled by
+   up to six stylesheets (viora-theme, pro-ui, app-polish, layout-final, app-layout, mobile-first) and three inline blocks in app.html,
+   which then overrode each other with !important. Those sidebar-inside rules were removed; what is left elsewhere is only the
+   container itself (position in the grid, background, border, radius, drawer behaviour on phones), which is not styled here.
+
+   The container is a flex column whenever it is visible (layout-final.css on desktop, the .sb drawer rule in app.html on phones).
+   So: the top block (logo, user, search, navigation) keeps its size, the chat history takes the free space and scrolls on its own,
+   and the phone-app card and Sign out stay pinned at the bottom.
+
+   Colors, spacing and type come from the app's theme tokens, so light and dark themes both work. No !important is needed. */
+
+:root[data-model] {
+  --sb-row: 40px;
+  --sb-radius: 10px;
+  --sb-ico: 18px;
+  --sb-hover: color-mix(in srgb, var(--paper) 7%, transparent);
+  --sb-on: color-mix(in srgb, var(--accent) 15%, transparent);
+  --sb-danger: #ff8189;
+}
+:root[data-theme="light"][data-model] { --sb-danger: #c9343a; }
+
+:root[data-model] #sh-left > * { flex: none; max-width: 100%; }
+:root[data-model] #sh-left > .sh-hist { flex: 1 1 auto; }
+
+/* ---------- header: brand, new chat, hide sidebar ---------- */
+:root[data-model] #sh-left .sh-logo {
+  display: flex; align-items: center; gap: 10px;
+  min-height: 44px; padding: 0 2px 12px;
+  color: var(--paper); font: 650 17px/1 var(--sans); letter-spacing: -.02em;
+}
+:root[data-model] #sh-left .sh-logo > img { width: 28px; height: 28px; flex: none; border-radius: 8px; }
+:root[data-model] #sh-left .sh-logo > span { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+:root[data-model] #sh-left .sh-logo .sh-new { margin-left: auto; }
+
+:root[data-model] #sh-left :is(.sh-collapse, .sh-gear) {
+  display: inline-grid; place-items: center; flex: none;
+  width: 34px; height: 34px; padding: 0;
+  border: 0; border-radius: var(--sb-radius); background: transparent;
+  color: var(--muted); font-size: 16px; cursor: pointer;
+  transition: background .15s ease, color .15s ease, transform .15s ease;
+}
+:root[data-model] #sh-left :is(.sh-collapse, .sh-gear) .ico { width: var(--sb-ico); height: var(--sb-ico); transition: transform .2s ease; }
+:root[data-model] #sh-left :is(.sh-collapse, .sh-gear):hover { background: var(--sb-hover); color: var(--paper); }
+:root[data-model] #sh-left .sh-gear:hover .ico { transform: rotate(35deg); }
+:root[data-model] #sh-left :is(.sh-collapse, .sh-gear):active { transform: scale(.94); }
+:root[data-model] #sh-left .sh-new { background: color-mix(in srgb, var(--accent) 14%, transparent); color: var(--accent); }
+:root[data-model] #sh-left .sh-new:hover { background: color-mix(in srgb, var(--accent) 24%, transparent); color: var(--accent); }
+
+/* ---------- account row ---------- */
+:root[data-model] #sh-left .sh-user {
+  display: flex; align-items: center; gap: 10px; min-width: 0;
+  margin: 2px 0 12px; padding: 6px;
+  border-radius: 12px; background: color-mix(in srgb, var(--raised) 60%, transparent);
+}
+:root[data-model] #sh-left .sh-user:has(#nm:empty) { visibility: hidden; } /* no empty box before the script fills the name in */
+:root[data-model] #sh-left .sh-av {
+  display: grid; place-items: center; flex: none; overflow: hidden;
+  width: 32px; height: 32px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--accent), var(--sky)); color: #fff;
+  font: 600 13px/1 var(--sans); cursor: pointer;
+}
+:root[data-model] #sh-left .sh-av img { display: block; width: 100%; height: 100%; object-fit: cover; }
+:root[data-model] #sh-left .sh-uname {
+  flex: 1; min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  color: var(--paper); font: 600 14px/1.2 var(--sans);
+}
+
+/* ---------- search ---------- */
+:root[data-model] #sh-left .sh-search {
+  box-sizing: border-box; width: 100%; height: 40px; padding: 0 14px 0 38px;
+  border: 1px solid var(--line); border-radius: 12px; outline: 0;
+  background: var(--raised) no-repeat 13px 50% / 16px
+    url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%238d87a8' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Ccircle cx='11' cy='11' r='7'/%3E%3Cpath d='M21 21l-4.3-4.3'/%3E%3C/svg%3E");
+  color: var(--paper); font: 400 14px/1 var(--sans);
+  transition: border-color .15s ease, box-shadow .15s ease;
+}
+:root[data-model] #sh-left .sh-search::placeholder { color: var(--faint); opacity: 1; }
+:root[data-model] #sh-left .sh-search:focus { border-color: var(--accent); box-shadow: 0 0 0 3px color-mix(in srgb, var(--accent) 16%, transparent); }
+
+/* ---------- section labels: CAPITALS for sections, plain text for the date groups under Chat history ---------- */
+:root[data-model] #sh-left h6 {
+  margin: 20px 10px 6px; padding: 0;
+  color: var(--faint); font: 600 11px/1.2 var(--sans); letter-spacing: .09em; text-transform: uppercase;
+}
+:root[data-model] #sh-left .sh-group {
+  margin: 14px 10px 4px; padding: 0;
+  color: var(--muted); font: 500 12px/1.2 var(--sans); letter-spacing: 0;
+}
+
+/* ---------- navigation (buttons and links look identical) ---------- */
+:root[data-model] #sh-left .sh-nav { display: grid; gap: 2px; }
+:root[data-model] #sh-left .sh-nav > :is(button, a) {
+  position: relative; display: flex; align-items: center; gap: 12px;
+  box-sizing: border-box; width: 100%; min-width: 0; min-height: var(--sb-row); padding: 0 12px;
+  border: 0; border-radius: var(--sb-radius); background: transparent;
+  color: var(--muted); font: 500 14px/1.2 var(--sans); text-align: left; text-decoration: none; cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+:root[data-model] #sh-left .sh-nav > :is(button, a) .ico {
+  width: var(--sb-ico); height: var(--sb-ico); min-width: var(--sb-ico); flex: none;
+  opacity: .8; transition: color .15s ease, opacity .15s ease, transform .15s ease;
+}
+:root[data-model] #sh-left .sh-nav > :is(button, a):hover { background: var(--sb-hover); color: var(--paper); }
+:root[data-model] #sh-left .sh-nav > :is(button, a):hover .ico { opacity: 1; transform: translateX(1px); }
+:root[data-model] #sh-left .sh-nav > :is(button, a):active { background: color-mix(in srgb, var(--paper) 10%, transparent); }
+:root[data-model] #sh-left .sh-nav > :is(.on, [aria-current="page"]) { background: var(--sb-on); color: var(--paper); }
+:root[data-model] #sh-left .sh-nav > :is(.on, [aria-current="page"]) .ico { color: var(--accent); opacity: 1; }
+:root[data-model] #sh-left .sh-nav > :is(.on, [aria-current="page"])::before { /* the active marker sits in the panel's gutter, so it is never clipped by the rounded row */
+  content: ""; position: absolute; left: -6px; top: 10px; bottom: 10px; width: 3px; border-radius: 3px; background: var(--accent);
+}
+
+/* ---------- chat history: date groups, single-line titles, tools appear on hover ---------- */
+:root[data-model] #sh-left .sh-hist {
+  display: flex; flex-direction: column; gap: 1px;
+  min-height: 96px; margin-bottom: 8px; overflow-y: auto; overscroll-behavior: contain;
+  scrollbar-width: thin; scrollbar-color: var(--line) transparent;
+}
+:root[data-model] #sh-left .sh-hist > .sh-group:first-child { margin-top: 2px; }
+:root[data-model] #sh-left .sh-item { position: relative; display: flex; align-items: center; min-width: 0; border-radius: var(--sb-radius); transition: background .15s ease; }
+:root[data-model] #sh-left .sh-item:hover { background: var(--sb-hover); }
+:root[data-model] #sh-left .sh-item:has(.sh-chat.on) { background: var(--sb-on); }
+:root[data-model] #sh-left .sh-chat {
+  flex: 1; min-width: 0; height: 36px; padding: 0 10px;
+  overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  border: 0; border-radius: var(--sb-radius); background: transparent;
+  color: var(--muted); font: 450 13.5px/1 var(--sans); text-align: left; cursor: pointer;
+  transition: color .15s ease, padding .15s ease;
+}
+:root[data-model] #sh-left .sh-item:hover .sh-chat,
+:root[data-model] #sh-left .sh-item:focus-within .sh-chat { padding-right: 66px; color: var(--paper); }
+:root[data-model] #sh-left .sh-chat.on { color: var(--paper); font-weight: 550; }
+:root[data-model] #sh-left .sh-tool {
+  position: absolute; top: 50%; right: 34px; display: grid; place-items: center;
+  width: 28px; height: 28px; padding: 0; margin-top: -14px;
+  border: 0; border-radius: 8px; background: transparent; color: var(--faint);
+  opacity: 0; cursor: pointer; transition: opacity .15s ease, background .15s ease, color .15s ease;
+}
+:root[data-model] #sh-left .sh-tool.sh-del { right: 6px; font-size: 18px; line-height: 1; }
+:root[data-model] #sh-left .sh-tool .ico { width: 15px; height: 15px; }
+:root[data-model] #sh-left .sh-item:hover .sh-tool,
+:root[data-model] #sh-left .sh-item:focus-within .sh-tool { opacity: 1; }
+:root[data-model] #sh-left .sh-tool:hover { background: color-mix(in srgb, var(--paper) 12%, transparent); color: var(--paper); }
+:root[data-model] #sh-left .sh-tool.sh-del:hover { color: var(--sb-danger); }
+:root[data-model] #sh-left .sh-empty { display: block; padding: 8px 10px; color: var(--faint); font-size: 13px; }
+
+/* ---------- footer: phone-app card, Sign out ---------- */
+:root[data-model] #sh-left .sh-invite {
+  margin: 0; padding: 12px 14px; text-align: left;
+  border: 1px solid color-mix(in srgb, var(--accent) 18%, var(--line)); border-radius: 14px;
+  background: color-mix(in srgb, var(--accent) 7%, var(--ink-2));
+}
+:root[data-model] #sh-left .sh-invite b { display: block; color: var(--paper); font: 600 13px/1.3 var(--sans); }
+:root[data-model] #sh-left .sh-invite small { display: block; margin: 3px 0 10px; color: var(--muted); font-size: 12px; line-height: 1.45; }
+:root[data-model] #sh-left .sh-invite button {
+  width: 100%; min-height: 36px; border: 0; border-radius: var(--sb-radius);
+  background: var(--accent); color: var(--on-accent); font: 600 13px/1 var(--sans); cursor: pointer;
+  transition: filter .15s ease, transform .15s ease;
+}
+:root[data-model] #sh-left .sh-invite button:hover { filter: brightness(1.08); }
+:root[data-model] #sh-left .sh-invite button:active { transform: scale(.985); }
+:root[data-model] #sh-left .sh-signout {
+  display: flex; align-items: center; gap: 12px; box-sizing: border-box; width: 100%;
+  min-height: var(--sb-row); margin: 8px 0 0; padding: 0 12px;
+  border: 0; border-radius: var(--sb-radius); background: transparent;
+  color: var(--muted); font: 500 14px/1.2 var(--sans); text-align: left; cursor: pointer;
+  transition: background .15s ease, color .15s ease;
+}
+:root[data-model] #sh-left .sh-signout .ico { width: var(--sb-ico); height: var(--sb-ico); flex: none; opacity: .85; }
+:root[data-model] #sh-left .sh-signout:hover { background: color-mix(in srgb, var(--sb-danger) 12%, transparent); color: var(--sb-danger); }
+
+/* ---------- small or short screens: the phone-app card shrinks to a title and a button so Sign out always fits ---------- */
+@media (max-width: 979px), (max-height: 760px) {
+  :root[data-model] #sh-left .sh-invite { padding: 10px 12px; }
+  :root[data-model] #sh-left .sh-invite b { margin-bottom: 8px; }
+  :root[data-model] #sh-left .sh-invite small { display: none; }
+  :root[data-model] #sh-left .sh-invite button { min-height: 40px; }
+}
+
+/* ---------- phones and tablets: comfortable tap targets, tools always reachable ---------- */
+@media (max-width: 979px) {
+  :root[data-model] #sh-left .sh-nav > :is(button, a),
+  :root[data-model] #sh-left .sh-signout { min-height: 44px; }
+  :root[data-model] #sh-left .sh-chat { height: 44px; }
+  :root[data-model] #sh-left .sh-tool { opacity: .75; width: 34px; height: 34px; margin-top: -17px; right: 40px; }
+  :root[data-model] #sh-left .sh-tool.sh-del { right: 6px; }
+  :root[data-model] #sh-left .sh-chat { padding-right: 80px; }
+  :root[data-model] #sh-left :is(.sh-collapse, .sh-gear) { width: 40px; height: 40px; }
+}
+@media (hover: none) and (min-width: 980px) {
+  :root[data-model] #sh-left .sh-tool { opacity: .75; }
+  :root[data-model] #sh-left .sh-chat { padding-right: 66px; }
+}
+/* Short screens (small laptops, small phones): drop the optional phone-app card (the account menu has the same link) and tighten
+   spacing so everything, including Sign out, still fits without scrolling the panel. Placed last so it wins over the touch sizes above. */
+@media (max-height: 700px) {
+  :root[data-model] #sh-left .sh-invite { display: none; }
+  :root[data-model] #sh-left .sh-logo { min-height: 38px; padding-bottom: 6px; }
+  :root[data-model] #sh-left .sh-user { margin-bottom: 8px; }
+  :root[data-model] #sh-left h6 { margin-top: 12px; }
+  :root[data-model] #sh-left .sh-nav > :is(button, a),
+  :root[data-model] #sh-left .sh-signout { min-height: 38px; }
+  :root[data-model] #sh-left .sh-signout { margin-top: 4px; }
+  :root[data-model] #sh-left .sh-hist { min-height: 72px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  :root[data-model] #sh-left * { transition: none; }
+}

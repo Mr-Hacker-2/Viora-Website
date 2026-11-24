@@ -52,9 +52,9 @@
   outline-offset: 3px;
 }
 :root[data-model] .suggestion { min-width: 0; overflow-wrap: anywhere; }
-:root[data-model] #sh-left :is(button, a) { max-width: 100%; }
-:root[data-model] .sh-hist button { min-width: 0; }
-:root[data-model] .sh-hist button > :first-child { min-width: 0; overflow: hidden; text-overflow: ellipsis; }
+
+
+
 :root[data-model] dialog { max-width: calc(100vw - 24px); }
 @media (min-width: 1180px) {
   :root[data-model] #shell {
@@ -170,16 +170,7 @@
 }
 
 /* 5. No empty boxes before the script fills in the model name and the user's name. */
-:root[data-model] .model-pill:has(.pill-name:empty),
-:root[data-model] .sh-user:has(#nm:empty) { visibility: hidden; }
-
-/* 6. Sidebar: the phone-app card sits at the bottom, with room above it. */
-@media (min-width: 980px) {
-  :root[data-model] #sh-left { display: flex !important; flex-direction: column; }
-  :root[data-model] #sh-left > * { flex: 0 0 auto; }
-  :root[data-model] #sh-left > #sh-hist { margin-bottom: 16px; }
-  :root[data-model] #sh-left > .sh-invite { margin-top: auto !important; }
-}
+:root[data-model] .model-pill:has(.pill-name:empty){ visibility: hidden; }
 
 /* 7. The shell fills the viewport exactly: no page scroll, even gutters around the cards. */
 @media (min-width: 980px) {

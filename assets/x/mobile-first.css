@@ -7,8 +7,13 @@
   #sh-center > .thread { overscroll-behavior-y: contain; scroll-padding-block: 16px 24px; }
   #composer { padding-bottom: max(10px, env(safe-area-inset-bottom)) !important; }
   #input { max-height: min(30dvh, 220px) !important; }
-  #open-full, #model-btn, #attach, #send, #sh-collapse,
-  #sh-gear, #av, .sh-item .sh-tool { min-width: 44px; min-height: 44px; }
+  #open-full,
+#model-btn,
+#attach,
+#send,
+#sh-collapse,
+#sh-gear,
+#av{ min-width: 44px; min-height: 44px; }
   .sheet-action { min-height: 44px; }
   #open-full, #sh-collapse, #sh-gear, #attach { display: inline-grid; place-items: center; }
   #model-btn { padding-inline: 10px; }

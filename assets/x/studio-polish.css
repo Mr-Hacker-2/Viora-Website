@@ -116,7 +116,7 @@
   :root[data-model] .composer-right{margin-left:auto}
   :root[data-model] .attach-btn,:root[data-model] .send{width:40px;height:40px}
   :root[data-model] #sh-left{border-radius:0 22px 22px 0!important;padding:calc(18px + env(safe-area-inset-top)) 18px max(18px,env(safe-area-inset-bottom))!important;width:min(330px,88vw)!important;max-width:88vw;inset:0 auto 0 0!important;z-index:80!important;overflow-y:auto}
-  :root[data-model] body.sb #sh-left{display:block!important}
+  :root[data-model] body.sb #sh-left{display:flex!important;flex-direction:column}
   :root[data-model] body.sb #sh-center{filter:brightness(.72)}
   :root[data-model] #model-sheet,:root[data-model] #attach-sheet,:root[data-model] #umenu{max-width:calc(100vw - 24px);z-index:100}
   :root[data-model] #art{inset:calc(6px + env(safe-area-inset-top)) 6px calc(6px + env(safe-area-inset-bottom));width:auto;border-radius:16px}

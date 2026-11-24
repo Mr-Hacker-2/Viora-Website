@@ -56,27 +56,8 @@
 :root[data-model] .agents{ position: absolute; }
 
 }
-:root[data-model] #sh-left h6{ margin: 24px 0 8px; color: var(--faint); font-weight: 500; font-size: 12px; letter-spacing: .08em; }
-:root[data-model] .sh-logo{ display: flex; align-items: center; gap: 10px; font: 600 21px/1 var(--sans); }
-:root[data-model] .sh-collapse{ margin-left: auto; background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 18px; }
-:root[data-model] .sh-user{ display: flex; align-items: center; gap: 10px; margin: 24px 0 14px; font-weight: 500; }
-:root[data-model] .sh-av{ width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: linear-gradient(135deg, var(--accent), var(--accent-deep)); color: var(--on-accent); font-weight: 700; }
-:root[data-model] .sh-gear{ margin-left: auto; background: none; border: 0; color: var(--muted); cursor: pointer; font-size: 16px; }
-:root[data-model] .sh-search{ width: 100%; padding: 11px 12px; border-radius: 12px; border: 0; background: var(--raised); color: var(--paper); font: inherit; }
-:root[data-model] .sh-search:focus{ outline: 1px solid var(--accent); }
-:root[data-model] .sh-nav,:root[data-model] .sh-hist{ display: grid; gap: 2px; }
-:root[data-model] .sh-nav button,:root[data-model] .sh-hist button{
-  text-align: left; background: none; border: 0; padding: 9px 6px; border-radius: 9px; cursor: pointer;
-  color: var(--muted); font-size: 15px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
-}
-:root[data-model] .sh-nav button:hover,:root[data-model] .sh-hist button:hover{ color: var(--paper); background: #ffffff0a; }
-:root[data-model] .sh-nav button.on,:root[data-model] .sh-hist button.on{ color: #fff; font-weight: 500; }
-:root[data-model] .sh-hist button{ font-size: 14px; color: #c4bcd6; }
-:root[data-model] .sh-empty{ color: var(--faint); font-size: 13px; }
-:root[data-model] .sh-invite{ margin-top: 22px; padding: 18px 14px; text-align: center; border-radius: 18px; border: 1px solid var(--line); background: radial-gradient(circle at 0 100%, #f5c2e844, transparent 55%), #1d1929; }
-:root[data-model] .sh-invite b{ display: block; font-size: 16px; }
-:root[data-model] .sh-invite small{ display: block; color: var(--muted); margin: 4px 0 12px; }
-:root[data-model] .sh-invite button{ background: #fff; color: #111; border: 0; border-radius: 10px; padding: 9px 14px; font-weight: 500; cursor: pointer; }
+
+
 :root[data-model] #sh-right h2{ margin: 0 0 14px; font: 600 22px/1.2 var(--sans); }
 :root[data-model] .sh-model{ background: var(--accent-deep); color: var(--accent); border: 1px solid var(--accent-line); border-radius: 10px; padding: 9px 12px; font: 500 15px var(--sans); }
 :root[data-model] .sh-tabs{ display: flex; margin: 20px -18px 0; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
@@ -100,8 +81,8 @@
 :root[data-model] .sh-filelist{ display: grid; gap: 6px; margin-bottom: 12px; font-size: 14px; }
 :root[data-model] .sh-btn{ display: block; width: 100%; margin-top: 8px; padding: 11px; border-radius: 12px; background: var(--raised); border: 1px solid var(--line); color: var(--paper); cursor: pointer; font: inherit; }
 :root[data-model] .sh-btn:hover{ border-color: var(--accent); color: var(--accent); }
-:root[data-model] .sh-av{ overflow: hidden; }
-:root[data-model] .sh-av img{ width: 100%; height: 100%; object-fit: cover; display: block; }
+
+
 :root[data-model] #sh-nb{ display: none; }
 :root[data-model] .nb-done{ margin: 10px 0; padding: 12px 14px; border-radius: 12px; border: 1px solid var(--accent-line); background: var(--accent-bg); display: grid; gap: 4px; font-size: 13px; }
 :root[data-model] .nb-done b{ color: var(--accent); font-weight: 600; }
@@ -122,14 +103,13 @@
 
 }
 :root[data-model] .ico{ width: 1.1em; height: 1.1em; flex: none; vertical-align: -0.18em; }
-:root[data-model] .sh-nav button,:root[data-model] .sh-agents button,:root[data-model] .sh-btn{ display: flex; align-items: center; gap: 10px; }
-:root[data-model] .sh-nav .ico{ width: 18px; height: 18px; }
-:root[data-model] .sh-collapse,:root[data-model] .sh-gear,:root[data-model] #nb-close{ display: grid; place-items: center; }
-:root[data-model] .sh-collapse .ico,:root[data-model] .sh-gear .ico{ width: 18px; height: 18px; }
+:root[data-model] .sh-agents button,
+:root[data-model] .sh-btn{ display: flex; align-items: center; gap: 10px; }
+
+:root[data-model] #nb-close{ display: grid; place-items: center; }
+
 :root[data-model] .sh-agents .ico{ color: var(--accent); }
 :root[data-model] .sh-btn{ justify-content: center; }
-
-
 
 
 /* ============ LIGHT (the default look): the extension's pastel wash, white cards, violet accent ============ */
@@ -159,7 +139,7 @@ html[data-theme="light"][data-model]{
 }
 :root[data-model] .bar{ background: none; border: 0; }
 :root[data-model] .wordmark{ font: 650 18px/1 var(--sans); letter-spacing: -.01em; background: linear-gradient(90deg, #7a58ff 0%, #f28a45 100%); -webkit-background-clip: text; background-clip: text; color: transparent; -webkit-text-fill-color: transparent; }
-:root[data-model] .sh-logo{ font: 650 19px/1 var(--sans); letter-spacing: -.01em; }
+
 :root[data-model] .model-pill{ background: var(--ink-2) !important; border: 1px solid transparent !important; color: var(--muted) !important; border-radius: 999px !important; box-shadow: var(--shadow); }
 :root[data-model] .model-pill:hover{ box-shadow: var(--shadow-lg); color: var(--paper) !important; }
 :root[data-model] .icon-btn{ border-radius: 50%; }
@@ -175,15 +155,11 @@ html[data-theme="light"][data-model]{
 :root[data-model] #sh-left,:root[data-model] #sh-right,:root[data-model] #shell.nb-open #sh-nb{ background: var(--ink-2); border: 1px solid transparent; box-shadow: var(--shadow); }
 :root[data-theme="light"][data-model] #sh-left,:root[data-theme="light"][data-model] #sh-right{ background: rgba(255,255,255,.82); -webkit-backdrop-filter: blur(14px); backdrop-filter: blur(14px); }
 :root[data-model] .sh-title h1{ font: 300 28px/1.2 var(--sans); letter-spacing: -.015em; }
-:root[data-model] .sh-av{ background: linear-gradient(135deg, var(--accent), var(--sky)); color: #fff; }
-:root[data-model] .sh-search{ background: var(--raised); border-radius: 999px; padding: 11px 16px; }
-:root[data-model] .sh-nav button,:root[data-model] .sh-hist button,:root[data-model] .sh-agents button{ border-radius: 12px; }
-:root[data-model] .sh-nav button:hover,:root[data-model] .sh-hist button:hover{ background: rgba(120,130,190,.12); color: var(--paper); }
-:root[data-model] .sh-nav button.on,:root[data-model] .sh-hist button.on{ color: var(--paper); background: color-mix(in srgb, var(--accent) 14%, var(--ink-2)); }
-:root[data-model] .sh-hist button{ color: var(--muted); }
-:root[data-model] .sh-invite{ background: radial-gradient(circle at 0 100%, rgba(255,210,238,.7), transparent 60%), radial-gradient(circle at 100% 0, rgba(206,222,255,.7), transparent 60%), var(--ink-2); border: 1px solid var(--line); }
-:root[data-theme="dark"][data-model] .sh-invite{ background: radial-gradient(circle at 0 100%, rgba(139,107,255,.25), transparent 60%), var(--ink-2); }
-:root[data-model] .sh-invite button{ background: var(--accent); color: var(--on-accent); border-radius: 999px; padding: 9px 18px; font-weight: 600; }
+
+
+:root[data-model] .sh-agents button{ border-radius: 12px; }
+
+
 :root[data-model] .sh-model{ background: var(--ink-2); color: var(--paper); border: 1px solid var(--line); border-radius: 999px; padding: 9px 14px; }
 :root[data-model] .sh-tabs{ border-color: var(--line); }
 :root[data-model] .sh-tabs button.on{ color: var(--paper); border-bottom-color: var(--accent); }

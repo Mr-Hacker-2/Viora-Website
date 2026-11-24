@@ -70,8 +70,7 @@
 }
 
 /* Sidebar header: New chat (+) sits beside the collapse button. */
-:root[data-model] .sh-logo .sh-new { margin-left: auto !important; }
-:root[data-model] .sh-logo .sh-new + .sh-collapse { margin-left: 2px !important; }
+
 
 /* Settings: install button with a download icon. */
 #sdlg .pwa-get { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
