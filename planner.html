@@ -9,7 +9,7 @@
 <link rel="icon" href="assets/icon-128.png">
 <link rel="stylesheet" href="planner.css">
 <link rel="stylesheet" href="planner-runtime.css">
-<script defer src="planner.js"></script>
+<script type="module" src="planner.js"></script>
 </head>
 <body>
 <div id="planner-loading" class="planner-loading" role="status" aria-live="polite"><span class="planner-spinner" aria-hidden="true"></span><strong>Opening your Planner…</strong><small>Checking your account and saved workspace.</small></div>
@@ -51,7 +51,7 @@
         <div class="head-actions"><button class="button ghost" id="refresh">↻ Refresh</button></div>
       </section>
       <div id="notice" class="notice" role="status" hidden></div>
-      <div class="reminder-banner"><span><strong>Reminders on this device</strong><small id="reminder-permission">Notifications appear while Planner is open in this browser.</small></span><button class="button ghost" id="enable-reminders" type="button">Enable notifications</button></div>
+      <div class="reminder-banner"><span><strong>Reminders on this device</strong><small id="reminder-next" role="status"></small><small id="reminder-permission">Notifications appear while Planner is open in this browser.</small></span><button class="button ghost" id="enable-reminders" type="button">Enable notifications</button></div>
       <section id="dashboard-view" class="view">
         <div class="stats-grid">
           <article class="stat-card"><span>Due today</span><strong id="stat-today">—</strong><small>Tasks with a deadline today</small></article>

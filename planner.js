@@ -1,3 +1,4 @@
+import { scanReminders, seenStore, reminderKey, describeNext } from './assets/x/planner-reminders.js';
 (() => {
 'use strict';
 const API = 'https://viora-auth-website.onrender.com';
@@ -329,18 +330,23 @@ async function enableBrowserReminders() {
   if (!('Notification' in window)) { toast('This browser does not support notifications.'); return; }
   let permission; try { permission = await Notification.requestPermission(); } catch { $('#reminder-permission').textContent = 'Notifications could not be enabled. Check browser permissions.'; return; }
   $('#reminder-permission').textContent = permission === 'granted' ? 'Browser reminders enabled on this device.' : 'Notifications are blocked by your browser settings.';
-  if (permission === 'granted') pollReminders();
+  pollReminders();
 }
+const reminderSeen = seenStore();
 function pollReminders() {
-  if (!('Notification' in window) || Notification.permission !== 'granted') return;
-  const now = Date.now();
-  for (const task of state.tasks) {
-    const at = Date.parse(task.reminderAt || '');
-    if (!Number.isFinite(at) || at > now || task.status === 'completed' || task.archived) continue;
-    const key = 'viora_planner_reminder_' + task.id + '_' + task.reminderAt;
-    try { if (localStorage.getItem(key)) continue; localStorage.setItem(key, 'shown'); } catch { continue; }
-    try { new Notification('Viora Planner reminder', { body: task.title, tag: key }); } catch {}
+  const now = Date.now(), { due, missed, upcoming } = scanReminders(state.tasks, now, key => reminderSeen.has(key));
+  const canNotify = 'Notification' in window && Notification.permission === 'granted';
+  for (const { task } of due) {
+    reminderSeen.add(reminderKey(task));
+    let shown = false;
+    if (canNotify) { try { new Notification('Viora Planner reminder', { body: task.title, tag: reminderKey(task) }); shown = true; } catch {} }
+    if (!shown) toast('Reminder: ' + task.title);       // no permission or the browser refused: still tell the person, inside the page
   }
+  if (missed.length) {
+    for (const { task } of missed) reminderSeen.add(reminderKey(task));
+    toast(missed.length === 1 ? 'Missed reminder: ' + missed[0].task.title : missed.length + ' reminders came due while Planner was closed');
+  }
+  const next = $('#reminder-next'); if (next) next.textContent = describeNext(upcoming, now);
 }
 function renderAll() { renderSidebar(); showView(); renderDashboard(); renderModes(); renderActivity(); renderSelection(); }
 async function createProject(name, folder, description) {
@@ -433,6 +439,7 @@ function openTask(id) {
   $('#task-dialog').showModal();
 }
 function updateStateFromResult(data) { if (data.state) { state = data.state; renderAll(); } }
+let taskSaving = false;
 async function saveTask(event) {
   /* Cancel and × are submit buttons of this dialog form: let the dialog close natively and save nothing. */
   if (event.submitter && event.submitter.value === 'cancel') return;
@@ -440,7 +447,9 @@ async function saveTask(event) {
   const frequency = String(data.get('recurrenceFrequency') || 'none');
   const fields = {title:String(data.get('title')||'').trim(),description:String(data.get('description')||''),notes:String(data.get('notes')||''),status:String(data.get('status')),priority:String(data.get('priority')),startDate:String(data.get('startDate')||''),dueDate:String(data.get('dueDate')||''),scheduledAt:dateTimeIso(String(data.get('scheduledAt')||'')),reminderAt:dateTimeIso(String(data.get('reminderAt')||'')),category:String(data.get('category')||'').trim(),estimatedMinutes:Number(data.get('estimatedMinutes')||0),actualMinutes:Number(data.get('actualMinutes')||0),progress:Number(data.get('progress')||0),important:form.elements.important.checked,archived:form.elements.archived.checked,recurrence:frequency==='none'?null:{frequency,interval:Number(data.get('recurrenceInterval')||1)},assignee:String(data.get('assignee')||'').trim(),tags:String(data.get('tags')||'').split(',').map(x=>x.trim()).filter(Boolean)};
   const projectId = String(data.get('projectId')||''), listId = String(data.get('listId')||''), parentId = String(data.get('parentId')||'');
-  $('#save-task').disabled = true; $('#task-save-note').textContent = 'Saving securely…';
+  if (taskSaving) return;
+  if (!fields.title) { $('#task-save-note').textContent = 'Give the task a title first.'; form.elements.title.focus(); return; }
+  taskSaving = true; $('#save-task').disabled = true; $('#task-save-note').textContent = 'Saving securely…';
   try {
     if (editingTask) {
       const old = taskById(editingTask), actions = [];
@@ -454,7 +463,7 @@ async function saveTask(event) {
     }
     $('#task-dialog').close(); toast(editingTask ? 'Task updated' : 'Task created'); editingTask = '';
   } catch (error) { $('#task-save-note').textContent = error.message; setSync(false,'Save failed'); }
-  finally { $('#save-task').disabled = false; }
+  finally { taskSaving = false; $('#save-task').disabled = false; }
 }
 async function addTaskDetailAction(action, taskId) {
   try { const result = await runActions([action]); if (taskId && taskById(taskId)) renderTaskExtras(taskById(taskId)); }
@@ -499,7 +508,8 @@ function bindEvents() {
   window.addEventListener('storage',event=>{if(event.key==='viora_planner_changed')void loadState({force:true,quiet:true})});
   if ('BroadcastChannel' in window) { const channel=new BroadcastChannel('viora-planner'); channel.addEventListener('message',event=>{if(event.data?.type==='changed')void loadState({force:true,quiet:true})}); }
   setInterval(()=>{if(document.visibilityState==='visible'&&!$('dialog[open]').length&&Date.now()-lastLoadedAt>=60000)void loadState({force:true,quiet:true})},60000);
-  if ('Notification' in window && Notification.permission === 'granted') { $('#reminder-permission').textContent = 'Browser reminders enabled on this device.'; pollReminders(); }
+  if ('Notification' in window && Notification.permission === 'granted') $('#reminder-permission').textContent = 'Browser reminders enabled on this device.';
+  reminderSeen.prune(); pollReminders();
   reminderInterval = setInterval(pollReminders,15000);
   updateLiveClock(); setInterval(updateLiveClock,1000);
   $('#new-task').addEventListener('click',openNewTask);

@@ -11,7 +11,7 @@ const appCss = await readFile(new URL('../assets/x/app-polish.css', import.meta.
 const runtimeCss = await readFile(new URL('../planner-runtime.css', import.meta.url), 'utf8');
 
 test('planner page scripts parse and expose authenticated workspace actions', () => {
-  assert.doesNotThrow(() => new Script(js));
+  assert.doesNotThrow(() => new Script(js.replace(/^import .*\r?\n/gm, ''))); // planner.js is an ES module now: Script cannot parse its import line
   assert.match(js, /Authorization: 'Bearer ' \+ token/);
   assert.match(js, /\/api\/planner\/state/);
   assert.match(js, /\/api\/planner\/actions/);
