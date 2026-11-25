@@ -15,7 +15,6 @@
 <link rel="stylesheet" href="assets/x/tab.css">
 <link rel="stylesheet" href="assets/x/accent.css">
 <link rel="stylesheet" href="assets/x/prefs.css">
-<link rel="stylesheet" href="assets/x/settings.css">
 <link rel="stylesheet" href="assets/x/viora-theme.css">
 <link rel="stylesheet" href="assets/x/fixes.css">
 <link rel="stylesheet" href="assets/x/app-polish.css">
@@ -544,6 +543,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   :root[data-model] #composer{padding-bottom:max(8px,env(safe-area-inset-bottom))!important}
 }
 </style>
+<link rel="stylesheet" href="assets/x/settings.css">
 </head>
 <body>
 <div id="shell">
@@ -2024,7 +2024,7 @@ const settings = initSettings({
   exportData: () => {
     const payload = { exportedAt: new Date().toISOString(), account: { email: S.email, name: S.name || '' }, chats, personalData: D,
       settings: ls.get('viora_settings_' + S.email, {}), appearance: { theme: localStorage.getItem('viora_theme'), accent: localStorage.getItem('viora_accent') },
-      voice: ls.get('viora_voice', {}), performance: NP.get() };
+      voice: ls.get('viora_voice', {}), performance: NP.get(), tone: ls.get('viora_tone', null), assistant: ls.get('viora_assistant', 'auto'), webSearch: ls.get('viora_web', true), researchDepth: ls.get('viora_research_depth', 'quick') };
     const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
     a.download = 'viora-data-export.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
   },
