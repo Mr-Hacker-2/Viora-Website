@@ -201,7 +201,7 @@
               <div class="card-head"><h3 id="labs-tool-form-title">New Labs tool</h3><button class="btn" id="labs-tool-close" type="button">Close</button></div>
               <div class="labs-editor-body">
                 <label>Tool name<input class="input" name="name" maxlength="80" required></label>
-                <label>URL slug<input class="input" name="id" maxlength="70" pattern="[a-z0-9]+(-[a-z0-9]+)*" required placeholder="my-new-tool"></label>
+                <label>URL slug <small>Optional — created from the name if left blank</small><input class="input" name="id" maxlength="70" pattern="[a-z0-9]+(-[a-z0-9]+)*" placeholder="my-new-tool"></label>
                 <label>Short description<textarea class="input" name="short" maxlength="220" rows="2" required></textarea></label>
                 <label>Full description<textarea class="input" name="description" maxlength="3000" rows="4"></textarea></label>
                 <div class="labs-form-grid"><label>Category<input class="input" name="category" maxlength="60" placeholder="Research"></label><label>Icon / emoji<input class="input" name="icon" maxlength="16" placeholder="✦"></label></div>
@@ -231,6 +231,7 @@
                 <div class="labs-image-preview" id="labs-cover-preview"><span>No cover image selected</span></div>
                 <div class="labs-block-toolbar"><b>Article content</b><span>Add a block</span><select class="select" id="labs-block-type"><option value="paragraph">Paragraph</option><option value="heading">Heading</option><option value="bulleted-list">Bullet list</option><option value="numbered-list">Numbered list</option><option value="quote">Quote</option><option value="code">Code block</option><option value="link">Link</option><option value="image">Image with caption</option></select><button class="btn" id="labs-add-block" type="button">Add block</button></div>
                 <div id="labs-article-blocks" class="labs-article-blocks"><div class="empty">Add your first content block.</div></div>
+                <div class="labs-form-grid"><label>Publication date <small>Blank = now. A future date schedules it.</small><input class="input" name="publishedAt" type="datetime-local"></label></div>
                 <div class="labs-check-row"><label><input type="checkbox" name="featured"> Featured article</label><label>Publication status<select class="select" name="status"><option value="draft">Draft</option><option value="published">Published</option></select></label></div>
                 <div class="labs-form-actions"><button class="btn" id="labs-article-preview" type="button">Preview</button><button class="btn primary" type="submit">Save article</button></div>
               </div>
