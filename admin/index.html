@@ -65,6 +65,7 @@
       <button data-view="health"><span class="ico">◉</span>System health</button>
       <button data-view="activity"><span class="ico">≋</span>Audit log</button>
       <button data-view="features"><span class="ico">⚙</span>Features</button>
+      <button data-view="labs"><span class="ico">⚗</span>Labs Management</button>
       <button data-view="feedback"><span class="ico">✉</span>Feedback</button>
       <button data-view="settings"><span class="ico">⊙</span>Settings</button>
     </nav>
@@ -183,6 +184,61 @@
         <div class="grid unavailable-grid"><article class="card unavail"><h3>User feedback</h3><p>No feedback endpoint or submissions database exists in the project.</p><span class="badge">Unavailable</span></article><article class="card unavail"><h3>Bug reports</h3><p>Reports sent through the public GitHub issue link are not mirrored into this admin center.</p><span class="badge">Unavailable</span></article><article class="card unavail"><h3>Internal notes</h3><p>No private notes storage is configured.</p><span class="badge">Unavailable</span></article></div>
       </section>
 
+      <section class="view" id="view-labs">
+        <div class="view-head"><div><div class="eyebrow">Publishing studio</div><h2>Labs Management</h2><p>Manage the public Labs tools and publish technology articles with images. Changes are saved to private server storage.</p></div><button class="btn" id="labs-refresh" type="button">↻ Refresh</button></div>
+        <div id="labs-admin-error" class="error" role="alert"></div>
+        <div id="labs-admin-status" class="labs-admin-status" role="status" aria-live="polite"></div>
+        <div class="labs-admin-tabs" role="tablist" aria-label="Labs management">
+          <button class="labs-admin-tab active" type="button" data-labs-tab="tools" role="tab" aria-selected="true">Tools <span id="labs-tool-count">—</span></button>
+          <button class="labs-admin-tab" type="button" data-labs-tab="articles" role="tab" aria-selected="false">Articles <span id="labs-article-count">—</span></button>
+        </div>
+        <section class="labs-admin-panel active" id="labs-tools-panel" data-labs-panel="tools">
+          <div class="labs-admin-toolbar"><div><h3>Labs tools</h3><p>Control which tools appear, their order, descriptions, and real assistant connections.</p></div><button class="btn primary" id="labs-add-tool" type="button">＋ Add tool</button></div>
+          <div class="labs-admin-layout">
+            <div class="card labs-admin-list-card"><div class="card-head"><h3>Published tools</h3><span class="subtle">Drag-free order control</span></div><div id="labs-tools-list" class="labs-admin-list"><div class="empty">Loading Labs tools…</div></div></div>
+            <form id="labs-tool-form" class="card labs-editor" hidden>
+              <div class="card-head"><h3 id="labs-tool-form-title">New Labs tool</h3><button class="btn" id="labs-tool-close" type="button">Close</button></div>
+              <div class="labs-editor-body">
+                <label>Tool name<input class="input" name="name" maxlength="80" required></label>
+                <label>URL slug<input class="input" name="id" maxlength="70" pattern="[a-z0-9]+(-[a-z0-9]+)*" required placeholder="my-new-tool"></label>
+                <label>Short description<textarea class="input" name="short" maxlength="220" rows="2" required></textarea></label>
+                <label>Full description<textarea class="input" name="description" maxlength="3000" rows="4"></textarea></label>
+                <div class="labs-form-grid"><label>Category<input class="input" name="category" maxlength="60" placeholder="Research"></label><label>Icon / emoji<input class="input" name="icon" maxlength="16" placeholder="✦"></label></div>
+                <div class="labs-form-grid"><label>Display order<input class="input" name="order" type="number" min="0" max="10000" value="5"></label><label>Launch action<select class="select" name="assistant"><option value="">Upcoming — no assistant</option><option value="human">Humanizer assistant</option><option value="search">Pro Search assistant</option><option value="math">Math &amp; Code assistant</option></select></label></div>
+                <label>Documentation / article URL<input class="input" name="documentationUrl" type="url" placeholder="https://…"></label>
+                <label>Tool image<input class="input" name="image" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+                <div class="labs-image-preview" id="labs-tool-image-preview"><span>No image selected</span></div>
+                <div class="labs-check-row"><label><input type="checkbox" name="featured"> Featured badge</label><label><input type="checkbox" name="active" checked> Active / visible</label></div>
+                <div class="labs-preview-card" id="labs-tool-preview"><span class="labs-preview-icon">✦</span><div><b>Tool preview</b><p>Your tool card preview appears here.</p></div></div>
+                <div class="labs-form-actions"><button class="btn" id="labs-tool-preview-btn" type="button">Preview</button><button class="btn primary" type="submit">Save &amp; publish</button></div>
+              </div>
+            </form>
+          </div>
+        </section>
+        <section class="labs-admin-panel" id="labs-articles-panel" data-labs-panel="articles" hidden>
+          <div class="labs-admin-toolbar"><div><h3>Labs articles</h3><p>Write and publish articles with cover art, inline images, captions, and accessible alt text.</p></div><button class="btn primary" id="labs-add-article" type="button">＋ New article</button></div>
+          <div class="labs-article-layout">
+            <div class="card labs-admin-list-card"><div class="card-head"><h3>Articles</h3><span class="subtle">Drafts stay private</span></div><div id="labs-articles-list" class="labs-admin-list"><div class="empty">Loading articles…</div></div></div>
+            <form id="labs-article-form" class="card labs-editor" hidden>
+              <div class="card-head"><h3 id="labs-article-form-title">New article</h3><button class="btn" id="labs-article-close" type="button">Close</button></div>
+              <div class="labs-editor-body">
+                <label>Article title<input class="input" name="title" maxlength="140" required></label>
+                <label>Subtitle / short description<textarea class="input" name="subtitle" rows="2" maxlength="300" required></textarea></label>
+                <div class="labs-form-grid"><label>Author<input class="input" name="author" maxlength="80" value="Viora Team"></label><label>Category<input class="input" name="category" maxlength="60" value="Technology"></label></div>
+                <label>Tags <small>Separate tags with commas</small><input class="input" name="tags" maxlength="400" placeholder="AI, Research, Security"></label>
+                <label>Cover image<input class="input" name="cover" type="file" accept="image/png,image/jpeg,image/webp,image/gif"></label>
+                <div class="labs-image-preview" id="labs-cover-preview"><span>No cover image selected</span></div>
+                <div class="labs-block-toolbar"><b>Article content</b><span>Add a block</span><select class="select" id="labs-block-type"><option value="paragraph">Paragraph</option><option value="heading">Heading</option><option value="bulleted-list">Bullet list</option><option value="numbered-list">Numbered list</option><option value="quote">Quote</option><option value="code">Code block</option><option value="link">Link</option><option value="image">Image with caption</option></select><button class="btn" id="labs-add-block" type="button">Add block</button></div>
+                <div id="labs-article-blocks" class="labs-article-blocks"><div class="empty">Add your first content block.</div></div>
+                <div class="labs-check-row"><label><input type="checkbox" name="featured"> Featured article</label><label>Publication status<select class="select" name="status"><option value="draft">Draft</option><option value="published">Published</option></select></label></div>
+                <div class="labs-form-actions"><button class="btn" id="labs-article-preview" type="button">Preview</button><button class="btn primary" type="submit">Save article</button></div>
+              </div>
+            </form>
+          </div>
+        </section>
+        <dialog id="labs-preview-dialog" class="labs-preview-dialog"><div class="labs-preview-head"><b>Preview</b><button class="btn" id="labs-preview-close" type="button">Close</button></div><article id="labs-preview-content" class="labs-preview-content"></article></dialog>
+      </section>
+
       <section class="view" id="view-settings">
         <div class="view-head"><div><div class="eyebrow">Security</div><h2>Admin settings</h2><p>Bootstrap and role rules are enforced by the auth server.</p></div></div>
         <div class="grid cols"><article class="card"><div class="card-head"><h3>Administrator access</h3></div><div class="card-body" id="settings-policy">Loading access policy…</div></article><article class="card"><div class="card-head"><h3>Session and security controls</h3></div><div class="card-body"><div class="health-list"><div class="health-row"><span>Admin role check</span><span class="val state-good">Server enforced</span></div><div class="health-row"><span>API key display</span><span class="val state-good">Never returned</span></div><div class="health-row"><span>Session revocation UI</span><span class="val">Unavailable</span></div><div class="health-row"><span>Admin confirmation prompts</span><span class="val state-good">Enabled for user access changes</span></div></div></div></article></div>
@@ -276,5 +332,6 @@ $('#nav').addEventListener('click',e=>{const button=e.target.closest('[data-view
 addEventListener('keydown',e=>{if(e.key==='Escape'&&document.body.classList.contains('nav-open')){document.body.classList.remove('nav-open');$('#sidebar').classList.remove('open');$('#menu').focus()}});
 })();
 </script>
+<script src="labs-admin.js" defer></script>
 </body>
 </html>
