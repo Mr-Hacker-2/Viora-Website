@@ -238,7 +238,7 @@
     if (!t.assistant || !LAB_ASSISTANTS.includes(t.assistant)) return;
     btn.disabled = true; btn.classList.add('busy'); btn.setAttribute('aria-busy', 'true');
     let ok = false;
-    try { sessionStorage.setItem('viora_labs_session', '1'); } catch {}
+    try { sessionStorage.setItem('viora_labs_session', '1'); sessionStorage.setItem('viora_labs_tool', t.assistant); } catch {}
     try { ok = switchAssistant(t.assistant, t.name); } catch { ok = false; }
     if (ok) { hideShell(); if (/^#labs/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search); }
     setTimeout(() => {
@@ -257,13 +257,33 @@
   navBtn.addEventListener('click', () => { if (location.hash === '#labs') route(); else location.hash = 'labs'; });
   window.addEventListener('hashchange', route);
 
-  /* Leaving Labs through the normal sidebar actions. AI Chat always returns to Viora Flash. */
+  /* The Lab tool the person launched from Labs in this browser session, if it is still the active assistant.
+     A Pro Search / Math choice made some other way (e.g. the sidebar mode switches) is not a Lab session. */
+  const launchedTool = () => { try { return sessionStorage.getItem('viora_labs_tool') || ''; } catch { return ''; } };
+  const inLabTool = () => { const a = activeAssistant(); return LAB_ASSISTANTS.includes(a) && launchedTool() === a; };
+  const endLabSession = () => { try { sessionStorage.removeItem('viora_labs_tool'); sessionStorage.removeItem('viora_labs_session'); } catch {} };
+  /* "+" after Labs: switch the real model state (#sh-model -> setAsst, saved to viora_assistant) to Viora Flash, close Labs,
+     then let the app's own newChat handler (bubble phase, runs after this capture listener) open a fresh, empty chat.
+     Saved chats are untouched. Outside Labs and Lab tools, "+" keeps its normal behaviour (new chat, same assistant). */
+  function toFlash() {
+    if (activeAssistant() !== 'flash') switchAssistant('flash', 'Viora Flash');
+    endLabSession();
+    sync();
+  }
+
+  /* Leaving Labs through the normal sidebar actions. AI Chat and "+" always return to Viora Flash. */
   document.getElementById('sh-left').addEventListener('click', e => {
-    if (!body.classList.contains('labs-open') || e.target.closest('#nav-labs')) return;
+    if (e.target.closest('#nav-labs')) return;
+    const labsOpen = body.classList.contains('labs-open');
+    if (e.target.closest('#new-thread')) {
+      if (labsOpen || inLabTool()) { toFlash(); if (labsOpen) leave(); }
+      return;
+    }
+    if (!labsOpen) return;
     if (e.target.closest('#nav-chat')) {
-      if (LAB_ASSISTANTS.includes(activeAssistant())) switchAssistant('flash', 'Viora Flash');
+      if (LAB_ASSISTANTS.includes(activeAssistant())) toFlash();
       leave();
-    } else if (e.target.closest('#new-thread, #sh-hist')) leave();
+    } else if (e.target.closest('#sh-hist')) leave();
   }, true);
 
   /* ---------- keep the normal model selector free of the Labs tools ---------- */
