@@ -15,6 +15,7 @@
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const body = document.body;
+  const cmsStyle = document.createElement('link'); cmsStyle.rel = 'stylesheet'; cmsStyle.href = 'assets/labs/labs-cms.css'; document.head.append(cmsStyle);
   const LABS_API = 'https://viora-auth-website.onrender.com';
   let uid = 0;
   let publishedArticles = [];
