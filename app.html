@@ -688,7 +688,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
             <h5>Chat preferences</h5>
             <p>Choose how the chat workspace behaves.</p>
             <label class="vs-setting"><span>Default AI model<small>Choose which assistant opens for a new chat.</small></span><select class="vs-select" data-setting="defaultModel" aria-label="Default AI model"><option value="auto">Viora Auto</option><option value="flash">Viora Flash</option><option value="search">Pro Search</option><option value="math">Math &amp; Code</option></select></label>
-            <label class="vs-setting"><span>Enter to send<small>Turn off to use Enter for a new line. Ctrl/Shift+Enter can still be used to send where supported.</small></span><input type="checkbox" data-setting="enterToSend"></label>
+            <label class="vs-setting"><span>Enter to send<small>Turn off to use Enter for a new line. Use the Send button when you are ready.</small></span><input type="checkbox" data-setting="enterToSend"></label>
             <label class="vs-setting"><span>Compact chat<small>Reduce spacing between messages.</small></span><input type="checkbox" data-setting="compactChat"></label>
             <label class="vs-setting"><span>Animations<small>Use subtle interface motion and transitions.</small></span><input type="checkbox" data-setting="animations"></label>
           </div>
@@ -708,7 +708,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
           </div>
           <div class="vs-card">
             <h5>Install Viora</h5><p>Add Viora to this device so it opens like an app.</p>
-            <div class="vs-row"><span>Viora on this device</span><button class="vs-action" id="pwa-install" type="button" data-ic="download">Install</button></div>
+            <div class="vs-row pwa-row" data-pwa-row><span>Viora on this device</span><button class="vs-action" id="pwa-install" type="button" data-ic="download">Install</button></div>
           </div>
         </section>
         <section data-settings-panel="appearance" hidden>
