@@ -40,7 +40,7 @@
     const fromLabs = sessionStorage.getItem('viora_labs_session') === '1';
     if (!stored || (['search', 'math', 'human'].includes(stored) && !fromLabs)) localStorage.setItem('viora_assistant', JSON.stringify('flash'));
   } catch {}
-  const v = '?v=20261125-labs-cms-1';
+  const v = '?v=20261125-labs-plus-flash';
   const css = document.createElement('link');
   css.rel = 'stylesheet'; css.href = 'assets/labs/labs.css' + v;
   document.head.append(css);
