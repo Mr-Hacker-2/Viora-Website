@@ -15,7 +15,10 @@
   const $ = s => document.querySelector(s);
   const esc = s => String(s).replace(/[&<>"]/g, c => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
   const body = document.body;
+  const cmsStyle = document.createElement('link'); cmsStyle.rel = 'stylesheet'; cmsStyle.href = 'assets/labs/labs-cms.css'; document.head.append(cmsStyle);
+  const LABS_API = 'https://viora-auth-website.onrender.com';
   let uid = 0;
+  let publishedArticles = [];
 
   /* ---------- the glass test tube icon (custom SVG: glass body, violet liquid, highlights, glow) ---------- */
   const tube = (cls = '') => {
@@ -133,15 +136,21 @@
   view.setAttribute('aria-label', 'Viora Labs');
   thread.after(view);
 
+  const toolArt = t => t.imageId
+    ? `<img class="labs-custom-art" src="${LABS_API}/api/labs/media/${encodeURIComponent(t.imageId)}" alt="" loading="lazy">`
+    : (ART[t.id] ? ART[t.id]() : `<div class="labs-generic-art">${esc(t.icon || '✦')}</div>`);
   const card = t => `<a class="labs-card" href="#labs/${t.id}" aria-label="${esc(t.name)}: ${esc(t.short)}">
-<div class="labs-art">${ART[t.id]()}</div>
-<div class="labs-card-body"><h3>${esc(t.name)}</h3><p>${esc(t.short)}</p>
-<ul class="labs-caps">${t.caps.map(c => `<li>${esc(c)}</li>`).join('')}</ul>
-<span class="labs-explore">Explore ${arrow}</span></div></a>`;
-
+<div class="labs-art">${toolArt(t)}</div>
+<div class="labs-card-body">${t.featured ? '<span class="labs-featured">Featured</span>' : ''}<h3>${esc(t.name)}</h3><p>${esc(t.short)}</p>
+<ul class="labs-caps">${(t.caps || []).map(c => `<li>${esc(c)}</li>`).join('')}</ul>
+<span class="labs-explore">${t.assistant ? 'Explore' : 'Coming soon'} ${arrow}</span></div></a>`;
+  const renderArticleCards = () => publishedArticles.length ? publishedArticles.slice().sort((a,b)=>Number(b.featured)-Number(a.featured)).map(a => `<a class="labs-article-card" href="/labs-article.html?slug=${encodeURIComponent(a.id)}">${a.coverImageId ? `<img src="${LABS_API}/api/labs/media/${encodeURIComponent(a.coverImageId)}" alt="" loading="lazy">` : '<div class="labs-article-art">VIORA LABS</div>'}<div class="labs-article-card-copy"><span>${esc(a.category || 'Technology')}${a.featured ? ' · Featured' : ''}</span><h4>${esc(a.title)}</h4><p>${esc(a.subtitle)}</p><small>${esc(a.author || 'Viora Team')} · ${a.publishedAt ? new Date(a.publishedAt).toLocaleDateString() : ''}</small></div></a>`).join('') : '<div class="labs-articles-empty">New research and product updates will appear here.</div>';
   const homeHtml = () => `<div class="labs-wrap labs-page">
 <header class="labs-hero">${tube('labs-hero-tube')}<h2 tabindex="-1">Viora Labs</h2><p>Explore specialized AI tools built to help you write, research, code, and solve problems.</p></header>
-<div class="labs-grid">${TOOLS.map(card).join('')}</div></div>`;
+<div class="labs-grid">${TOOLS.filter(t => t.active !== false).sort((a,b) => (a.order||0)-(b.order||0)).map(card).join('')}</div>
+<section class="labs-articles-section"><div class="labs-articles-heading"><div><span class="labs-section-kicker">IDEAS · RESEARCH · BUILDS</span><h3>From Viora Labs</h3><p>Updates, explainers, and ideas from the world of technology.</p></div><a href="/labs-article.html">Explore articles</a></div>
+<div class="labs-article-filters"><input id="labs-article-search" type="search" placeholder="Search articles…" aria-label="Search Labs articles"><select id="labs-article-category" aria-label="Filter articles by category"><option value="">All categories</option>${[...new Set(publishedArticles.map(a=>a.category).filter(Boolean))].sort().map(x=>`<option value="${esc(x)}">${esc(x)}</option>`).join('')}</select></div>
+<div class="labs-articles-grid" id="labs-articles-grid">${renderArticleCards()}</div></section></div>`;
 
   const sec = (title, inner) => `<section class="labs-sec"><h3>${esc(title)}</h3>${inner}</section>`;
   const ul = items => `<ul>${items.map(i => `<li>${esc(i)}</li>`).join('')}</ul>`;
@@ -149,9 +158,9 @@
 
   const detailHtml = t => `<div class="labs-wrap labs-page" data-tool="${t.id}">
 <a class="labs-back" href="#labs">${back} Labs</a>
-<section class="labs-detail-hero"><div class="labs-art labs-art-big">${ART[t.id]()}</div>
+<section class="labs-detail-hero"><div class="labs-art labs-art-big">${toolArt(t)}</div>
 <div class="labs-intro"><span class="labs-eyebrow">${tube('labs-eyebrow-tube')} Viora Labs</span><h2 tabindex="-1">${esc(t.name)}</h2><p class="labs-lead">${esc(t.long)}</p>
-<div class="labs-actions"><button type="button" class="labs-try" data-try="${t.id}"><span class="labs-try-label">Try ${esc(t.name)}</span>${arrow}<span class="labs-spin" aria-hidden="true"></span></button><a class="labs-ghost" href="#labs">Back to Labs</a></div>
+<div class="labs-actions">${t.assistant ? `<button type="button" class="labs-try" data-try="${t.id}"><span class="labs-try-label">Try ${esc(t.name)}</span>${arrow}<span class="labs-spin" aria-hidden="true"></span></button>` : '<span class="labs-upcoming">Coming soon</span>'}<a class="labs-ghost" href="#labs">Back to Labs</a>${t.documentationUrl ? `<a class="labs-ghost" href="${esc(t.documentationUrl)}" target="_blank" rel="noopener noreferrer">Documentation</a>` : ''}</div>
 <p class="labs-err" role="alert"${pendingError ? '' : ' hidden'}>${esc(pendingError)}</p>
 <p class="labs-note">${esc(t.note)}</p></div></section>
 <div class="labs-secs">${sec('What it does', `<p>${esc(t.does)}</p>`)}${sec('Main capabilities', ul(t.list))}${sec('Example tasks', ul(t.tasks))}${sec('When to use it', ul(t.when))}</div></div>`;
@@ -190,12 +199,23 @@
     hideShell();
     if (/^#labs/.test(location.hash)) history.replaceState(null, '', location.pathname + location.search);
   }
+  function bindArticleFilters() {
+    const search=document.getElementById('labs-article-search'), category=document.getElementById('labs-article-category');
+    const render=()=>{const q=(search?.value||'').trim().toLowerCase(),cat=category?.value||'';const rows=publishedArticles.filter(a=>(!cat||a.category===cat)&&(!q||(a.title+' '+a.subtitle+' '+(a.tags||[]).join(' ')).toLowerCase().includes(q)));const root=document.getElementById('labs-articles-grid');if(!root)return;root.innerHTML=rows.length?rows.map(a=>`<a class="labs-article-card" href="/labs-article.html?slug=${encodeURIComponent(a.id)}">${a.coverImageId?`<img src="${LABS_API}/api/labs/media/${encodeURIComponent(a.coverImageId)}" alt="" loading="lazy">`:'<div class="labs-article-art">VIORA LABS</div>'}<div class="labs-article-card-copy"><span>${esc(a.category||'Technology')}</span><h4>${esc(a.title)}</h4><p>${esc(a.subtitle)}</p><small>${esc(a.author||'Viora Team')} · ${a.publishedAt?new Date(a.publishedAt).toLocaleDateString():''}</small></div></a>`).join(''):'<div class="labs-articles-empty">No articles match your search.</div>';};search?.addEventListener('input',render);category?.addEventListener('change',render);
+  }
+  async function loadPublishedContent() {
+    try { const response=await fetch(LABS_API+'/api/labs/content',{cache:'no-store'});if(!response.ok)return;const data=await response.json();
+      if(Array.isArray(data.tools)){const base=new Map(TOOLS.map(t=>[t.id,t]));const merged=data.tools.map(remote=>{const old=base.get(remote.id);return {...(old||{caps:[],list:[],tasks:[],when:[],note:remote.assistant?'This opens its connected Viora assistant.':'This tool is not connected to an assistant yet.'}),...remote,long:remote.description||old?.long||remote.short,does:remote.description||old?.does||remote.short,assistant:remote.assistant||'',caps:old?.caps||[remote.category||'Labs tool']};});TOOLS.splice(0,TOOLS.length,...merged);}
+      publishedArticles=Array.isArray(data.articles)?data.articles:[];if(body.classList.contains('labs-open')&&location.hash==='#labs'){const y=view.scrollTop;view.innerHTML=homeHtml();bindArticleFilters();view.scrollTop=y;}
+    } catch { /* Built-in tools remain available if publishing storage is offline. */ }
+  }
   function route() {
     const m = /^#labs(?:\/([a-z-]+))?$/.exec(location.hash);
     if (!m) { if (body.classList.contains('labs-open')) hideShell(); return; }
     const t = TOOLS.find(x => x.id === m[1]);
     showShell();
     view.innerHTML = t ? detailHtml(t) : homeHtml();
+    if (!t) bindArticleFilters();
     pendingError = '';
     view.scrollTop = 0;
     view.scrollTo(0, 0);
@@ -215,6 +235,7 @@
   }
 
   function launch(t, btn) {
+    if (!t.assistant || !LAB_ASSISTANTS.includes(t.assistant)) return;
     btn.disabled = true; btn.classList.add('busy'); btn.setAttribute('aria-busy', 'true');
     let ok = false;
     try { sessionStorage.setItem('viora_labs_session', '1'); } catch {}
@@ -261,4 +282,5 @@
   if (pill) new MutationObserver(sync).observe(pill, { childList: true, characterData: true, subtree: true });
   sync();
   route();
+  loadPublishedContent();
 })();
