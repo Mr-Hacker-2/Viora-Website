@@ -3,9 +3,11 @@
   const API = 'https://viora-auth-website.onrender.com';
   const $ = s => document.querySelector(s);
   const esc = value => String(value ?? '').replace(/[&<>"']/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
-  const token = () => sessionStorage.getItem('viora_admin_session') || '';
+  const token = () => { try { return sessionStorage.getItem('viora_admin_session') || JSON.parse(localStorage.getItem('viora_session') || 'null')?.token || ''; } catch { return ''; } };
   let tools = [], articles = [], editingTool = null, editingArticle = null, coverImageId = '', blocks = [], busy = false;
   let previewUrls = [];
+  const adminImageUrls = [];
+  async function loadAdminImage(img, id) { try { const response=await fetch(API+'/api/admin/labs/media/'+encodeURIComponent(id),{headers:{Authorization:'Bearer '+token()},cache:'no-store'}); if(!response.ok)return; const url=URL.createObjectURL(await response.blob()); adminImageUrls.push(url); img.src=url; } catch {} }
 
   async function api(path, options = {}) {
     const headers = { Authorization: 'Bearer ' + token(), ...(options.body instanceof FormData ? {} : {'Content-Type':'application/json'}), ...(options.headers || {}) };
@@ -45,7 +47,7 @@
     for (const t of [...tools].sort((a,b) => a.order - b.order)) {
       const row = document.createElement('div'); row.className = 'labs-tool-row';
       const mark = document.createElement('div'); mark.className = 'labs-tool-mark';
-      if (t.imageId) { const img = document.createElement('img'); img.alt = ''; img.src = API + '/api/admin/labs/media/' + encodeURIComponent(t.imageId); img.onerror = () => { mark.textContent = t.icon || '✦'; }; mark.append(img); }
+      if (t.imageId) { const img = document.createElement('img'); img.alt = ''; loadAdminImage(img,t.imageId); img.onerror = () => { mark.textContent = t.icon || '✦'; }; mark.append(img); }
       else mark.textContent = t.icon || '✦';
       const copy = document.createElement('div'); copy.className = 'labs-row-copy';
       const title = document.createElement('b'); title.textContent = t.name;
@@ -70,7 +72,7 @@
     form.elements.id.disabled=!!t.id && ['humanizer','pro-search','code','math'].includes(t.id);
     $('#labs-tool-form-title').textContent=t.id?'Edit '+t.name:'New Labs tool';
     const preview=$('#labs-tool-image-preview');preview.replaceChildren();
-    if(t.imageId){const img=document.createElement('img');img.src=API+'/api/admin/labs/media/'+encodeURIComponent(t.imageId);img.alt='Current tool image';preview.append(img);}else preview.textContent='No image selected';
+    if(t.imageId){const img=document.createElement('img');loadAdminImage(img,t.imageId);img.alt='Current tool image';preview.append(img);}else preview.textContent='No image selected';
     form.dataset.imageId=t.imageId||''; form.elements.image.value='';
     updateToolPreview();
     form.hidden=false;form.scrollIntoView({behavior:'smooth',block:'start'});
@@ -111,7 +113,7 @@
     if(!articles.length){root.innerHTML='<div class="empty">No articles yet. Create your first technology article.</div>';return;}
     for(const a of articles){
       const row=document.createElement('div');row.className='labs-article-row';
-      if(a.coverImageId){const img=document.createElement('img');img.src=API+'/api/admin/labs/media/'+encodeURIComponent(a.coverImageId);img.alt='';row.append(img);}
+      if(a.coverImageId){const img=document.createElement('img');loadAdminImage(img,a.coverImageId);img.alt='';row.append(img);}
       const copy=document.createElement('div');copy.className='labs-row-copy';const title=document.createElement('b');title.textContent=a.title;const desc=document.createElement('p');desc.textContent=a.subtitle;const meta=document.createElement('div');meta.className='labs-row-meta';
       for(const [label,cls] of [[a.status==='published'?'Published':'Draft',a.status==='published'?'live':'draft'],[a.category,''],[date(a.publishedAt||a.updatedAt),'']]){const p=document.createElement('span');p.className='labs-pill '+cls;p.textContent=label;meta.append(p);}
       copy.append(title,desc,meta);const actions=document.createElement('div');actions.className='labs-row-actions';
@@ -125,7 +127,7 @@
     const f=$('#labs-article-form');editingArticle=a?.id||null;blocks=(a?.blocks||[]).map(b=>({...b,items:b.items?[...b.items]:undefined}));coverImageId=a?.coverImageId||'';
     for(const name of ['title','subtitle','author','category','tags','status'])f.elements[name].value=a? (name==='tags'?(a.tags||[]).join(', '):a[name]??'') : ({author:'Viora Team',category:'Technology',status:'draft'}[name]||'');
     f.elements.featured.checked=!!a?.featured;f.elements.title.dataset.id=a?.id||'';
-    const p=$('#labs-cover-preview');p.replaceChildren();if(coverImageId){const img=document.createElement('img');img.src=API+'/api/admin/labs/media/'+encodeURIComponent(coverImageId);img.alt='Current cover image';p.append(img);}else p.textContent='No cover image selected';
+    const p=$('#labs-cover-preview');p.replaceChildren();if(coverImageId){const img=document.createElement('img');loadAdminImage(img,coverImageId);img.alt='Current cover image';p.append(img);}else p.textContent='No cover image selected';
     f.elements.cover.value='';renderBlocks();$('#labs-article-form-title').textContent=a?'Edit article':'New article';f.hidden=false;f.scrollIntoView({behavior:'smooth',block:'start'});
   }
   function renderBlocks() {
@@ -139,7 +141,7 @@
       else if(block.type==='bulleted-list'||block.type==='numbered-list')field('items',(block.items||[]).join('\n'),'One list item per line');
       else if(block.type==='link'){field('text',block.text,'Link text',false);field('url',block.url,'https://example.com',false);}
       else if(block.type==='image'){
-        if(block.imageId){const img=document.createElement('img');img.src=API+'/api/admin/labs/media/'+encodeURIComponent(block.imageId);img.alt=block.alt||'';img.style.cssText='max-width:100%;max-height:130px;object-fit:contain;border-radius:8px;margin-bottom:8px';box.append(img);}
+        if(block.imageId){const img=document.createElement('img');loadAdminImage(img,block.imageId);img.alt=block.alt||'';img.style.cssText='max-width:100%;max-height:130px;object-fit:contain;border-radius:8px;margin-bottom:8px';box.append(img);}
         const upload=document.createElement('input');upload.type='file';upload.accept='image/png,image/jpeg,image/webp,image/gif';upload.dataset.field='file';box.append(upload);
         const grid=document.createElement('div');grid.className='labs-block-grid';for(const [key,ph] of [['alt','Accessible image description'],['caption','Image caption']]){const inp=document.createElement('input');inp.dataset.field=key;inp.value=block[key]||'';inp.placeholder=ph;grid.append(inp);}box.append(grid);
       }
