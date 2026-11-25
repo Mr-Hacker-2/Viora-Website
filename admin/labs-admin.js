@@ -24,6 +24,8 @@
   function fail(error) { $('#labs-admin-error').textContent = error.message || String(error); $('#labs-admin-error').classList.add('show'); status('', true); }
   function clearFail() { $('#labs-admin-error').textContent = ''; $('#labs-admin-error').classList.remove('show'); }
   function slug(value) { return String(value || '').toLowerCase().normalize('NFKD').replace(/[\u0300-\u036f]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,70); }
+  const toLocalInput=v=>{if(!v)return '';const d=new Date(v);if(isNaN(d))return '';const p=n=>String(n).padStart(2,'0');return d.getFullYear()+'-'+p(d.getMonth()+1)+'-'+p(d.getDate())+'T'+p(d.getHours())+':'+p(d.getMinutes());};
+  const fromLocalInput=v=>{if(!v)return '';const d=new Date(v);return isNaN(d)?'':d.toISOString();};
   function date(value) { return value ? new Date(value).toLocaleDateString() : '—'; }
   function showTab(name) {
     document.querySelectorAll('[data-labs-tab]').forEach(b => { const on = b.dataset.labsTab === name; b.classList.toggle('active', on); b.setAttribute('aria-selected', String(on)); });
@@ -126,7 +128,7 @@
   function articleFormData(a=null) {
     const f=$('#labs-article-form');editingArticle=a?.id||null;blocks=(a?.blocks||[]).map(b=>({...b,items:b.items?[...b.items]:undefined}));coverImageId=a?.coverImageId||'';
     for(const name of ['title','subtitle','author','category','tags','status'])f.elements[name].value=a? (name==='tags'?(a.tags||[]).join(', '):a[name]??'') : ({author:'Viora Team',category:'Technology',status:'draft'}[name]||'');
-    f.elements.featured.checked=!!a?.featured;f.elements.title.dataset.id=a?.id||'';
+    f.elements.featured.checked=!!a?.featured;f.elements.publishedAt.value=toLocalInput(a?.publishedAt);f.elements.title.dataset.id=a?.id||'';
     const p=$('#labs-cover-preview');p.replaceChildren();if(coverImageId){const img=document.createElement('img');loadAdminImage(img,coverImageId);img.alt='Current cover image';p.append(img);}else p.textContent='No cover image selected';
     f.elements.cover.value='';renderBlocks();$('#labs-article-form-title').textContent=a?'Edit article':'New article';f.hidden=false;f.scrollIntoView({behavior:'smooth',block:'start'});
   }
@@ -186,7 +188,8 @@
       const file=f.elements.cover.files[0];if(file)coverImageId=await uploadImage(file);
       const title=f.elements.title.value.trim(),id=f.elements.title.dataset.id||slug(title);
       const article={id,title,subtitle:f.elements.subtitle.value.trim(),author:f.elements.author.value.trim(),category:f.elements.category.value.trim(),
-        tags:f.elements.tags.value.split(',').map(x=>x.trim()).filter(Boolean),coverImageId,blocks:await readBlocks(),status:f.elements.status.value,featured:f.elements.featured.checked};
+        tags:f.elements.tags.value.split(',').map(x=>x.trim()).filter(Boolean),coverImageId,blocks:await readBlocks(),status:f.elements.status.value,featured:f.elements.featured.checked,publishedAt:fromLocalInput(f.elements.publishedAt.value)};
+      if(!f.elements.title.dataset.id)article.isNew=true;
       const data=await api('/api/admin/labs/articles',{method:'POST',body:JSON.stringify(article)});
       articles=[data.article,...articles.filter(a=>a.id!==data.article.id)];renderArticles();$('#labs-article-count').textContent=String(articles.length);
       f.hidden=true;editingArticle=null;status(article.status==='published'?'Article published to Viora Labs.':'Draft saved privately.');

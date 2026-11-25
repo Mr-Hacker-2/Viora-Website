@@ -36,3 +36,20 @@ test('admin CMS uses authenticated server APIs rather than localStorage publishi
   assert.match(js, /method:'DELETE'/);
   assert.doesNotMatch(js, /localStorage\.setItem\([^)]*labs/i);
 });
+
+test('Labs admin form does not block saving on an optional slug and supports publication dates', async () => {
+  const { readFileSync } = await import('node:fs');
+  const html = readFileSync(new URL('../admin/index.html', import.meta.url), 'utf8');
+  const js = readFileSync(new URL('../admin/labs-admin.js', import.meta.url), 'utf8');
+  const slugInput = html.match(/<input[^>]*name="id"[^>]*>/)[0];
+  assert.doesNotMatch(slugInput, /\brequired\b/);
+  assert.match(html, /name="publishedAt" type="datetime-local"/);
+  assert.match(js, /article\.isNew=true/);
+  assert.match(js, /publishedAt:fromLocalInput/);
+});
+
+test('Labs admin styles use the dashboard colour tokens (no unreadable dark-on-light panels)', async () => {
+  const { readFileSync } = await import('node:fs');
+  const css = readFileSync(new URL('../admin/labs-admin.css', import.meta.url), 'utf8');
+  assert.doesNotMatch(css, /#(0f0c19|100d1b|0b0915|171329|110e1c|cfc7df)/i);
+});
