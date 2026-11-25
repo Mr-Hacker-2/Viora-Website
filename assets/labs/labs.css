@@ -5,6 +5,20 @@
 body.labs-open #thread,
 body.labs-open #composer,
 body.labs-open #humanizer-studio { display: none !important; }
+
+/* The main app's later welcome-screen rules use :root[data-model] selectors with
+   higher specificity than the original Labs hide rule. Override those explicitly:
+   the chat welcome orb and suggestions must never show behind the Labs hub. */
+:root[data-model] body.labs-open #sh-center > #thread,
+:root[data-model] body.labs-open #sh-center > #composer,
+:root[data-model] body.labs-open #sh-center > #humanizer-studio {
+  display: none !important;
+}
+:root[data-model] body.labs-open #sh-center > #labs-view {
+  display: block !important;
+  grid-row: 2 !important;
+  grid-column: 1 !important;
+}
 body.labs-open #sh-center > .bar .sh-title,
 body.labs-open #sh-center > .bar .model-pill { display: none !important; }
 #labs-view { display: none; }
