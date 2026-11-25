@@ -12,7 +12,13 @@ body.labs-open #labs-view {
   display: block; grid-row: 2; grid-column: 1; min-height: 0; overflow-y: auto; overscroll-behavior: contain;
   padding: clamp(18px, 4vw, 44px) clamp(14px, 4vw, 48px) calc(48px + env(safe-area-inset-bottom, 0px));
 }
-.labs-wrap { max-width: 1040px; margin: 0 auto; color: var(--paper); }
+.labs-wrap { display: flex; flex-direction: column; gap: clamp(24px, 4vh, 40px); max-width: 1040px; margin: 0 auto; color: var(--paper); }
+/* Keep the Labs landing-page hierarchy stable even when other app styles target generic wrappers. */
+.labs-wrap > .labs-hero { order: 0; }
+.labs-wrap > .labs-grid { order: 1; }
+#labs-view { overflow-anchor: none; scroll-behavior: auto; }
+.labs-hero { flex: 0 0 auto; }
+.labs-grid { flex: 0 0 auto; }
 .labs-page { animation: labs-in .34s cubic-bezier(.2, .75, .25, 1) both; }
 @keyframes labs-in { from { opacity: 0; transform: translateY(12px); } to { opacity: 1; transform: none; } }
 .labs-wrap h2:focus { outline: none; }
