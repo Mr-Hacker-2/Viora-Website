@@ -198,6 +198,9 @@
     view.innerHTML = t ? detailHtml(t) : homeHtml();
     pendingError = '';
     view.scrollTop = 0;
+    view.scrollTo(0, 0);
+    /* Re-apply after the display/layout change so the hub always opens at its real top. */
+    requestAnimationFrame(() => { if (body.classList.contains('labs-open')) view.scrollTo(0, 0); });
     const h = view.querySelector('h2'); if (h) h.focus({ preventScroll: true });
   }
 
