@@ -543,6 +543,7 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   :root[data-model] #composer{padding-bottom:max(8px,env(safe-area-inset-bottom))!important}
 }
 </style>
+<link rel="stylesheet" href="assets/x/settings.css">
 </head>
 <body>
 <div id="shell">
@@ -663,24 +664,121 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
     <iframe id="a-prev" sandbox="allow-scripts" title="Preview"></iframe>
     <textarea id="a-code" spellcheck="false" aria-label="Code editor"></textarea>
   </aside>
-<dialog id="sdlg">
-  <h3>Settings</h3><p>Viora opens in the same soft light look as the extension, with its violet accent. Change the look here.</p>
-  <div id="pf-mount"></div>
-  <h4 class="np-h">Reply personality</h4>
-   <label class="np-row" style="display:flex;gap:10px;align-items:center;margin:6px 0 14px"><span style="flex:1">Emotions &amp; emojis<small style="display:block;color:var(--faint)">How expressive Viora is when it answers. Rewrite tools stay plain.</small></span><select id="tone-sel" aria-label="Reply personality"></select></label>
-   <h4 class="np-h">Speed &amp; reliability</h4>
-  <div id="np-mount"></div>
-  <h4 class="np-h">Voice</h4>
-  <label class="vs-row"><span>Voice Mode<small>Show the hands-free Voice Mode button beside the microphone.</small></span><input type="checkbox" id="vs-mode" aria-label="Voice Mode"></label>
-  <label class="vs-row"><span>Speak replies aloud<small>In Voice Mode, Viora reads its answers out loud.</small></span><input type="checkbox" id="vs-speak" aria-label="Speak replies aloud"></label>
-  <label class="vs-row"><span>Keep listening after a reply<small>Start listening again as soon as Viora finishes speaking.</small></span><input type="checkbox" id="vs-auto" aria-label="Keep listening after a reply"></label>
-  <label class="vs-row"><span>Voice</span><select id="vs-voice" aria-label="Voice"></select></label>
-  <label class="vs-row"><span>Speed <b id="vs-rate-v">1×</b></span><input id="vs-rate" type="range" min="0.7" max="1.5" step="0.05" value="1" aria-label="Speaking speed" style="width:140px;accent-color:var(--accent)"></label>
-  <div class="vs-row"><span>Hear how Viora sounds</span><button class="btn" id="vs-test" type="button">Play sample</button></div>
-  <p class="vs-note" id="vs-note" role="status"></p>
-  <h4 class="np-h">Install app</h4>
-  <div class="np-row pwa-row" data-pwa-row style="display:flex;gap:10px;align-items:center;margin:6px 0 14px"><span style="flex:1">Viora on this device<small style="display:block;color:var(--faint)">Add Viora to your Home Screen or desktop so it opens like an app.</small></span><button class="btn pwa-get" id="pwa-install" type="button" data-ic="download"> Install</button></div>
-  <div class="dl" style="margin-top:12px"><span style="flex:1"></span><button class="btn p" id="s-x" type="button">Done</button></div>
+<dialog id="sdlg" class="vs-dialog">
+  <div class="vs-shell">
+    <header class="vs-head">
+      <div class="vs-brand"><h3>Settings</h3><p>Manage your Viora experience, account, and data.</p></div>
+      <button class="vs-close" id="s-x" type="button" aria-label="Close settings">×</button>
+    </header>
+    <div class="vs-layout">
+      <nav class="vs-nav" aria-label="Settings sections">
+        <button type="button" data-settings-tab="general" aria-current="page">General</button>
+        <button type="button" data-settings-tab="appearance" aria-current="false">Appearance</button>
+        <button type="button" data-settings-tab="personalization" aria-current="false">Personalization</button>
+        <button type="button" data-settings-tab="account" aria-current="false">Account</button>
+        <button type="button" data-settings-tab="privacy" aria-current="false">Privacy &amp; Data</button>
+        <button type="button" data-settings-tab="security" aria-current="false">Security</button>
+        <button type="button" data-settings-tab="about" aria-current="false">About Viora</button>
+      </nav>
+      <main class="vs-content">
+        <h4 id="settings-section-title">General</h4>
+        <p class="vs-intro">Your preferences are saved automatically on this device.</p>
+        <section data-settings-panel="general">
+          <div class="vs-card">
+            <h5>Chat preferences</h5>
+            <p>Choose how the chat workspace behaves.</p>
+            <label class="vs-setting"><span>Default AI model<small>Choose which assistant opens for a new chat.</small></span><select class="vs-select" data-setting="defaultModel" aria-label="Default AI model"><option value="auto">Viora Auto</option><option value="flash">Viora Flash</option><option value="search">Pro Search</option><option value="math">Math &amp; Code</option></select></label>
+            <label class="vs-setting"><span>Enter to send<small>Turn off to use Enter for a new line. Use the Send button when you are ready.</small></span><input type="checkbox" data-setting="enterToSend"></label>
+            <label class="vs-setting"><span>Compact chat<small>Reduce spacing between messages.</small></span><input type="checkbox" data-setting="compactChat"></label>
+            <label class="vs-setting"><span>Animations<small>Use subtle interface motion and transitions.</small></span><input type="checkbox" data-setting="animations"></label>
+          </div>
+          <div class="vs-card">
+            <h5>Speed &amp; reliability</h5><p>Control connection waits, retries, and conversation context.</p>
+            <div id="np-mount"></div>
+          </div>
+          <div class="vs-card">
+            <h5>Voice</h5><p>Set up hands-free conversations and spoken replies.</p>
+            <label class="vs-row"><span>Voice Mode<small>Show the hands-free Voice Mode button beside the microphone.</small></span><input type="checkbox" id="vs-mode" aria-label="Voice Mode"></label>
+            <label class="vs-row"><span>Speak replies aloud<small>In Voice Mode, Viora reads its answers out loud.</small></span><input type="checkbox" id="vs-speak" aria-label="Speak replies aloud"></label>
+            <label class="vs-row"><span>Keep listening after a reply<small>Start listening again as soon as Viora finishes speaking.</small></span><input type="checkbox" id="vs-auto" aria-label="Keep listening after a reply"></label>
+            <label class="vs-row"><span>Voice</span><select id="vs-voice" aria-label="Voice"></select></label>
+            <label class="vs-row"><span>Speed <b id="vs-rate-v">1×</b></span><input id="vs-rate" type="range" min="0.7" max="1.5" step="0.05" value="1" aria-label="Speaking speed" style="width:140px;accent-color:var(--accent)"></label>
+            <div class="vs-row"><span>Hear how Viora sounds</span><button class="vs-action" id="vs-test" type="button">Play sample</button></div>
+            <p class="vs-note" id="vs-note" role="status"></p>
+          </div>
+          <div class="vs-card">
+            <h5>Install Viora</h5><p>Add Viora to this device so it opens like an app.</p>
+            <div class="vs-row pwa-row" data-pwa-row><span>Viora on this device</span><button class="vs-action" id="pwa-install" type="button" data-ic="download">Install</button></div>
+          </div>
+        </section>
+        <section data-settings-panel="appearance" hidden>
+          <p class="vs-intro">Personalize the look of your Viora workspace. Changes apply immediately.</p>
+          <div id="pf-mount"></div>
+        </section>
+        <section data-settings-panel="personalization" hidden>
+          <p class="vs-intro">Give Viora helpful context about how you like responses. Avoid adding passwords or other secrets.</p>
+          <div class="vs-card">
+            <h5>Reply personality</h5><p>Choose how expressive Viora sounds. Writing and rewrite tools may use their own style rules.</p>
+            <label class="vs-setting"><span>Response tone</span><select id="tone-sel" class="vs-select" aria-label="Reply personality"></select></label>
+          </div>
+          <div class="vs-card">
+            <h5>Custom instructions</h5><p>These instructions are included with your personalization context when supported.</p>
+            <textarea class="vs-textarea" data-setting="customInstructions" maxlength="2000" placeholder="For example: explain technical topics step by step, define unfamiliar terms, and use examples."></textarea>
+          </div>
+        </section>
+        <section data-settings-panel="account" hidden>
+          <p class="vs-intro">Review your profile and current Viora plan.</p>
+          <div class="vs-card">
+            <h5>Profile</h5>
+            <label class="vs-setting"><span>Display name<small>This name appears in your Viora account.</small></span><input id="settings-display-name" class="vs-input" maxlength="80" autocomplete="name"></label>
+            <div class="vs-setting"><span>Email address<small>Your sign-in email. Email changes are not currently supported here.</small></span><b id="settings-email"></b></div>
+            <div class="vs-meta"><div><small>Current plan</small><b id="settings-plan">Loading…</b></div><div><small>Account created</small><b id="settings-created">Loading…</b></div></div>
+            <button class="vs-action primary" type="button" data-settings-action="save-profile">Save display name</button>
+          </div>
+        </section>
+        <section data-settings-panel="privacy" hidden>
+          <p class="vs-intro">You control the conversations and personal information stored in this browser and in Viora's account services.</p>
+          <div class="vs-card">
+            <h5>Your data</h5><p>Export the Viora data available in this browser or clear your chat history.</p>
+            <div class="vs-row"><span>Export my data<small>Download chats, Memory, projects, and preferences stored on this device.</small></span><button class="vs-action" type="button" data-settings-action="export-data">Export</button></div>
+            <div class="vs-row"><span>Clear chat history<small>Delete saved conversations from this browser. This does not delete your account.</small></span><button class="vs-action" type="button" data-settings-action="clear-chats">Clear chats</button></div>
+            <div class="vs-row"><span>Manage Memory<small>Review or delete the personal context saved by Viora.</small></span><button class="vs-action" type="button" data-settings-action="open-memory">Open Memory</button></div>
+          </div>
+          <div class="vs-card vs-danger-zone">
+            <h5>Delete account</h5>
+            <p>Permanent deletion removes your account record and server-stored Planner data and attachments. Browser-stored chats and Memory on this device are cleared after the server confirms deletion. This action cannot be undone.</p>
+            <div class="vs-delete-grid">
+              <label><small>Confirm your account email</small><input id="settings-delete-email" class="vs-input" type="email" autocomplete="off" placeholder="you@example.com"></label>
+              <label><small>Type DELETE to confirm</small><input id="settings-delete-word" class="vs-input" type="text" autocomplete="off" placeholder="DELETE"></label>
+            </div>
+            <button class="vs-action danger" type="button" data-settings-action="delete-account" style="margin-top:14px">Permanently delete account</button>
+          </div>
+        </section>
+        <section data-settings-panel="security" hidden>
+          <p class="vs-intro">Protect access to your Viora account.</p>
+          <div class="vs-card">
+            <h5>Current session</h5><p>You are signed in to this browser. Signing out removes the local session from this device.</p>
+            <button class="vs-action" type="button" data-settings-action="sign-out">Sign out</button>
+          </div>
+          <div class="vs-card">
+            <h5>Password and sessions</h5>
+            <p>Viora does not currently provide in-app password changes or a session-management screen. Use your sign-in provider's account recovery options if you need to change your password.</p>
+          </div>
+        </section>
+        <section data-settings-panel="about" hidden>
+          <p class="vs-intro">A little information about your Viora workspace.</p>
+          <div class="vs-card">
+            <h5>Viora AI</h5><p>Your AI workspace for research, writing, coding, and everyday questions.</p>
+            <div class="vs-row"><span>Website</span><a href="https://viora-website.onrender.com" target="_blank" rel="noopener">viora-website.onrender.com</a></div>
+            <div class="vs-row"><span>GitHub</span><a href="https://github.com/Mr-Hacker-2/Viora-Website" target="_blank" rel="noopener">Viora Website repository</a></div>
+            <div class="vs-row"><span>Terms of Service</span><a href="terms.html" target="_blank" rel="noopener">Read terms</a></div>
+            <div class="vs-row"><span>Privacy Policy</span><a href="privacy.html" target="_blank" rel="noopener">Read privacy policy</a></div>
+          </div>
+        </section>
+        <p id="settings-status" role="status" aria-live="polite"></p>
+      </main>
+    </div>
+  </div>
 </dialog>
 <dialog id="pdlg">
   <h3 id="p-h">New project</h3><p>Instructions and notes are sent with every chat in this project.</p>
@@ -753,6 +851,7 @@ import { fallbackTitle, shouldGenerateTitle, renameConversation, finishTitleGene
 import { editableUserIndex, historyBeforeEditedTurn } from './assets/x/chat-edit.js';
 import { initVoice } from './assets/x/voice-mode.js';
 import { suggestFollowUps, looksCutOff, CONTINUE_PROMPT } from './assets/x/suggest.js';
+import { initSettings } from './assets/x/settings.js';
 (() => {
 'use strict';
 const API = 'https://viora-auth-website.onrender.com';
@@ -790,7 +889,7 @@ if (migrateMemoryConsent) saveD();
 if (!D.profile || typeof D.profile !== 'object') D.profile = { name: '', about: '' };
 /* The user's name: what they typed in "About you", else the name they asked to be called, else their sign-in name. */
 const myName = () => String(D.profile.name || preferredName(D.memory) || S.name || '').trim();
-const who = () => userProfile({ name: myName(), about: D.profile.about, facts: [] });
+const who = () => { const prefs = ls.get('viora_settings_' + S.email, {}); return userProfile({ name: myName(), about: [D.profile.about, prefs.customInstructions].filter(Boolean).join('\n\n'), facts: [] }); };
 const save = () => { if (!ls.set(key, chats.slice(0, 80)) && !ls.set(key, chats.slice(0, 30))) setStatus('Could not save chats: browser storage is full or blocked. Export your data to keep them.', 8000); };
 function clearEditingTurn(clearInput = false) {
   editingTurn = null; $('#edit-banner').hidden = true;
@@ -1826,7 +1925,7 @@ $('#hz-input').addEventListener('input', () => { const n = $('#hz-input').value.
 $('#hz-copy').onclick = async () => { const value = $('#hz-output').value; if (!value) return; try { await navigator.clipboard.writeText(value); toast('Rewrite copied.'); } catch { $('#hz-output').focus(); $('#hz-output').select(); toast('Select and copy the rewritten text.'); } };
 $('#hz-replace').onclick = () => { if (!$('#hz-output').value) return; hzReplacedDraft = $('#hz-input').value; $('#hz-input').value = $('#hz-output').value; $('#hz-input').dispatchEvent(new Event('input')); $('#hz-input').focus(); $('#hz-undo').disabled = false; };
 $('#hz-undo').onclick = () => { if (hzReplacedDraft === null) return; $('#hz-input').value = hzReplacedDraft; hzReplacedDraft = null; $('#hz-input').dispatchEvent(new Event('input')); $('#hz-undo').disabled = true; $('#hz-input').focus(); };
-$('#input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing) { e.preventDefault(); busy || send(e.target.value); } });
+$('#input').addEventListener('keydown', e => { if (e.key === 'Enter' && !e.shiftKey && !e.isComposing && ls.get('viora_settings_' + S.email, {}).enterToSend !== false) { e.preventDefault(); busy || send(e.target.value); } });
 $('#input').addEventListener('input', grow);
 addEventListener('keydown', e => {
   if (e.key === 'Escape') {
@@ -1907,7 +2006,7 @@ $('#thread').onclick = async e => {
 };
 $('#tone-sel').innerHTML = Object.entries(LEVELS).map(([k, v]) => `<option value="${k}">${esc(v)}</option>`).join('');
 $('#tone-sel').onchange = e => { tone = normLevel(e.target.value); ls.set('viora_tone', tone); };
-$('#open-settings').onclick = () => { $('#tone-sel').value = tone; hide(); VioraPrefs.mount($('#pf-mount')); NP.mount($('#np-mount')); $('#sdlg').showModal(); };
+$('#open-settings').onclick = () => { $('#tone-sel').value = tone; hide(); VioraPrefs.mount($('#pf-mount')); NP.mount($('#np-mount')); settings.open(); $('#sdlg').showModal(); };
 $('#s-x').onclick = () => $('#sdlg').close();
 /* Voice: microphone dictation, Voice Mode and spoken replies live in assets/x/voice-*.js. They use the normal send(), so voice chats
    use the selected assistant and are saved in history like typed ones. */
@@ -1918,6 +2017,22 @@ window.VioraVoice = initVoice({
   toast: t => toast(t)
 });
 const signOut = () => { localStorage.removeItem('viora_session'); location.href = 'index.html'; };
+const settings = initSettings({
+  api: API, email: S.email, token: () => S.token, name: () => myName(), assistant: () => asst,
+  setAssistant: value => setAsst(value),
+  onNameSaved: value => { S.name = value; ls.set('viora_session', S); $('#nm').textContent = value; if (!S.picture) $('#av').textContent = value.slice(0, 1).toUpperCase(); D.profile.name = value; saveD(); },
+  exportData: () => {
+    const payload = { exportedAt: new Date().toISOString(), account: { email: S.email, name: S.name || '' }, chats, personalData: D,
+      settings: ls.get('viora_settings_' + S.email, {}), appearance: { theme: localStorage.getItem('viora_theme'), accent: localStorage.getItem('viora_accent') },
+      voice: ls.get('viora_voice', {}), performance: NP.get(), tone: ls.get('viora_tone', null), assistant: ls.get('viora_assistant', 'auto'), webSearch: ls.get('viora_web', true), researchDepth: ls.get('viora_research_depth', 'quick') };
+    const a = document.createElement('a'); a.href = URL.createObjectURL(new Blob([JSON.stringify(payload, null, 2)], { type: 'application/json' }));
+    a.download = 'viora-data-export.json'; a.click(); setTimeout(() => URL.revokeObjectURL(a.href), 4000);
+  },
+  clearChats: () => { if (!confirm('Delete all saved conversations from this browser? This cannot be undone.')) return; chats = []; cur = null; save(); render(); },
+  openMemory: () => $('#mem').click(),
+  signOut,
+  onDeleted: () => { localStorage.clear(); sessionStorage.clear(); location.replace('index.html'); }
+});
 $('#out').onclick = $('#side-out').onclick = signOut;
 /* projects */
 const pdlg = $('#pdlg');
