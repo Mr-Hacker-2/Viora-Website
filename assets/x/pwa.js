@@ -27,3 +27,24 @@
     row.hidden = true;
   });
 })();
+
+/* Viora Labs bootstrap. Runs on app.html only (the page that has the chat sidebar).
+   1) Viora Flash is the default chat model. A stored Humanizer / Pro Search / Math choice from before Labs existed is
+      reset to Flash unless the person just launched it from Labs in this browser session.
+   2) Loads the Labs stylesheet and script. */
+(() => {
+  if (!document.getElementById('sh-left') || !document.getElementById('thread')) return;
+  try {
+    let stored = null;
+    try { stored = JSON.parse(localStorage.getItem('viora_assistant')); } catch {}
+    const fromLabs = sessionStorage.getItem('viora_labs_session') === '1';
+    if (!stored || (['search', 'math', 'human'].includes(stored) && !fromLabs)) localStorage.setItem('viora_assistant', JSON.stringify('flash'));
+  } catch {}
+  const v = '?v=20261124-1';
+  const css = document.createElement('link');
+  css.rel = 'stylesheet'; css.href = 'assets/labs/labs.css' + v;
+  document.head.append(css);
+  const js = document.createElement('script');
+  js.src = 'assets/labs/labs.js' + v; js.defer = true;
+  document.head.append(js);
+})();
