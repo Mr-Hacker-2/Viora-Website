@@ -351,6 +351,10 @@ button:disabled{cursor:not-allowed;opacity:.55}
   #sh-center>.bar .pill-name{min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 }
 
+/* Model selection is managed internally; keep the home-chat header clean without the model dropdown. */
+#sh-center > .bar #model-btn,
+#sh-center > #model-sheet { display: none !important; }
+
 /* The assistant picker must be clickable. tab.css (carried over from the browser extension) turns the pill into a
    non-interactive label and hides its caret, which left no way to choose Pro Search, Math & Code or Humanizer —
    the sidebar tools panel that offered them is hidden at every width. */
