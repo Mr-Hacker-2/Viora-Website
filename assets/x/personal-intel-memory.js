@@ -37,7 +37,7 @@
     const total = Object.values(state.profile || {}).reduce((sum, items) => sum + (Array.isArray(items) ? items.length : 0), 0);
     const pending = (state.findings || []).filter(f => f.status === 'pending').length;
     const autoApproved = (state.findings || []).filter(f => f.autoApproved === true && f.status === 'approved').length;
-    const autoBox = $('#pi-memory-auto-approve'); if (autoBox) autoBox.checked = state.autoApproveStrong === true;
+    const autoBox = $('#pi-memory-auto-approve'); if (autoBox) { autoBox.checked = state.autoApproveStrong === true; autoBox.disabled = !state.enabled || !state.emailVerified; }
     const pill = $('#pi-memory-state');
     pill.textContent = state.enabled ? 'Discovery on' : 'Discovery off';
     pill.dataset.enabled = String(state.enabled);
