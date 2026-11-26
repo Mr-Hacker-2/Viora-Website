@@ -51,7 +51,7 @@
       const last = state.lastRunAt ? ' Last discovery: ' + new Date(state.lastRunAt).toLocaleString() + '.' : '';
       setStatus(total + ' approved profile detail' + (total === 1 ? '' : 's') + ' · ' + pending + ' finding' + (pending === 1 ? '' : 's') + ' waiting for review · ' + autoApproved + ' auto-approved.' + last + ' Viora uses only relevant approved details in normal chats.');
     } else {
-      setStatus(total ? total + ' approved profile detail' + (total === 1 ? '' : 's') + ' saved. Discovery is off, so Viora is not using this profile in AI requests.' : 'Discovery is off. Nothing from public discovery is being added to your profile.');
+      setStatus(total ? total + ' approved profile detail' + (total === 1 ? '' : 's') + ' saved · ' + autoApproved + ' auto-approved. Discovery is off, so Viora is not using this profile in AI requests.' : 'Discovery is off. ' + autoApproved + ' details were auto-approved previously; nothing from public discovery is being added to your profile.');
     }
     const facts = $('#pi-memory-facts');
     facts.replaceChildren();
