@@ -23,10 +23,10 @@ test('one huge paragraph is cut at sentence ends only', () => {
   assert.equal(parts.join(' '), big);
 });
 test('completeness floor accepts shorter and longer rewrites but not a cut-off one', () => {
-  assert.equal(minWordsFor(1000, {}), 500);
+  assert.equal(minWordsFor(1000, {}), 400);
   assert.equal(minWordsFor(1000, { style: 'concise' }), 300);
   assert.equal(minWordsFor(1000, { mode: 'grammar' }), 750);
-  assert.ok(620 >= minWordsFor(1000, {})); assert.ok(1600 >= minWordsFor(1000, {})); assert.ok(180 < minWordsFor(1000, {}));
+  assert.ok(420 >= minWordsFor(1000, {})); assert.ok(350 < minWordsFor(1000, {})); assert.ok(1600 >= minWordsFor(1000, {})); assert.ok(180 < minWordsFor(1000, {}));
   assert.equal(minWordsFor(0, {}), 0); assert.equal(minWordsFor(3, {}), 2);
 });
 test('fact check no longer rejects a lower-cased name or "10" written as "ten", but still catches real losses', () => {

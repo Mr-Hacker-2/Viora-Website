@@ -32,7 +32,7 @@ export const needsChunks = text => count(text) > SINGLE_LIMIT;
 export function minWordsFor(sourceWords, { style = '', length = 'keep', mode = '' } = {}) {
   if (!sourceWords) return 0;
   const shorter = style === 'concise' || length === 'shorter';
-  const ratio = shorter ? 0.3 : (mode === 'grammar' || mode === 'light' || mode === 'voice') ? 0.75 : 0.5;
+  const ratio = shorter ? 0.3 : (mode === 'grammar' || mode === 'light' || mode === 'voice') ? 0.75 : 0.4;
   return Math.min(sourceWords, Math.max(1, Math.ceil(sourceWords * ratio)));
 }
 

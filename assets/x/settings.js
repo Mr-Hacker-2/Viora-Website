@@ -77,7 +77,7 @@ export function initSettings(host) {
         status('Enter your exact account email and type DELETE to continue.', true);
         return;
       }
-      const confirmed = window.confirm('Permanently delete your Viora account and its server-stored Planner files? This cannot be undone.');
+      const confirmed = window.confirm('Permanently delete your Viora account and all account-owned server data, including stored files and previous file versions? This cannot be undone. After deletion finishes, you can sign up again with the same email as a completely new account.');
       if (!confirmed) return;
       action.disabled = true;
       status('Deleting your account and associated data…');
