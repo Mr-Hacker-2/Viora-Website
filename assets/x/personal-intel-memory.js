@@ -78,12 +78,14 @@
     setStatus('Loading your private Personal Intelligence profile…');
     try {
       state = await call('/api/intel');
+      render();
       if (state.enabled && state.discoveryPending) {
         setStatus('Your signup opt-in was saved. Running the first public-source discovery now…');
         state = await call('/api/intel/discover', 'POST', {});
       }
       render();
     } catch (error) {
+      if (state) render();
       setStatus(error.message, true);
     } finally {
       busy = false;
