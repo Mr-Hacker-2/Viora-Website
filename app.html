@@ -15,6 +15,7 @@
 <link rel="stylesheet" href="assets/x/tab.css">
 <link rel="stylesheet" href="assets/x/accent.css">
 <link rel="stylesheet" href="assets/x/prefs.css">
+<link rel="stylesheet" href="assets/x/intel-memory.css">
 <link rel="stylesheet" href="assets/x/viora-theme.css">
 <link rel="stylesheet" href="assets/x/fixes.css">
 <link rel="stylesheet" href="assets/x/app-polish.css">
@@ -791,6 +792,12 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   <h3>About you</h3><p>Viora uses this in every chat so it knows who you are.</p>
   <input type="text" id="u-name" maxlength="60" aria-label="What should Viora call you?">
   <textarea id="u-about" maxlength="600" placeholder="What should Viora know about you? e.g. I'm in 10th grade, I love robotics, and I like short answers with examples." aria-label="About you"></textarea>
+  <section class="pi-memory" id="pi-memory" aria-labelledby="pi-memory-title">
+    <div class="pi-memory-head"><div><h3 id="pi-memory-title">Personal Intelligence Discovery</h3><p>Public information you reviewed and approved. This is separate from the notes you write above.</p></div><span class="pi-memory-state" id="pi-memory-state">Loading…</span></div>
+    <p class="pi-memory-status" id="pi-memory-status" role="status" aria-live="polite">Checking your private profile…</p>
+    <div class="pi-memory-facts" id="pi-memory-facts"><p class="pi-memory-empty">Your approved discoveries will appear here.</p></div>
+    <div class="pi-memory-actions"><a href="intelligence.html">Review findings and manage discovery ↗</a><button class="btn" id="pi-memory-refresh" type="button">Refresh</button><button class="btn" id="pi-memory-disable" type="button" hidden>Turn off discovery</button></div>
+  </section>
   <h3 style="margin-top:14px">Memory</h3><p>Viora can remember explicit, non-sensitive preferences, interests, and goals you share. Memories stay on this device; review, edit, or delete them here. Passwords, health details, and other sensitive topics are skipped.</p>
   <label style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:14px"><input type="checkbox" id="m-auto"> Automatically remember details I share</label>
   <label style="display:flex;gap:8px;align-items:center;margin-bottom:10px;font-size:14px"><input type="checkbox" id="m-on"> Use memory in chats</label>
@@ -2111,5 +2118,6 @@ $('#input').addEventListener('input', () => { try { if (NP.get().saveDraft && $(
 render(); grow(); $('#input').focus();
 })();
 </script>
+<script type="module" src="assets/x/personal-intel-memory.js"></script>
 </body>
 </html>
