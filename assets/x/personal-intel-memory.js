@@ -7,7 +7,7 @@
   if (!panel) return;
   let state = null, busy = false;
   const session = () => { try { return JSON.parse(localStorage.getItem('viora_session') || 'null'); } catch { return null; } };
-  const API = (window.VIORA && window.VIORA.authApi) || '';
+  const API = 'https://viora-auth-website.onrender.com';
   const setStatus = (message, error = false) => {
     const el = $('#pi-memory-status');
     el.textContent = message || '';
