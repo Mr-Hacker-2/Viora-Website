@@ -31,7 +31,7 @@ test('login offers Google (which verifies the email) and email + password', asyn
   assert.match(html, /id="auth-email"[^>]*type="email"[^>]*required/);
   assert.match(html, /Sign in with Google, or with your email and password/);
   assert.match(auth, /googleUrl\(mode, termsAccepted = false, personalIntelOptIn = false\)/);
-  assert.match(auth, /Auth\.googleUrl\(mode\(\), consent\.checked\)/);
+  assert.match(auth, /Auth\.googleUrl\(mode\(\), consent\.checked, !!/);
 });
 
 test('Pro Search exposes real Quick and Deep modes and streams server activity into progress', async () => {
