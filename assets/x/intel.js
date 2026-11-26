@@ -29,7 +29,7 @@
     $('#pi-main').hidden = !state.enabled && !state.findings.length;
     $('#pi-run').disabled = !state.enabled;
     $('#pi-disable').hidden = !state.enabled;
-    const autoBox = $('#pi-auto-approve'); if (autoBox) autoBox.checked = state.autoApproveStrong === true;
+    const autoBox = $('#pi-auto-approve'); if (autoBox) { autoBox.checked = state.autoApproveStrong === true; autoBox.disabled = !state.enabled || !state.emailVerified; }
     const autoStatus = $('#pi-auto-status'); if (autoStatus) autoStatus.textContent = state.autoApproveStrong ? 'Automatic approval is on for strong matches only.' : 'Automatic approval is off. All findings wait for your review.';
 
     $('#pi-sources').replaceChildren(...state.sources.map(x => el('li', { textContent: x.label + (x.configured ? '' : ' (not configured on this server yet)') })));
