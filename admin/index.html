@@ -361,7 +361,7 @@ async function loadOverview(){
     $('.health-pill').dataset.state='degraded';
     showError(currentView==='monitoring'?'#monitor-error':'#overview-error','Health status unavailable: '+healthResult.reason.message);
   }
-  if(storageResult.status==='fulfilled')$('#m-storage').textContent=Number(storageResult.value.totals.bytes).toLocaleString()+' bytes';else $('#m-storage').textContent='Unavailable';
+  if(storageResult.status==='fulfilled'&&storageResult.value?.totals)$('#m-storage').textContent=Number(storageResult.value.totals.bytes).toLocaleString()+' bytes';else $('#m-storage').textContent='Unavailable';
   if(activityResult.status==='fulfilled'){
     renderEvents($('#recent-events'),activityResult.value.events,5);
   }else{
