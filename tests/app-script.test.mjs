@@ -30,7 +30,7 @@ test('login offers Google (which verifies the email) and email + password', asyn
   const auth = await readFile(new URL('../assets/app.js', import.meta.url), 'utf8');
   assert.match(html, /id="auth-email"[^>]*type="email"[^>]*required/);
   assert.match(html, /Sign in with Google, or with your email and password/);
-  assert.match(auth, /googleUrl\(mode, termsAccepted = false, personalIntelOptIn = false\)/);
+  assert.match(auth, /googleUrl\(mode, termsAccepted = false, personalIntelOptIn = false, autoApproveStrong = false\)/);
   assert.match(auth, /Auth\.googleUrl\(mode\(\), consent\.checked, !!/);
 });
 
