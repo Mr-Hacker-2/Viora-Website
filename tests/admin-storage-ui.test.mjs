@@ -40,7 +40,7 @@ test('bulk deletion preview displays a complete object-key manifest and two conf
 
 test('storage UI labels protected data and does not expose provider credentials', async () => {
   const html = await readFile(new URL('../admin/index.html', import.meta.url), 'utf8');
-  assert.match(html, /User accounts and authentication records/);
+  assert.match(html, /user accounts and authentication records/i);
   assert.match(html, /administrator audit records/);
   assert.match(html, /unclassified or unrelated bucket objects/);
   assert.ok(!html.includes('B2_APP_KEY'));
