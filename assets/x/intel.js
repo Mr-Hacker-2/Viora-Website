@@ -17,7 +17,7 @@
     if (!r.ok) throw new Error(d.error || 'Something went wrong. Please try again.');
     return d;
   }
-  const act = async (fn, okText) => { try { msg(''); const d = await fn(); if (d && d.findings) { state = d; render(); } if (okText) msg(okText); return d; } catch (e) { msg(e.message, true); return null; } };
+  const act = async (fn, okText) => { try { msg(''); const d = await fn(); if (d && d.findings) { state = d; render(); } if (okText) msg(d?.discoveryPending ? 'No public source completed the first search. It remains queued and will retry when you reopen Personal Intelligence.' : okText); return d; } catch (e) { msg(e.message, true); return null; } };
 
   function render() {
     $('#pi-email').textContent = s.email;
