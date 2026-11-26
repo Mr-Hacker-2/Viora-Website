@@ -85,20 +85,20 @@ const LS = {
 const session = () => LS.get('viora_session', null);
 const Auth = {
   /** Google sign-in is independent of the email/password box: Google tells the server which account this is. */
-  googleUrl(mode, termsAccepted = false, personalIntelOptIn = false) {
+  googleUrl(mode, termsAccepted = false, personalIntelOptIn = false, autoApproveStrong = false) {
     const url = new URL(VIORA.authApi + '/auth/google');
     url.searchParams.set('site', '1'); url.searchParams.set('mode', mode === 'signup' ? 'signup' : 'signin');
     if (mode === 'signup' && termsAccepted) url.searchParams.set('terms', '1');
-    if (mode === 'signup' && personalIntelOptIn) { url.searchParams.set('intel', '1'); url.searchParams.set('intel_adult', '1'); }
+    if (mode === 'signup' && personalIntelOptIn) { url.searchParams.set('intel', '1'); url.searchParams.set('intel_adult', '1'); if (autoApproveStrong) url.searchParams.set('intel_auto', '1'); }
     return url.href;
   },
   /** Email + password sign-up or sign-in. The server stores only a salted hash of the password. */
-  async password(mode, { email, password, name, terms, personalIntelOptIn = false }) {
+  async password(mode, { email, password, name, terms, personalIntelOptIn = false, personalIntelAutoApproveStrong = false }) {
     let r;
     try {
       r = await fetch(VIORA.authApi + (mode === 'signup' ? '/api/auth/signup' : '/api/auth/login'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mode === 'signup' ? { email, password, name, terms: !!terms, personalIntelOptIn: !!personalIntelOptIn, personalIntelAdultConfirmed: !!personalIntelOptIn } : { email, password })
+        body: JSON.stringify(mode === 'signup' ? { email, password, name, terms: !!terms, personalIntelOptIn: !!personalIntelOptIn, personalIntelAdultConfirmed: !!personalIntelOptIn, personalIntelAutoApproveStrong: !!personalIntelAutoApproveStrong && !!personalIntelOptIn } : { email, password })
       });
     } catch { throw new Error('Could not reach the Viora server. It may be waking up, so try again in 30 seconds.'); }
     const d = await r.json().catch(() => ({}));
@@ -246,7 +246,7 @@ if (page === 'login') {
   btn.onclick = () => {
     if (mode() === 'signup' && !consent.checked) return fail('Please accept the Terms and Privacy Policy to create your account.');
     err.classList.remove('show');
-    btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode(), consent.checked, !!$('#auth-intel-consent')?.checked);
+    btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode(), consent.checked, !!$('#auth-intel-consent')?.checked, !!$('#auth-intel-auto')?.checked);
   };
   // Coming back with the Back button restores this page as it was; make the Google button usable again.
   addEventListener('pageshow', event => { if (event.persisted) { btn.dataset.busy = 'false'; btn.disabled = mode() === 'signup' && !consent.checked; btn.lastChild.textContent = label(); } });
@@ -264,7 +264,7 @@ if (page === 'login') {
     pwBtn.textContent = creating ? 'Creating your account…' : 'Signing you in…';
     let sess;
     try {
-      const d = await Auth.password(mode(), { email: value, password: secret, name: ($('#auth-name').value || '').trim(), terms: consent.checked, personalIntelOptIn: !!$('#auth-intel-consent')?.checked });
+      const d = await Auth.password(mode(), { email: value, password: secret, name: ($('#auth-name').value || '').trim(), terms: consent.checked, personalIntelOptIn: !!$('#auth-intel-consent')?.checked, personalIntelAutoApproveStrong: !!$('#auth-intel-auto')?.checked });
       sess = await Auth.finish(d.token, 'password');
     } catch (ex) { btn.disabled = creating && !consent.checked; return stop(ex.message); }
     pass.value = '';
