@@ -36,6 +36,8 @@
     if (!state) return;
     const total = Object.values(state.profile || {}).reduce((sum, items) => sum + (Array.isArray(items) ? items.length : 0), 0);
     const pending = (state.findings || []).filter(f => f.status === 'pending').length;
+    const autoApproved = (state.findings || []).filter(f => f.autoApproved === true && f.status === 'approved').length;
+    const autoBox = $('#pi-memory-auto-approve'); if (autoBox) { autoBox.checked = state.autoApproveStrong === true; autoBox.disabled = !state.enabled || !state.emailVerified; }
     const pill = $('#pi-memory-state');
     pill.textContent = state.enabled ? 'Discovery on' : 'Discovery off';
     pill.dataset.enabled = String(state.enabled);
@@ -47,7 +49,7 @@
         : 'Verify ownership of this email with Google before discovery can run. Your existing profile, if any, remains private.');
     } else if (state.enabled) {
       const last = state.lastRunAt ? ' Last discovery: ' + new Date(state.lastRunAt).toLocaleString() + '.' : '';
-      setStatus(total + ' approved profile detail' + (total === 1 ? '' : 's') + ' · ' + pending + ' finding' + (pending === 1 ? '' : 's') + ' waiting for review.' + last + ' Viora uses only relevant approved details in normal chats.');
+      setStatus(total + ' approved profile detail' + (total === 1 ? '' : 's') + ' · ' + pending + ' finding' + (pending === 1 ? '' : 's') + ' waiting for review · ' + autoApproved + ' auto-approved.' + last + ' Viora uses only relevant approved details in normal chats.');
     } else {
       setStatus(total ? total + ' approved profile detail' + (total === 1 ? '' : 's') + ' saved. Discovery is off, so Viora is not using this profile in AI requests.' : 'Discovery is off. Nothing from public discovery is being added to your profile.');
     }
@@ -105,6 +107,14 @@
     try { state = await call('/api/intel/consent', 'POST', { enable: false }); render(); setStatus(pendingOnly ? 'The pending sign-up opt-in was cancelled.' : 'Discovery is off. Your saved profile remains available to review or delete.'); }
     catch (error) { setStatus(error.message, true); }
     finally { busy = false; $('#pi-memory-disable').disabled = false; }
+  });
+  const autoBox = $('#pi-memory-auto-approve');
+  if (autoBox) autoBox.addEventListener('change', async () => {
+    if (busy || !state?.enabled || !state?.emailVerified) { autoBox.checked = state?.autoApproveStrong === true; return; }
+    busy = true; autoBox.disabled = true;
+    try { state = await call('/api/intel/settings', 'POST', { autoApproveStrong: autoBox.checked }); render(); }
+    catch (error) { autoBox.checked = state?.autoApproveStrong === true; setStatus(error.message, true); }
+    finally { busy = false; autoBox.disabled = false; }
   });
   const open = $('#mem');
   if (open) open.addEventListener('click', load);

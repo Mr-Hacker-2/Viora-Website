@@ -29,6 +29,8 @@
     $('#pi-main').hidden = !state.enabled && !state.findings.length;
     $('#pi-run').disabled = !state.enabled;
     $('#pi-disable').hidden = !state.enabled;
+    const autoBox = $('#pi-auto-approve'); if (autoBox) { autoBox.checked = state.autoApproveStrong === true; autoBox.disabled = !state.enabled || !state.emailVerified; }
+    const autoStatus = $('#pi-auto-status'); if (autoStatus) autoStatus.textContent = state.autoApproveStrong ? 'Automatic approval is on for strong matches only.' : 'Automatic approval is off. All findings wait for your review.';
 
     $('#pi-sources').replaceChildren(...state.sources.map(x => el('li', { textContent: x.label + (x.configured ? '' : ' (not configured on this server yet)') })));
     $('#pi-report').replaceChildren(...(state.lastRunReport || []).map(r => el('li', {}, [el('b', { textContent: r.source + ':' }), r.status === 'ok' ? `${r.count} result${r.count === 1 ? '' : 's'}` : r.status === 'not_configured' ? 'not configured' : r.status === 'rate_limited' ? 'rate limited, try later' : 'failed', r.detail ? ' — ' + r.detail : ''])));
@@ -44,10 +46,11 @@
     const btn = (text, cls, fn) => el('button', { className: 'btn ' + cls, type: 'button', textContent: text, onclick: fn });
     const acts = [];
     if (f.status !== 'approved') acts.push(btn('Approve', 'btn-primary', () => act(() => call('/api/intel/findings/' + f.id, 'POST', { status: 'approved' }), 'Approved. Its details were added to what Viora has learned.')));
+    if (f.autoApproved) acts.push(btn('Undo', 'btn-ghost', () => act(() => call('/api/intel/findings/' + f.id, 'POST', { status: 'pending' }), 'Automatic approval undone. The finding is pending review.')));
     if (f.status !== 'rejected') acts.push(btn('Not me', 'btn-ghost', () => act(() => call('/api/intel/findings/' + f.id, 'POST', { status: 'rejected' }))));
     acts.push(btn('Delete', 'btn-ghost', () => act(() => call('/api/intel/findings/' + f.id, 'DELETE'))));
     return el('article', { className: 'pi-f' }, [
-      el('div', { className: 'pi-tags' }, [el('span', { className: 'pi-tag ' + f.confidence, textContent: label }), el('span', { className: 'pi-tag', textContent: f.source })]),
+      el('div', { className: 'pi-tags' }, [el('span', { className: 'pi-tag ' + f.confidence, textContent: label }), el('span', { className: 'pi-tag', textContent: f.source }), ...(f.autoApproved ? [el('span', { className: 'pi-tag auto-approved', textContent: 'Auto-approved' })] : [])]),
       el('a', { href: f.url, target: '_blank', rel: 'noopener noreferrer nofollow', textContent: f.title || f.url }),
       el('span', { className: 'url', textContent: f.url }),
       f.snippet ? el('p', { className: 'snip', textContent: f.snippet }) : '',
@@ -61,6 +64,7 @@
   $('#pi-ack').onchange = updateConsentButton;
   $('#pi-adult').onchange = updateConsentButton;
   $('#pi-enable').onclick = () => act(async () => { const enabled = await call('/api/intel/consent', 'POST', { enable: true, acknowledge: true, adultConfirmed: true }); state = enabled; render(); return enabled.discoveryPending ? call('/api/intel/discover', 'POST', {}) : enabled; }, 'Discovery is enabled. Review the findings before approving anything.');
+  $('#pi-auto-approve').onchange = () => act(() => call('/api/intel/settings', 'POST', { autoApproveStrong: $('#pi-auto-approve').checked }), $('#pi-auto-approve').checked ? 'Automatic approval enabled for strong matches.' : 'Automatic approval turned off.');
   $('#pi-disable').onclick = () => act(() => call('/api/intel/consent', 'POST', { enable: false }), 'Discovery is off. Viora will not search again or use your profile until you turn it back on.');
   $('#pi-run').onclick = async () => { const b = $('#pi-run'); b.disabled = true; b.textContent = 'Searching…'; await act(() => call('/api/intel/discover', 'POST', {}), 'Discovery finished. Review the pending findings below.'); b.textContent = 'Run discovery'; b.disabled = !state?.enabled; };
   $('#pi-save').onclick = () => { const profile = {}; document.querySelectorAll('#pi-profile textarea').forEach(t => { profile[t.name] = t.value.split('\n').map(x => x.trim()).filter(Boolean); }); act(() => call('/api/intel/profile', 'PUT', { profile }), 'Saved.'); };
