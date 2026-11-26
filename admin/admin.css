@@ -92,6 +92,10 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .storage-category-top{display:flex;align-items:center;justify-content:space-between;gap:8px}
 .storage-category-top strong{font-size:12px}
 .storage-category-card small{color:var(--faint);line-height:1.45}
+.storage-category-actions{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.storage-category-select{display:inline-flex;align-items:center;gap:7px;color:var(--muted);font-size:10px;cursor:pointer}
+.storage-category-select input{accent-color:#a58aff}
+.storage-category-actions .btn{min-height:31px;padding:6px 10px;font-size:10px}
 .storage-toolbar{padding:0 16px}
 .storage-toolbar .input{flex:1;min-width:180px}
 .storage-table{min-width:920px}
