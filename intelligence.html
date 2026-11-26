@@ -22,9 +22,10 @@
 
   <section class="pi-card" id="pi-consent" hidden>
     <h2>Turn on discovery</h2>
-    <p>When you turn this on, Viora's server searches these public sources for <b id="pi-email"></b>:</p>
+    <p>When you turn this on, Viora's server searches these public sources for <b id="pi-email"></b> only after your separate adult confirmation and opt-in:</p>
     <ul id="pi-sources" class="pi-list"></ul>
-    <p>Viora never signs in to your accounts, asks for other passwords, reads private messages or inboxes, uses leaked databases or gets around a site's protections. Results are stored privately on your account, aren't shown to anyone else, and stay "pending" until you approve them. You can delete everything at any time.</p>
+    <p>Viora never signs in to your accounts, asks for other passwords, reads private messages or inboxes, uses leaked databases or gets around a site's protections. Results are stored privately on your account, aren't shown to anyone else, and stay "pending" until you approve them. You can turn discovery off or permanently delete your profile at any time. Search results are not automatically treated as yours.</p>
+    <label class="pi-check"><input type="checkbox" id="pi-adult"> I confirm that I am 18 years or older.</label>
     <label class="pi-check"><input type="checkbox" id="pi-ack"> I understand what will be searched and want Viora to look for my public footprint.</label>
     <div class="pi-row"><button class="btn btn-primary" id="pi-enable" type="button" disabled>Turn on discovery</button></div>
   </section>
