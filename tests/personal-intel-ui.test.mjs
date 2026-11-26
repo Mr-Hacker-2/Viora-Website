@@ -62,3 +62,15 @@ test('frontend does not contain server-side discovery API credentials', async ()
     assert.doesNotMatch(source, /BRAVE_SEARCH_API_KEY|GRAVATAR_API_KEY|GITHUB_TOKEN/);
   }
 });
+
+test('Google signup forwards the separate Personal Intelligence opt-in, while sign-in remains excluded', async () => {
+  const app = await file('assets/app.js');
+  assert.match(app, /Auth\\.googleUrl\\(mode\\(\\), consent\\.checked, !!\\$\\('#auth-intel-consent'\\)\\?\\.checked\\)/);
+  assert.match(app, /if \\(mode\\(\\) === 'signup' && personalIntelOptIn\\) \\{ url\\.searchParams\\.set\\('intel', '1'\\); url\\.searchParams\\.set\\('intel_adult', '1'\\); \\}/);
+});
+
+test('queued discovery starts automatically when the signed-in app loads', async () => {
+  const script = await file('assets/x/personal-intel-memory.js');
+  assert.match(script, /if \\(state\\.enabled && state\\.discoveryPending\\)\\s*\\{[\\s\\S]*?call\\('\\/api\\/intel\\/discover', 'POST', \\{\\}\\)/);
+  assert.match(script, /load\\(\\);\\s*\\}\\)\\(\\);\\s*$/);
+});
