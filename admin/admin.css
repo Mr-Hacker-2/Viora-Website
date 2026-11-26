@@ -51,6 +51,7 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 .notice{border:1px solid #a58aff2b;border-left:3px solid var(--violet);border-radius:12px;background:linear-gradient(110deg,#946fff15,#66baff08);color:#c9c1dd}
 .notice strong{color:#f0eaff}
 .error{border-color:#ff819b55;background:#ff6f8b12;color:#ffc4d0}
+.admin-inline-status{min-height:0;margin:0 0 8px;color:var(--green);font-size:12px}.admin-inline-status:empty{display:none}.admin-inline-status[data-state=success]{color:#91e8c3}
 .btn{min-height:38px;border:1px solid #39314f;border-radius:11px;background:#ffffff08;color:var(--text);font-size:12px;font-weight:600;transition:transform .16s,border-color .16s,background .16s,box-shadow .16s}
 .btn:hover{transform:translateY(-1px);border-color:#a58aff88;background:#a58aff17;box-shadow:0 7px 18px #0002}
 .btn.primary{border-color:transparent;background:linear-gradient(110deg,#805de7,#586fdf);color:#fff;box-shadow:0 7px 18px #7653df30}
