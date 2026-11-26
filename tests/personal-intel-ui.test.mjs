@@ -77,3 +77,27 @@ test('queued discovery starts automatically when the signed-in app loads', async
   assert.ok(script.includes("call('/api/intel/discover', 'POST', {})"));
   assert.ok(script.trimEnd().endsWith('load();\n})();'));
 });
+
+test('automatic strong-match approval controls are separate, unchecked signup options', async () => {
+  for (const page of ['login.html', 'signup.html']) {
+    const html = await file(page);
+    assert.match(html, /id="auth-intel-auto" type="checkbox"/);
+    assert.match(html, /id="auth-intel-auto-wrap" hidden/);
+    assert.match(html, /Possible and uncertain matches will always wait/);
+  }
+  const app = await file('assets/app.js');
+  assert.match(app, /autoApproveStrong = false/);
+  assert.match(app, /url.searchParams.set\('intel_auto', '1'\)/);
+  assert.match(app, /personalIntelAutoApproveStrong/);
+});
+test('dashboard and About you & Memory expose automatic approval controls', async () => {
+  const html = await file('intelligence.html'), dashboard = await file('assets/x/intel.js');
+  const memory = await file('assets/x/personal-intel-memory.js'), app = await file('app.html');
+  assert.match(html, /id="pi-auto-approve"/);
+  assert.match(dashboard, /\/api\/intel\/settings/);
+  assert.match(dashboard, /Auto-approved/);
+  assert.match(dashboard, /Undo/);
+  assert.match(app, /id="pi-memory-auto-approve"/);
+  assert.match(memory, /\/api\/intel\/settings/);
+  assert.match(memory, /auto-approved/);
+});
