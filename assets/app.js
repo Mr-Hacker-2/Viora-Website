@@ -246,7 +246,7 @@ if (page === 'login') {
   btn.onclick = () => {
     if (mode() === 'signup' && !consent.checked) return fail('Please accept the Terms and Privacy Policy to create your account.');
     err.classList.remove('show');
-    btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode(), consent.checked);
+    btn.disabled = true; btn.dataset.busy = 'true'; btn.lastChild.textContent = 'Opening Google…'; location.href = Auth.googleUrl(mode(), consent.checked, !!$('#auth-intel-consent')?.checked);
   };
   // Coming back with the Back button restores this page as it was; make the Google button usable again.
   addEventListener('pageshow', event => { if (event.persisted) { btn.dataset.busy = 'false'; btn.disabled = mode() === 'signup' && !consent.checked; btn.lastChild.textContent = label(); } });
