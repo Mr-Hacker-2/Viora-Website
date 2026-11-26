@@ -32,6 +32,8 @@ test('About you & Memory displays approved Personal Intelligence from the authen
   assert.match(script, /Authorization: 'Bearer ' \+ s\.token/);
   assert.match(script, /textContent/);
   assert.match(script, /discoveryPending/);
+  assert.match(script, /signupOptInPending/);
+  assert.match(script, /Cancel pending opt-in/);
   assert.match(css, /@media\(max-width:620px\)/);
 });
 
