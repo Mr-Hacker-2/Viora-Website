@@ -59,6 +59,7 @@
     <nav class="nav" id="nav">
       <button data-view="overview" aria-current="true"><span class="ico">◈</span>Overview</button>
       <button data-view="users"><span class="ico">♙</span>Users</button>
+      <button data-view="storage"><span class="ico">▤</span>Blackblaze Storage</button>
       <button data-view="models"><span class="ico">✦</span>AI models</button>
       <button data-view="voice"><span class="ico">♪</span>Voice</button>
       <button data-view="monitoring"><span class="ico">⌁</span>API monitoring</button>
@@ -87,11 +88,18 @@
           <article class="card stat"><div class="stat-label">New this week</div><div class="stat-value" id="m-week">—</div><div class="stat-note">Rolling seven-day period</div></article>
           <article class="card stat"><div class="stat-label">Recent sign-ins</div><div class="stat-value" id="m-active">—</div><div class="stat-note">Accounts signing in during the last 30 days</div></article>
         </div>
+        <div class="grid stats overview-secondary-stats">
+          <article class="card stat"><div class="stat-label">Premium accounts</div><div class="stat-value" id="m-premium">—</div><div class="stat-note">Current active premium plans</div></article>
+          <article class="card stat"><div class="stat-label">Free accounts</div><div class="stat-value" id="m-free">—</div><div class="stat-note">Accounts without an active premium plan</div></article>
+          <article class="card stat"><div class="stat-label">Credits remaining</div><div class="stat-value" id="m-credits">—</div><div class="stat-note" id="m-credits-note">Current balances; usage history is not tracked</div></article>
+          <article class="card stat"><div class="stat-label">Viora storage</div><div class="stat-value" id="m-storage">—</div><div class="stat-note">All listed Viora storage versions</div></article>
+        </div>
         <div class="grid cols">
           <article class="card"><div class="card-head"><h3>AI requests by assistant</h3><span class="subtle" id="request-period">Since server start</span></div><div class="card-body"><div class="chart-wrap"><canvas id="request-chart" role="img" aria-label="Submitted AI requests by assistant since server start"></canvas></div><p class="subtle" id="request-total">Request counts are held in server memory and reset on restart.</p></div></article>
           <article class="card"><div class="card-head"><h3>Current service status</h3><span class="subtle" id="health-time">Awaiting check</span></div><div class="card-body"><div class="health-list" id="mini-health"><div class="empty">Loading verified status…</div></div></div></article>
         </div>
         <article class="card"><div class="card-head"><h3>Recent admin activity</h3><button class="btn" data-goto="activity">View audit log →</button></div><div class="card-body" id="recent-events"><div class="empty">Loading activity…</div></div></article>
+        <article class="card" style="margin-top:14px"><div class="card-head"><h3>Recent system errors</h3><span class="status">Not collected</span></div><div class="card-body"><div class="empty">The current backend does not persist an admin-readable error feed. No error count or history is fabricated. Render logs remain the source for server exceptions.</div></div></article>
         <h3 style="font-size:13px;margin:20px 0 10px">Metrics the current services do not provide</h3>
         <div class="grid unavailable-grid">
           <article class="card unavail"><h3>Conversations</h3><p>Chat history is stored on users’ devices, so the server cannot provide a total.</p><span class="badge">Unavailable</span></article>
@@ -109,7 +117,31 @@
         <div class="notice" style="margin-top:14px"><strong>Suspension enforcement:</strong> Existing tokens are checked against the server account record on protected app requests; the server cache is refreshed within 10 seconds.</div>
       </section>
 
-      <section class="view" id="view-models">
+      <section class="view" id="view-storage">
+  <div class="view-head"><div><div class="eyebrow">Backblaze B2 · private bucket</div><h2>Blackblaze Storage Management</h2><p>Inspect Viora-managed objects, their storage categories, version history, and usage. Account identity records and admin audit records are protected from bulk deletion.</p></div><button class="btn" id="storage-refresh" type="button">↻ Refresh storage</button></div>
+  <div id="storage-error" class="error" role="alert"></div>
+  <div id="storage-status" class="storage-status" role="status" aria-live="polite"></div>
+  <div class="grid storage-summary-grid" id="storage-summary-grid"><article class="card storage-summary"><span class="subtle">Bucket</span><strong id="storage-bucket">Checking…</strong><small id="storage-endpoint">Connecting to Backblaze</small></article><article class="card storage-summary"><span class="subtle">Viora objects</span><strong id="storage-total-objects">—</strong><small>Across explicitly identified Viora namespaces</small></article><article class="card storage-summary"><span class="subtle">Versioned storage</span><strong id="storage-total-size">—</strong><small id="storage-version-note">Includes listed object versions</small></article><article class="card storage-summary"><span class="subtle">Storage connection</span><strong id="storage-connection">—</strong><small id="storage-measured">Not measured yet</small></article></div>
+  <article class="card" style="margin-bottom:16px"><div class="card-head"><h3>Storage categories</h3><span class="subtle">Select a category to inspect its objects</span></div><div class="card-body"><div class="storage-category-grid" id="storage-category-grid"><div class="empty">Loading category inventory…</div></div></div></article>
+  <article class="card">
+    <div class="card-head"><h3>Stored objects</h3><span class="subtle" id="storage-list-count">Select a category or browse all Viora bucket objects</span></div>
+    <div class="toolbar storage-toolbar"><select class="select" id="storage-category" aria-label="Storage category"><option value="all">All bucket objects</option><option value="planner">Planner data</option><option value="planner-files">Planner attachments</option><option value="intelligence">Personal Intelligence</option><option value="labs">Labs CMS</option><option value="accounts">User accounts · protected</option><option value="deleted">Deletion tombstones · protected</option><option value="audit">Admin audit · protected</option></select><input class="input" id="storage-prefix" type="search" placeholder="Filter by object-key prefix" aria-label="Object key prefix"><button class="btn primary" id="storage-search" type="button">Search</button><button class="btn" id="storage-list-refresh" type="button">Refresh list</button><button class="btn danger" id="storage-delete-selected" type="button" disabled>Delete selected objects</button></div>
+    <div class="table-wrap"><table class="table storage-table"><thead><tr><th>Select</th><th>Object key</th><th>Category</th><th>Size</th><th>Last modified</th><th>Access</th></tr></thead><tbody id="storage-objects"><tr><td colspan="6" class="empty">Open this section to load storage objects.</td></tr></tbody></table></div>
+    <div class="card-head storage-pagination"><button class="btn" id="storage-prev" type="button" disabled>← Previous</button><span class="subtle" id="storage-page">Page 1</span><button class="btn" id="storage-next" type="button" disabled>Next →</button></div>
+  </article>
+  <article class="card storage-danger-card">
+    <div class="card-head"><h3>High-risk storage operation</h3><span class="status suspended">Permanent deletion</span></div>
+    <div class="card-body"><p><strong>Delete All Info from Blackblaze</strong> permanently removes all versions and delete markers in the four explicitly deletable Viora application namespaces: Planner data, Planner attachments, Personal Intelligence, and Labs CMS content/media.</p><p class="storage-protected-note">Protected and preserved: user accounts and authentication records (<code>users/</code>), account-deletion tombstones (<code>deleted/</code>), administrator audit records (<code>admin/audit/</code>), and any unclassified or unrelated bucket objects. This action does not delete Render databases or external provider data.</p><p class="subtle">A live inventory preview is required first. You must type the exact confirmation phrase and check a separate second-confirmation box. No bulk deletion runs during development or deployment.</p><div class="storage-danger-actions"><button class="btn danger" id="storage-delete-all" type="button">Delete All Info from Blackblaze</button></div></div>
+  </article>
+  <div class="storage-modal" id="storage-modal" hidden role="dialog" aria-modal="true" aria-labelledby="storage-modal-title">
+    <div class="storage-modal-backdrop" data-storage-close></div>
+    <div class="storage-modal-panel">
+      <div class="card-head"><div><span class="eyebrow">Administrator confirmation</span><h3 id="storage-modal-title">Review deletion</h3></div><button class="btn" id="storage-modal-close" type="button">Close</button></div>
+      <div class="card-body"><div id="storage-preview-loading" class="empty">Preparing an exact version inventory…</div><div id="storage-preview-content" hidden><div class="storage-preview-stats" id="storage-preview-stats"></div><h4>Categories included</h4><div id="storage-preview-categories"></div><h4>Exact object keys in this plan</h4><pre class="storage-key-manifest" id="storage-key-manifest"></pre><div class="storage-protected-note" id="storage-preview-protected"></div><div class="storage-confirm-area"><label for="storage-confirm-input">Type <code id="storage-confirm-phrase">DELETE ALL VIORA STORAGE</code> to confirm</label><input class="input" id="storage-confirm-input" autocomplete="off" spellcheck="false" placeholder="Enter the exact confirmation phrase"><label class="storage-second-confirm"><input type="checkbox" id="storage-second-confirm"> I understand this permanently deletes the listed Viora objects and their stored versions.</label><div class="error" id="storage-confirm-error" role="alert"></div><button class="btn danger" id="storage-confirm-delete" type="button" disabled>Confirm permanent deletion</button></div></div><div id="storage-delete-report" hidden></div></div>
+    </div>
+  </div>
+</section>
+<section class="view" id="view-models">
         <div class="view-head"><div><div class="eyebrow">Inference</div><h2>AI model control center</h2><p>Names and key-configuration indicators come from the server. No key values are returned.</p></div></div>
         <div class="notice">Provider connection tests and model-availability switches are not exposed by the current API. “Configured” means a server key is present; it does not prove that the provider or model is reachable.</div>
         <div id="models-error" class="error" role="alert"></div><div class="grid model-grid" id="model-grid"><div class="card empty">Loading server model configuration…</div></div>
@@ -146,7 +178,7 @@
       </section>
 
       <section class="view" id="view-analytics">
-        <div class="view-head"><div><div class="eyebrow">Trends</div><h2>Analytics</h2><p>Only current account snapshots and in-memory request totals are available.</p></div><select class="select" disabled aria-label="Date range"><option>Historical filters unavailable</option></select></div>
+        <div class="view-head"><div><div class="eyebrow">Trends</div><h2>Analytics</h2><p>Only current account snapshots and in-memory request totals are available. Historical date filters are not available because the service does not retain time-series events.</p></div></div>
         <div class="grid unavailable-grid">
           <article class="card unavail"><h3>Daily active users</h3><p>Only each account’s latest sign-in is stored, not day-by-day active-user events.</p><span class="badge">Unavailable</span></article>
           <article class="card unavail"><h3>New registrations</h3><p>Today and seven-day counts use actual account creation timestamps when storage listing is complete.</p><span class="badge">Available on overview</span></article>
