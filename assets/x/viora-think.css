@@ -1,0 +1,162 @@
+/* Viora web app — the thinking panel (markup and behaviour: think.js).
+
+   Phases (data-phase): think = waiting for the answer · write = the answer is streaming in · done = finished.
+   Only transform / opacity / grid-rows are animated, with a handful of tiny elements, so it stays cheap.
+   Every animation starts from the time the reply began (--vt-el, negative delay), so the thread being re-rendered
+   never makes the orb jump back to its first frame.  Reduced motion and hidden tabs switch it all off. */
+
+.vt{
+  --vt-a:#8b6bff; --vt-b:#c084fc; --vt-c:#6d4cff;
+  --vt-bg1:color-mix(in srgb,var(--vt-a) 9%,var(--ink-2,#fff));
+  --vt-bg2:color-mix(in srgb,var(--vt-b) 4%,var(--ink-2,#fff));
+  --vt-line:color-mix(in srgb,var(--vt-a) 26%,var(--line,#e0e5f2));
+  --vt-shadow:0 10px 30px -16px color-mix(in srgb,var(--vt-c) 55%,transparent),0 1px 0 rgba(255,255,255,.5) inset;
+  --vt-ok:var(--vt-c); --vt-bad:#d6343c;
+  position:relative; box-sizing:border-box; width:100%; max-width:520px; margin:2px 0 12px;
+  border:1px solid var(--vt-line); border-radius:18px; overflow:hidden;
+  background:linear-gradient(135deg,var(--vt-bg1),var(--vt-bg2));
+  -webkit-backdrop-filter:blur(12px) saturate(1.15); backdrop-filter:blur(12px) saturate(1.15);
+  box-shadow:var(--vt-shadow); color:var(--paper,#1d1e2b);
+  transition:border-radius .35s cubic-bezier(.2,.75,.25,1),box-shadow .35s,border-color .35s,max-width .35s;
+}
+:root[data-theme="dark"] .vt{
+  --vt-bg1:color-mix(in srgb,var(--vt-a) 17%,var(--ink-2,#1d1929));
+  --vt-bg2:color-mix(in srgb,var(--vt-b) 7%,var(--ink-2,#1d1929));
+  --vt-line:color-mix(in srgb,var(--vt-a) 36%,var(--line,#322a44));
+  --vt-shadow:0 14px 38px -18px color-mix(in srgb,var(--vt-a) 70%,transparent),0 1px 0 rgba(255,255,255,.06) inset;
+  --vt-ok:var(--vt-b); --vt-bad:#ff7a82;
+}
+.msg.enter .vt{animation:vt-appear .42s cubic-bezier(.2,.75,.25,1) both}
+@keyframes vt-appear{from{opacity:0;transform:translateY(6px) scale(.985)}to{opacity:1;transform:none}}
+.msg.assistant > .body:empty{display:none}
+
+/* ---------- header ---------- */
+.vt-head{
+  appearance:none; display:flex; align-items:center; gap:14px; width:100%; box-sizing:border-box;
+  padding:14px 16px; border:0; background:none; color:inherit; font:inherit; text-align:left; cursor:pointer;
+  transition:padding .4s cubic-bezier(.2,.75,.25,1),gap .4s,background .2s;
+}
+.vt-head:hover{background:color-mix(in srgb,var(--vt-a) 6%,transparent)}
+.vt-head:focus-visible{outline:2px solid var(--vt-a); outline-offset:-3px; border-radius:inherit}
+.vt-copy{display:flex; flex-direction:column; gap:2px; min-width:0; flex:1}
+.vt-title{font:650 14.5px/1.25 var(--sans,system-ui,sans-serif); letter-spacing:.005em;
+  background:linear-gradient(90deg,var(--paper),color-mix(in srgb,var(--vt-a) 70%,var(--paper)));-webkit-background-clip:text;background-clip:text;-webkit-text-fill-color:transparent;color:var(--paper)}
+.vt-status{font:500 12.5px/1.3 var(--sans,system-ui,sans-serif); color:var(--muted,#565b72); white-space:nowrap; overflow:hidden; text-overflow:ellipsis}
+.vt-status.vt-swap{animation:vt-swap .38s cubic-bezier(.2,.75,.25,1)}
+@keyframes vt-swap{from{opacity:0;transform:translateY(5px)}to{opacity:1;transform:none}}
+.vt-time{font:600 11.5px/1 var(--sans,system-ui,sans-serif); font-variant-numeric:tabular-nums; color:var(--faint,#8a8fa6); transition:opacity .3s}
+.vt-chev{flex:none; color:var(--faint,#8a8fa6); transition:transform .35s cubic-bezier(.2,.75,.25,1),color .2s}
+.vt-head:hover .vt-chev{color:var(--vt-a)}
+.vt[data-open="1"] .vt-chev{transform:rotate(180deg)}
+
+/* ---------- orb ---------- */
+.vt-orb{--o:44px; position:relative; flex:none; width:var(--o); height:var(--o); transition:width .45s cubic-bezier(.2,.75,.25,1),height .45s cubic-bezier(.2,.75,.25,1),transform .25s}
+.vt-head:hover .vt-orb{transform:scale(1.06)}
+.vt-halo{position:absolute; inset:-32%; border-radius:50%; background:radial-gradient(circle,color-mix(in srgb,var(--vt-a) 55%,transparent),transparent 64%); filter:blur(7px); opacity:.85;
+  animation:vt-halo 2.8s ease-in-out infinite; animation-delay:calc(var(--vt-el,0ms) * -1); transition:opacity .4s}
+.vt-ring{position:absolute; inset:0; border-radius:50%;
+  background:conic-gradient(from 0deg,transparent 0 48%,var(--vt-b) 74%,var(--vt-a) 90%,transparent);
+  -webkit-mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px)); mask:radial-gradient(farthest-side,transparent calc(100% - 2.5px),#000 calc(100% - 2px));
+  animation:vt-spin 3.2s linear infinite; animation-delay:calc(var(--vt-el,0ms) * -1); transition:opacity .4s}
+.vt-core{position:absolute; inset:19%; border-radius:50%;
+  background:radial-gradient(circle at 32% 26%,rgba(255,255,255,.95),rgba(255,255,255,0) 38%),linear-gradient(145deg,var(--vt-b),var(--vt-a) 55%,var(--vt-c));
+  box-shadow:0 0 16px color-mix(in srgb,var(--vt-a) 80%,transparent),0 0 2px 1px rgba(255,255,255,.35) inset;
+  animation:vt-core 2.4s ease-in-out infinite; animation-delay:calc(var(--vt-el,0ms) * -1)}
+.vt-orb i{position:absolute; left:50%; top:50%; width:3px; height:3px; margin:-1.5px 0 0 -1.5px; border-radius:50%; background:#efe7ff; box-shadow:0 0 6px var(--vt-b); opacity:0;
+  transform:rotate(var(--a)) translateX(var(--d));
+  animation:vt-orbit var(--s) linear infinite; animation-delay:calc(var(--vt-el,0ms) * -1 + var(--dl)); transition:opacity .3s}
+@keyframes vt-halo{0%,100%{opacity:.55;transform:scale(.92)}50%{opacity:1;transform:scale(1.08)}}
+@keyframes vt-spin{to{transform:rotate(360deg)}}
+@keyframes vt-core{0%,100%{transform:scale(.9);filter:saturate(1)}50%{transform:scale(1.07);filter:saturate(1.25) brightness(1.08)}}
+@keyframes vt-orbit{0%{transform:rotate(var(--a)) translateX(var(--d)) scale(.5);opacity:0}18%{opacity:1}82%{opacity:.9}100%{transform:rotate(calc(var(--a) + 360deg)) translateX(var(--d)) scale(.7);opacity:0}}
+
+/* ---------- waveform ---------- */
+.vt-wave{display:flex; align-items:center; gap:3px; height:22px; flex:none; transition:opacity .35s,width .4s,margin .4s}
+.vt-wave b{display:block; width:3px; height:100%; border-radius:3px; background:linear-gradient(180deg,var(--vt-b),var(--vt-a)); transform:scaleY(.3); transform-origin:center;
+  animation:vt-wave 1.15s ease-in-out infinite; animation-delay:calc(var(--vt-el,0ms) * -1)}
+.vt-wave b:nth-child(2){animation-delay:calc(var(--vt-el,0ms) * -1 - .18s)}
+.vt-wave b:nth-child(3){animation-delay:calc(var(--vt-el,0ms) * -1 - .36s)}
+.vt-wave b:nth-child(4){animation-delay:calc(var(--vt-el,0ms) * -1 - .54s)}
+.vt-wave b:nth-child(5){animation-delay:calc(var(--vt-el,0ms) * -1 - .72s)}
+@keyframes vt-wave{0%,100%{transform:scaleY(.26);opacity:.6}50%{transform:scaleY(1);opacity:1}}
+
+/* ---------- phases ---------- */
+.vt[data-phase="think"] .vt-orb i{opacity:1}
+.vt[data-phase="write"],.vt[data-phase="done"]{border-radius:14px}
+.vt[data-phase="write"] .vt-head,.vt[data-phase="done"] .vt-head{padding:8px 12px; gap:10px}
+.vt[data-phase="write"] .vt-orb,.vt[data-phase="done"] .vt-orb{--o:22px}
+.vt[data-phase="write"] .vt-halo,.vt[data-phase="done"] .vt-halo{opacity:.5}
+.vt[data-phase="write"] .vt-copy,.vt[data-phase="done"] .vt-copy{flex-direction:row; align-items:baseline; gap:10px}
+.vt[data-phase="write"] .vt-title,.vt[data-phase="done"] .vt-title{font-size:13px; flex:none}
+.vt[data-phase="write"] .vt-status,.vt[data-phase="done"] .vt-status{font-size:12px}
+.vt[data-phase="write"] .vt-wave{height:14px}
+.vt[data-phase="write"] .vt-wave b{width:2.5px}
+.vt[data-phase="write"] .vt-time{opacity:.9}
+.vt[data-phase="done"]{box-shadow:none; background:color-mix(in srgb,var(--vt-a) 5%,var(--ink-2,#fff)); max-width:420px}
+.vt[data-phase="done"] .vt-title{background:none;-webkit-text-fill-color:currentColor;color:var(--muted,#565b72);font-weight:600}
+.vt[data-phase="done"] .vt-wave{opacity:0; width:0; margin-left:-10px; overflow:hidden}
+.vt[data-phase="done"] .vt-time{display:none}
+.vt[data-phase="done"] .vt-halo,.vt[data-phase="done"] .vt-ring,.vt[data-phase="done"] .vt-core,.vt[data-phase="done"] .vt-wave b{animation:none}
+.vt[data-phase="done"] .vt-ring{opacity:0}
+.vt[data-phase="done"] .vt-core{transform:none}
+.vt[data-phase="done"] .vt-orb i{display:none}
+.vt[data-phase="done"][data-out="stopped"] .vt-core{filter:grayscale(.85) opacity(.8)}
+.vt[data-phase="done"][data-out="failed"] .vt-core{background:linear-gradient(145deg,#ff8a90,var(--vt-bad)); box-shadow:0 0 10px color-mix(in srgb,var(--vt-bad) 55%,transparent)}
+.vt[data-open="1"]{max-width:520px}
+.vt[data-phase="done"][data-open="1"]{background:linear-gradient(135deg,var(--vt-bg1),var(--vt-bg2))}
+
+/* ---------- expandable steps ---------- */
+.vt-panel{display:grid; grid-template-rows:0fr; opacity:0; visibility:hidden;
+  transition:grid-template-rows .38s cubic-bezier(.2,.75,.25,1),opacity .28s ease,visibility 0s linear .38s}
+.vt[data-open="1"] .vt-panel{grid-template-rows:1fr; opacity:1; visibility:visible; transition:grid-template-rows .38s cubic-bezier(.2,.75,.25,1),opacity .3s ease .05s,visibility 0s}
+.vt-panel-in{min-height:0; overflow:hidden}
+.vt-steps{list-style:none; margin:0; padding:2px 16px 4px; border-top:1px solid var(--vt-line)}
+.vt-step{display:grid; grid-template-columns:24px minmax(0,1fr) auto 16px; column-gap:10px; align-items:start; padding:10px 0}
+.vt-step + .vt-step{border-top:1px solid color-mix(in srgb,var(--line,#e0e5f2) 75%,transparent)}
+.vt-step.vt-new{animation:vt-step-in .34s cubic-bezier(.2,.75,.25,1) both}
+@keyframes vt-step-in{from{opacity:0;transform:translateY(-4px)}to{opacity:1;transform:none}}
+.vt-step-ic{display:grid; place-items:center; width:24px; height:24px; border-radius:8px; color:var(--vt-a); background:color-mix(in srgb,var(--vt-a) 11%,transparent)}
+.vt-step[data-st="active"] .vt-step-ic{background:color-mix(in srgb,var(--vt-a) 20%,transparent); box-shadow:0 0 0 0 color-mix(in srgb,var(--vt-a) 40%,transparent); animation:vt-ping 1.8s ease-out infinite}
+@keyframes vt-ping{0%{box-shadow:0 0 0 0 color-mix(in srgb,var(--vt-a) 38%,transparent)}70%,100%{box-shadow:0 0 0 7px transparent}}
+.vt-step-main{display:flex; flex-direction:column; gap:2px; min-width:0; padding-top:2px}
+.vt-step-l{display:flex; align-items:center; gap:7px; flex-wrap:wrap; font:600 13px/1.3 var(--sans,system-ui,sans-serif); color:var(--paper,#1d1e2b)}
+.vt-step[data-st="active"] .vt-step-l{color:color-mix(in srgb,var(--vt-a) 55%,var(--paper))}
+.vt-tool{font:700 9.5px/1 var(--sans,system-ui,sans-serif); font-style:normal; letter-spacing:.06em; text-transform:uppercase; padding:3px 6px; border-radius:6px; color:var(--vt-a); border:1px solid color-mix(in srgb,var(--vt-a) 35%,transparent)}
+.vt-step-d{font:400 12px/1.4 var(--sans,system-ui,sans-serif); color:var(--muted,#565b72); overflow-wrap:anywhere}
+.vt-step-t{display:flex; flex-direction:column; align-items:flex-end; gap:2px; padding-top:3px; font:500 11px/1.2 var(--sans,system-ui,sans-serif); color:var(--faint,#8a8fa6); font-variant-numeric:tabular-nums; white-space:nowrap}
+.vt-step-t b{font-weight:600; color:var(--muted,#565b72)}
+.vt-step-s{display:grid; place-items:center; width:16px; height:16px; margin-top:4px; border-radius:50%}
+.vt-step[data-st="done"] .vt-step-s{color:var(--vt-ok)}
+.vt-step[data-st="failed"] .vt-step-s{color:#fff; background:var(--vt-bad)}
+.vt-step[data-st="failed"] .vt-step-ic{color:var(--vt-bad); background:color-mix(in srgb,var(--vt-bad) 12%,transparent)}
+.vt-step[data-st="stopped"] .vt-step-s{color:var(--faint,#8a8fa6)}
+.vt-step[data-st="active"] .vt-step-s::before{content:""; width:7px; height:7px; border-radius:50%; background:var(--vt-a); animation:vt-blink 1.1s ease-in-out infinite}
+@keyframes vt-blink{0%,100%{opacity:.35;transform:scale(.8)}50%{opacity:1;transform:scale(1)}}
+.vt-foot{margin:0; padding:8px 16px 12px; font:400 11.5px/1.4 var(--sans,system-ui,sans-serif); color:var(--faint,#8a8fa6); border-top:1px solid color-mix(in srgb,var(--line,#e0e5f2) 75%,transparent)}
+
+/* ---------- small screens ---------- */
+@media (max-width:520px){
+  .vt{border-radius:16px; max-width:100%}
+  .vt-head{padding:12px 13px; gap:11px}
+  .vt-orb{--o:38px}
+  .vt[data-phase="write"] .vt-orb,.vt[data-phase="done"] .vt-orb{--o:20px}
+  .vt-title{font-size:14px}
+  .vt[data-phase="write"] .vt-copy{flex-direction:column; gap:1px}
+  .vt[data-phase="write"] .vt-time{display:none}
+  .vt-steps{padding-inline:13px}
+  .vt-step{grid-template-columns:24px minmax(0,1fr) 16px}
+  .vt-step-t{grid-column:2; grid-row:2; flex-direction:row; gap:8px; padding-top:0}
+  .vt-foot{padding-inline:13px}
+}
+@media (max-width:340px){.vt-wave{display:none}}
+
+/* ---------- hidden tab / reduced motion ---------- */
+html.vt-paused .vt *{animation-play-state:paused !important}
+@media (prefers-reduced-motion:reduce){
+  .vt,.vt *{animation:none !important; transition:none !important}
+  .vt-orb i{display:none}
+  .vt-halo{opacity:.7}
+  .vt-wave b{transform:scaleY(.55)}
+  .vt-wave b:nth-child(2){transform:scaleY(.9)} .vt-wave b:nth-child(3){transform:scaleY(.4)} .vt-wave b:nth-child(4){transform:scaleY(1)} .vt-wave b:nth-child(5){transform:scaleY(.65)}
+  .vt[data-phase="done"] .vt-wave{display:none}
+}

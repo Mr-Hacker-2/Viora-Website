@@ -1,0 +1,11 @@
+/* Appearance picker (assets/x/prefs.js). Uses only theme variables so it fits any page. */
+.pf-row{display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;padding:12px 0;border-bottom:1px solid var(--line)}
+.pf-row b{font-weight:600;font-size:15px}
+.pf-seg{display:inline-flex;border:1px solid var(--line);border-radius:999px;padding:3px;gap:2px}
+.pf-seg button{border:0;background:none;color:var(--muted);padding:6px 16px;border-radius:999px;cursor:pointer;font:inherit;font-size:14px}
+.pf-seg button[aria-checked="true"]{background:var(--accent);color:var(--on-accent);font-weight:600}
+.pf-sw{display:flex;gap:10px;flex-wrap:wrap}
+.pf-sw button{width:30px;height:30px;border-radius:50%;border:2px solid transparent;background:var(--sw);cursor:pointer;padding:0;box-shadow:0 0 0 1px var(--line)}
+.pf-sw button[aria-checked="true"]{border-color:var(--paper,var(--text));box-shadow:0 0 0 2px var(--sw)}
+.pf-note{margin:12px 0 8px;color:var(--muted,#888);font-size:13px}
+.pf-reset{background:none;border:0;color:var(--accent-ink,var(--accent));cursor:pointer;font:inherit;font-size:14px;padding:4px 0;text-decoration:underline;text-underline-offset:3px}

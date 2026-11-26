@@ -1,0 +1,68 @@
+import test from 'node:test'; import assert from 'node:assert/strict';
+import { DEFAULT_LEVEL, personaFor, withPersona, normLevel } from '../assets/x/persona.js';
+test('default level is warm and keeps emotional responses natural', () => { assert.equal(DEFAULT_LEVEL, 'warm'); assert.match(personaFor('flash'), /emojis/i); assert.match(personaFor('flash'), /do not infer a personal emotional state from a neutral question/i); assert.match(withPersona('flash'), /Answer the user's actual request/); });
+test('Flash idea suggestions respect explicit user constraints', () => {
+  const prompt = withPersona('flash');
+  assert.match(prompt, /unless they request a different number or format/);
+  assert.match(prompt, /recommendation only when it fits their tone and needs/);
+  assert.match(prompt, /invite them to choose only when a follow-up would help/);
+});
+test('off adds nothing', () => assert.equal(personaFor('flash', 'off'), ''));
+test('rewriting and unknown assistants stay plain', () => { for (const a of ['human', 'humanize', 'legacy']) assert.equal(personaFor(a, 'vivid'), ''); });
+test('code safety rule is always present', () => { for (const l of ['warm', 'vivid']) assert.match(withPersona('math', l), /code in fenced blocks/); });
+test('vivid differs from warm', () => assert.notEqual(personaFor('flash', 'vivid'), personaFor('flash', 'warm')));
+test('emoji levels keep emojis out of code and away from distress', () => { for (const l of ['warm', 'vivid']) { assert.match(personaFor('flash', l), /code blocks/); assert.match(personaFor('flash', l), /distress/); } });
+test('emoji use stays optional and has no quota', () => { assert.match(withPersona('flash', 'warm'), /Emojis are optional/); assert.match(withPersona('flash', 'vivid'), /no fixed number/); assert.doesNotMatch(withPersona('flash', 'vivid'), /6 to 12 per answer/i); });
+test('unknown or corrupt saved value falls back to the default', () => { assert.equal(normLevel('nonsense'), 'warm'); assert.equal(normLevel(null), 'warm'); assert.equal(normLevel(undefined), 'warm'); });
+test('project instructions are kept after the persona', () => { const t = withPersona('flash', 'warm', 'Answer in French.'); assert.ok(t.endsWith('Answer in French.')); assert.ok(withPersona('human', 'warm', 'X').endsWith('X')); });
+test('every chat assistant knows Abdullah Lababidi created Viora', () => { for (const a of ['flash', 'search', 'math']) assert.match(withPersona(a, 'warm'), /created by Abdullah Lababidi/); });
+test('prompts stay well under the server 8000-character cut-off, leaving room for project instructions', () => { for (const a of ['flash', 'search', 'math', 'human']) for (const l of ['off', 'warm', 'vivid']) assert.ok(withPersona(a, l, '').length < 6000, a + '/' + l); });
+test('base prompt is organised into labelled sections and describes the renderable formatting', () => { const t = withPersona('flash', 'warm'); for (const h of ['HOW TO ANSWER:', 'ACCURACY:', 'CODE:', 'FORMAT:', 'ABOUT VIORA:']) assert.ok(t.includes(h), h); assert.match(t, /\$\$\.\.\.\$\$/); });
+test('math assistant is told to write LaTeX and bold the final result', () => { assert.match(withPersona('math', 'warm'), /LaTeX/); assert.match(withPersona('math', 'warm'), /final result on its own line in bold/); });
+test('Pro Search profiles separate incident dates, evidence confidence, hypotheses, and defensive analysis', () => {
+  const prompt = withPersona('search', 'warm');
+  for (const pattern of [/discovery and publication dates/i, /established facts from attributed assessments and hypotheses/i, /qualify confidence/i, /defensive context/i]) assert.match(prompt, pattern);
+  assert.match(prompt, /keep ordinary answers concise/i);
+});
+
+import { userProfile } from '../assets/x/persona.js';
+test('every chat assistant is told the signed-in user\'s name and profile', () => {
+  const who = userProfile({ name: 'Abdullah', about: 'I am in 10th grade and love robotics.', facts: ['I prefer short answers', 'I prefer short answers', 'I use Python'] });
+  assert.match(who, /^ABOUT THE USER: You are talking with Abdullah/); assert.match(who, /10th grade/); assert.match(who, /I use Python/);
+  assert.equal((who.match(/I prefer short answers/g) || []).length, 1);
+  for (const a of ['flash', 'search', 'math', 'auto']) assert.ok(withPersona(a, 'warm', '', who).includes(who), a);
+});
+test('the Humanizer is not given the user profile', () => { assert.doesNotMatch(withPersona('human', 'warm', '', userProfile({ name: 'Sam' })), /ABOUT THE USER/); });
+test('profile comes before project instructions, and nothing is added when nothing is known', () => {
+  const t = withPersona('flash', 'warm', 'Answer in French.', userProfile({ name: 'Sam' }));
+  assert.ok(t.indexOf('ABOUT THE USER') < t.indexOf('Answer in French.')); assert.ok(t.endsWith('Answer in French.'));
+  assert.equal(userProfile({}), ''); assert.equal(userProfile(), ''); assert.equal(withPersona('flash', 'warm', '', ''), withPersona('flash', 'warm', ''));
+});
+test('profile text is cleaned and capped so the prompt stays under the server cut-off', () => {
+  const who = userProfile({ name: 'A<b>\nB'.repeat(50), about: 'x'.repeat(5000), facts: Array(50).fill(0).map((_, i) => 'fact ' + i + ' ' + 'y'.repeat(400)) });
+  assert.doesNotMatch(who, /[<>\n]/);
+  for (const a of ['flash', 'search', 'math']) assert.ok(withPersona(a, 'vivid', '', who).length < 8000, a);
+});
+test('without a name the profile still says the user is signed in', () => { assert.match(userProfile({ about: 'I like chess' }), /has not shared their name/); });
+
+test('chat assistants get the structured briefing style; the Humanizer does not', () => {
+  for (const a of ['flash', 'search', 'math', 'auto']) assert.match(withPersona(a, 'warm'), /REPLY STYLE:/);
+  assert.doesNotMatch(withPersona('human', 'warm'), /REPLY STYLE:/);
+});
+
+test('Flash is conversation-first: no mandatory expert-briefing layout, while Search and Math keep it', () => {
+  const flash = withPersona('flash', 'warm');
+  assert.match(flash, /REPLY STYLE: Sound like a sharp, friendly person, not a report/);
+  assert.doesNotMatch(flash, /write like an expert briefing|titled numbered sections/);
+  assert.doesNotMatch(flash, /End with a brief conclusion/);
+  for (const a of ['search', 'math']) assert.match(withPersona(a, 'warm'), /write like an expert briefing/, a);
+});
+test('Flash reply craft: answer-first, exact constraints, a clear pick, no filler, one follow-up at most, brief self-correction', () => {
+  const flash = withPersona('flash', 'warm');
+  for (const re of [/Reply craft:/, /keep exact constraints/, /pick one and say why/, /give the actual steps/, /Great question/, /I hope this helps/, /at most one follow-up question/, /Own a mistake in one line/]) assert.match(flash, re);
+});
+test('Flash keeps its accuracy rules and emoji guardrails after the style change', () => {
+  const flash = withPersona('flash', 'vivid');
+  assert.match(flash, /ACCURACY:/); assert.match(flash, /never claim to have run code/); assert.match(flash, /created by Abdullah Lababidi/);
+  for (const l of ['off', 'warm', 'vivid']) assert.ok(withPersona('flash', l, '').length < 6000, 'Flash/' + l + ' stays under the headroom cap');
+});

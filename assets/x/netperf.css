@@ -1,0 +1,12 @@
+/* Speed & reliability panel in the web app's Settings dialog (assets/x/netperf.js). */
+.np-h{margin:18px 0 4px;font:600 15px var(--sans)}
+.np-presets{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;margin:8px 0}
+.np-presets button{display:grid;gap:2px;text-align:left;padding:9px 10px;border-radius:12px;border:1px solid var(--line);background:var(--raised);color:var(--paper);cursor:pointer;font:inherit}
+.np-presets button b{font-weight:600;font-size:14px}.np-presets button span{color:var(--muted);font-size:12px}
+.np-presets button[aria-checked=true]{border-color:var(--accent);box-shadow:0 0 0 2px color-mix(in srgb,var(--accent) 25%,transparent)}
+.np-f{display:grid;gap:4px;margin:10px 0;font-size:14px}
+.np-f input{width:100%;box-sizing:border-box;background:var(--raised);border:1px solid var(--line);color:var(--paper);border-radius:12px;padding:8px 12px;font:inherit}
+.np-f input:focus{border-color:var(--accent);outline:0}
+.np-c{display:flex;gap:10px;align-items:flex-start;margin:10px 0;font-size:14px}.np-c input{margin-top:3px;accent-color:var(--accent)}
+#sdlg{max-height:88vh;overflow:auto}
+@media (max-width:520px){.np-presets{grid-template-columns:1fr}}

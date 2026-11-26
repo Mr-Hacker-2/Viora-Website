@@ -1,0 +1,24 @@
+/* Viora web app — the Think button in the composer (behaviour: think-mode.js).
+   Off: gray brain outline + gray label on a transparent background.
+   On:  blue brain outline + blue label on a light-blue rounded pill. */
+.think-btn{
+  --think-off: var(--muted, #8b8f9a);
+  --think-on: #2563eb;
+  --think-on-bg: #dbe8ff;
+  --think-ring: #2563eb55;
+  display:inline-flex;align-items:center;gap:6px;flex:0 0 auto;
+  height:30px;padding:0 11px 0 9px;margin:0;
+  border:0;border-radius:999px;background:transparent;color:var(--think-off);
+  font:inherit;font-size:13px;font-weight:600;line-height:1;letter-spacing:.005em;
+  cursor:pointer;white-space:nowrap;-webkit-tap-highlight-color:transparent;
+  transition:background-color .22s ease,color .22s ease,box-shadow .22s ease,transform .16s ease;
+}
+.think-btn svg{width:18px;height:18px;flex:0 0 auto;fill:none;stroke:currentColor;stroke-width:1.75;stroke-linecap:round;stroke-linejoin:round}
+.think-btn:hover{color:color-mix(in srgb,var(--think-off) 60%,var(--paper,#111))}
+.think-btn:active{transform:scale(.96)}
+.think-btn:focus-visible{outline:0;box-shadow:0 0 0 3px var(--think-ring)}
+.think-btn[aria-pressed="true"],.think-btn[aria-pressed="true"]:hover{color:var(--think-on);background:var(--think-on-bg)}
+.think-btn:disabled{opacity:.45;cursor:not-allowed;transform:none}
+:root[data-theme="dark"] .think-btn{--think-on:#8cb4ff;--think-on-bg:#6f9cff2b;--think-ring:#8cb4ff66}
+@media (max-width:420px){.think-btn{padding:0 10px 0 8px;gap:5px;font-size:12.5px}}
+@media (prefers-reduced-motion:reduce){.think-btn{transition:none}}

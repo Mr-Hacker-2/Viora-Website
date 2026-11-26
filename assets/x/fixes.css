@@ -1,0 +1,15 @@
+/* Sidebar fix: pin each panel to its own grid column. Hiding #sh-left (display:none) used to make the
+   chat and tools panels slide one column left, leaving the chat in a 0-width column. */
+@media (min-width: 980px){
+  :root[data-model] #sh-left{ grid-column: 1; }
+  :root[data-model] #sh-center{ grid-column: 2; }
+  :root[data-model] #sh-right{ grid-column: 3; }
+  :root[data-model] #shell.no-left{ grid-template-columns: minmax(0, 1fr) 292px; }
+  :root[data-model] #shell.no-left #sh-center{ grid-column: 1; }
+  :root[data-model] #shell.no-left #sh-right{ grid-column: 2; }
+}
+
+/* Mobile sidebar drawer: opaque, with a shadow, so chat text no longer shows through it. */
+@media (max-width: 979px){
+  html body.sb #sh-left{ background: var(--ink-2) !important; -webkit-backdrop-filter: none !important; backdrop-filter: none !important; box-shadow: 0 0 0 100vmax rgba(10,8,20,.38), 8px 0 30px rgba(0,0,0,.22); }
+}
