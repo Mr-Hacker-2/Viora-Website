@@ -17,7 +17,7 @@
     if (!r.ok) throw new Error(d.error || 'Something went wrong. Please try again.');
     return d;
   }
-  const act = async (fn, okText) => { try { msg(''); const d = await fn(); if (d && d.findings) { state = d; render(); } if (okText) msg(okText); } catch (e) { msg(e.message, true); } };
+  const act = async (fn, okText) => { try { msg(''); const d = await fn(); if (d && d.findings) { state = d; render(); } if (okText) msg(okText); return d; } catch (e) { msg(e.message, true); return null; } };
 
   function render() {
     $('#pi-email').textContent = s.email;
@@ -57,13 +57,15 @@
     ]);
   }
 
-  $('#pi-ack').onchange = e => { $('#pi-enable').disabled = !e.target.checked; };
-  $('#pi-enable').onclick = () => act(() => call('/api/intel/consent', 'POST', { enable: true, acknowledge: true }), 'Discovery is on. Run it whenever you like.');
+  const updateConsentButton = () => { $('#pi-enable').disabled = !($('#pi-ack').checked && $('#pi-adult').checked); };
+  $('#pi-ack').onchange = updateConsentButton;
+  $('#pi-adult').onchange = updateConsentButton;
+  $('#pi-enable').onclick = () => act(async () => { const enabled = await call('/api/intel/consent', 'POST', { enable: true, acknowledge: true, adultConfirmed: true }); return enabled.discoveryPending ? call('/api/intel/discover', 'POST', {}) : enabled; }, 'Discovery is enabled. Review the findings before approving anything.');
   $('#pi-disable').onclick = () => act(() => call('/api/intel/consent', 'POST', { enable: false }), 'Discovery is off. Viora will not search again or use your profile until you turn it back on.');
   $('#pi-run').onclick = async () => { const b = $('#pi-run'); b.disabled = true; b.textContent = 'Searching…'; await act(() => call('/api/intel/discover', 'POST', {}), 'Discovery finished. Review the pending findings below.'); b.textContent = 'Run discovery'; b.disabled = !state?.enabled; };
   $('#pi-save').onclick = () => { const profile = {}; document.querySelectorAll('#pi-profile textarea').forEach(t => { profile[t.name] = t.value.split('\n').map(x => x.trim()).filter(Boolean); }); act(() => call('/api/intel/profile', 'PUT', { profile }), 'Saved.'); };
   $('#pi-delete').onclick = () => { if (!confirm('Delete all Personal Intelligence findings and your learned profile? This cannot be undone.')) return; act(async () => { await call('/api/intel', 'DELETE'); return call('/api/intel'); }, 'Your Personal Intelligence profile was deleted.'); };
   document.querySelectorAll('.pi-tabs button').forEach(b => b.onclick = () => { filter = b.dataset.f; document.querySelectorAll('.pi-tabs button').forEach(x => x.classList.toggle('on', x === b)); render(); });
 
-  act(() => call('/api/intel'));
+  act(async () => { const current = await call('/api/intel'); return current.enabled && current.discoveryPending ? call('/api/intel/discover', 'POST', {}) : current; });
 })();
