@@ -33,7 +33,7 @@ test('bulk deletion preview displays a complete object-key manifest and two conf
   assert.match(script, /preview\.objectKeys/);
   assert.match(script, /input\.value!==input\.dataset\.required/);
   assert.match(script, /!check\.checked/);
-  assert.match(script, /No objects were deleted/);
+  assert.match(script, /Enter the exact phrase and complete the second confirmation/);
 });
 
 test('storage UI labels protected data and does not expose provider credentials', async () => {
