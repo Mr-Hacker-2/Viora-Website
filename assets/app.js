@@ -85,19 +85,20 @@ const LS = {
 const session = () => LS.get('viora_session', null);
 const Auth = {
   /** Google sign-in is independent of the email/password box: Google tells the server which account this is. */
-  googleUrl(mode, termsAccepted = false) {
+  googleUrl(mode, termsAccepted = false, personalIntelOptIn = false) {
     const url = new URL(VIORA.authApi + '/auth/google');
     url.searchParams.set('site', '1'); url.searchParams.set('mode', mode === 'signup' ? 'signup' : 'signin');
     if (mode === 'signup' && termsAccepted) url.searchParams.set('terms', '1');
+    if (mode === 'signup' && personalIntelOptIn) { url.searchParams.set('intel', '1'); url.searchParams.set('intel_adult', '1'); }
     return url.href;
   },
   /** Email + password sign-up or sign-in. The server stores only a salted hash of the password. */
-  async password(mode, { email, password, name, terms }) {
+  async password(mode, { email, password, name, terms, personalIntelOptIn = false }) {
     let r;
     try {
       r = await fetch(VIORA.authApi + (mode === 'signup' ? '/api/auth/signup' : '/api/auth/login'), {
         method: 'POST', headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(mode === 'signup' ? { email, password, name, terms: !!terms } : { email, password })
+        body: JSON.stringify(mode === 'signup' ? { email, password, name, terms: !!terms, personalIntelOptIn: !!personalIntelOptIn, personalIntelAdultConfirmed: !!personalIntelOptIn } : { email, password })
       });
     } catch { throw new Error('Could not reach the Viora server. It may be waking up, so try again in 30 seconds.'); }
     const d = await r.json().catch(() => ({}));
@@ -199,6 +200,7 @@ if (page === 'login') {
       $('#auth-title').textContent = 'Create your Viora account';
       $('#auth-sub').textContent = 'Create your account with Google, or with an email and password, then answer 5 quick questions so Viora can tailor your experience.';
       $('#auth-consent-wrap').hidden = false;
+      $('#auth-intel-wrap').hidden = false;
       email.value = email.value || query.get('email') || '';
       btn.lastChild.textContent = 'Create account with Google';
       const message = "We couldn't find an account with this email. Let's create one!";
@@ -262,7 +264,7 @@ if (page === 'login') {
     pwBtn.textContent = creating ? 'Creating your account…' : 'Signing you in…';
     let sess;
     try {
-      const d = await Auth.password(mode(), { email: value, password: secret, name: ($('#auth-name').value || '').trim(), terms: consent.checked });
+      const d = await Auth.password(mode(), { email: value, password: secret, name: ($('#auth-name').value || '').trim(), terms: consent.checked, personalIntelOptIn: !!$('#auth-intel-consent')?.checked });
       sess = await Auth.finish(d.token, 'password');
     } catch (ex) { btn.disabled = creating && !consent.checked; return stop(ex.message); }
     pass.value = '';
