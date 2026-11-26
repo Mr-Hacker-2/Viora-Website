@@ -66,7 +66,7 @@ test('frontend does not contain server-side discovery API credentials', async ()
 test('Google signup forwards the separate Personal Intelligence opt-in, while sign-in remains excluded', async () => {
   const app = await file('assets/app.js');
   assert.ok(app.includes("Auth.googleUrl(mode(), consent.checked, !!$('#auth-intel-consent')?.checked)"));
-  assert.ok(app.includes("if (mode() === 'signup' && personalIntelOptIn)"));
+  assert.ok(app.includes("if (mode === 'signup' && personalIntelOptIn)"));
   assert.ok(app.includes("url.searchParams.set('intel', '1')"));
   assert.ok(app.includes("url.searchParams.set('intel_adult', '1')"));
 });
