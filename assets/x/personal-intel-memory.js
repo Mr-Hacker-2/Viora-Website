@@ -39,9 +39,12 @@
     const pill = $('#pi-memory-state');
     pill.textContent = state.enabled ? 'Discovery on' : 'Discovery off';
     pill.dataset.enabled = String(state.enabled);
-    $('#pi-memory-disable').hidden = !state.enabled;
+    $('#pi-memory-disable').hidden = !(state.enabled || state.signupOptInPending);
+    $('#pi-memory-disable').textContent = state.signupOptInPending && !state.enabled ? 'Cancel pending opt-in' : 'Turn off discovery';
     if (!state.emailVerified) {
-      setStatus('Verify ownership of this email with Google before discovery can run. Your existing profile, if any, remains private.');
+      setStatus(state.signupOptInPending
+        ? 'You opted in at sign-up, but discovery is paused until you verify this email with Google. You can cancel that pending opt-in here.'
+        : 'Verify ownership of this email with Google before discovery can run. Your existing profile, if any, remains private.');
     } else if (state.enabled) {
       const last = state.lastRunAt ? ' Last discovery: ' + new Date(state.lastRunAt).toLocaleString() + '.' : '';
       setStatus(total + ' approved profile detail' + (total === 1 ? '' : 's') + ' · ' + pending + ' finding' + (pending === 1 ? '' : 's') + ' waiting for review.' + last + ' Viora uses only relevant approved details in normal chats.');
@@ -89,11 +92,15 @@
   }
   $('#pi-memory-refresh').addEventListener('click', load);
   $('#pi-memory-disable').addEventListener('click', async () => {
-    if (!state?.enabled || busy) return;
-    if (!confirm('Turn off Personal Intelligence discovery? Viora will stop searching and stop using this profile in AI requests. Your saved findings will remain until you delete them.')) return;
+    if (!(state?.enabled || state?.signupOptInPending) || busy) return;
+    const pendingOnly = state.signupOptInPending && !state.enabled;
+    const question = pendingOnly
+      ? 'Cancel the Personal Intelligence opt-in saved at sign-up? Viora will not start discovery if you later verify this email.'
+      : 'Turn off Personal Intelligence discovery? Viora will stop searching and stop using this profile in AI requests. Your saved findings will remain until you delete them.';
+    if (!confirm(question)) return;
     busy = true;
     $('#pi-memory-disable').disabled = true;
-    try { state = await call('/api/intel/consent', 'POST', { enable: false }); render(); setStatus('Discovery is off. Your saved profile remains available to review or delete.'); }
+    try { state = await call('/api/intel/consent', 'POST', { enable: false }); render(); setStatus(pendingOnly ? 'The pending sign-up opt-in was cancelled.' : 'Discovery is off. Your saved profile remains available to review or delete.'); }
     catch (error) { setStatus(error.message, true); }
     finally { busy = false; $('#pi-memory-disable').disabled = false; }
   });
