@@ -13,7 +13,7 @@ test('every admin navigation item has a matching dashboard view', async () => {
 test('Backblaze inventory controls call real protected backend endpoints', async () => {
   const html = await readFile(new URL('../admin/index.html', import.meta.url), 'utf8');
   const script = [...html.matchAll(/<script[^>]*>([\s\S]*?)<\/script>/gi)].map(match => match[1]).join('\n');
-  for (const id of ['storage-refresh','storage-list-refresh','storage-search','storage-delete-selected','storage-delete-all','storage-confirm-delete','storage-prev','storage-next']) {
+  for (const id of ['storage-refresh','storage-list-refresh','storage-search','storage-delete-selected','storage-delete-categories','storage-delete-all','storage-confirm-delete','storage-prev','storage-next']) {
     assert.ok(html.includes('id="' + id + '"'), 'missing storage control ' + id);
   }
   for (const route of ['/api/admin/storage/summary','/api/admin/storage/objects','/api/admin/storage/preview','/api/admin/storage/delete']) {
@@ -23,6 +23,8 @@ test('Backblaze inventory controls call real protected backend endpoints', async
   assert.match(script, /secondConfirm:true/);
   assert.match(script, /DELETE ALL VIORA STORAGE/);
   assert.match(script, /DELETE SELECTED VIORA OBJECTS/);
+  assert.match(script, /DELETE SELECTED VIORA CATEGORIES/);
+  assert.ok(html.includes('id="storage-delete-categories"'));
 });
 
 test('bulk deletion preview displays a complete object-key manifest and two confirmations', async () => {
