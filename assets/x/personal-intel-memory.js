@@ -49,7 +49,7 @@
         : 'Verify ownership of this email with Google before discovery can run. Your existing profile, if any, remains private.');
     } else if (state.enabled) {
       const last = state.lastRunAt ? ' Last discovery: ' + new Date(state.lastRunAt).toLocaleString() + '.' : '';
-      setStatus(total + ' approved profile detail' + (total === 1 ? '' : 's') + ' · ' + pending + ' finding' + (pending === 1 ? '' : 's') + ' waiting for review · ' + autoApproved + ' auto-approved.' + last + ' Viora uses only relevant approved details in normal chats.');
+      setStatus(total + ' approved profile detail' + (total === 1 ? '' : 's') + ' · ' + pending + ' finding' + (pending === 1 ? '' : 's') + ' waiting for review · ' + autoApproved + ' auto-approved.' + last + ' Viora uses only relevant approved details in normal chats.' + (state.discoveryPending ? ' The first search has not reached a public source yet; it remains queued and will retry when you open this panel again.' : ''));
     } else {
       setStatus(total ? total + ' approved profile detail' + (total === 1 ? '' : 's') + ' saved. Discovery is off, so Viora is not using this profile in AI requests.' : 'Discovery is off. Nothing from public discovery is being added to your profile.');
     }
