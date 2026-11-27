@@ -130,3 +130,8 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(max-width:760px){.side{width:min(292px,86vw)}.top{height:62px;padding-inline:14px}.content{padding:22px 14px 36px}.view-head h2{font-size:24px}.storage-category-grid{grid-template-columns:1fr}.storage-toolbar{padding:0 12px}.storage-toolbar .input{width:100%;flex-basis:100%}.storage-toolbar .select{flex:1;min-width:150px}.storage-preview-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.storage-modal{padding:8px}.storage-modal-panel{max-height:94dvh;border-radius:14px}}
 @media(max-width:480px){.storage-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.storage-summary{padding:12px}.storage-summary strong{font-size:17px}.storage-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.storage-toolbar>*{min-width:0;width:100%}.storage-toolbar .input{grid-column:1/-1}.storage-toolbar .select{grid-column:1/-1}.storage-toolbar #storage-delete-selected{grid-column:1/-1}.storage-danger-actions .btn{width:100%}.storage-modal-panel .card-body{padding:12px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+#users-status{min-height:18px;margin:-4px 0 10px;font-size:12px;color:var(--muted)}#users-status[data-state=success]{color:#91e8c3}
+#last-refresh{white-space:nowrap}
+.admin-id .btn,.side-foot .btn{width:100%}
+@media(max-width:760px){#last-refresh{display:none}}
