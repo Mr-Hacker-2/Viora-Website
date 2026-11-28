@@ -38,13 +38,17 @@
   <div id="pi-main" hidden>
     <section class="pi-card">
       <div class="pi-row pi-between"><h2>Discovery</h2>
-        <div class="pi-row"><button class="btn btn-primary" id="pi-run" type="button">Run discovery</button><button class="btn btn-ghost" id="pi-disable" type="button">Turn off discovery</button></div></div>
-      <label class="pi-check"><input type="checkbox" id="pi-auto-approve"> Automatically approve strong matches</label><p class="pi-faint" id="pi-auto-status">Automatic approval is off. All findings wait for your review.</p><ul id="pi-report" class="pi-report"></ul>
+        <div class="pi-row"><button class="btn btn-primary" id="pi-run" type="button">Refresh Discovery</button><button class="btn btn-ghost" id="pi-pause" type="button">Pause discovery</button><button class="btn btn-ghost" id="pi-disable" type="button">Turn off discovery</button></div></div>
+      <p class="pi-faint" id="pi-status-line"></p>
+      <div id="pi-progress" class="pi-progress" aria-live="polite" hidden></div>
+      <label class="pi-check"><input type="checkbox" id="pi-auto-approve"> Automatically approve strong matches</label><p class="pi-faint" id="pi-auto-status">Automatic approval is off. All findings wait for your review.</p>
+      <details class="pi-uses"><summary>What Viora uses in AI conversations</summary>
+        <p class="pi-faint">Only details you approved (and strong matches, if you turned on automatic approval) can be used, and only the few relevant to what you are asking. They go to the AI as background, never as instructions, and never to the Humanizer. Pending, rejected and uncertain findings are never used. Pausing keeps your approved details in use; turning discovery off stops all use. Searches run on Viora's server, so you can close this page while one is running.</p></details>
     </section>
 
     <section class="pi-card">
       <div class="pi-row pi-between"><h2>Findings</h2>
-        <div class="pi-tabs" role="tablist"><button data-f="pending" class="on" type="button">Pending</button><button data-f="approved" type="button">Approved</button><button data-f="rejected" type="button">Rejected</button></div></div>
+        <div class="pi-tabs" role="tablist"><button data-f="new" class="on" type="button">New</button><button data-f="pending" type="button">Pending</button><button data-f="approved" type="button">Approved</button><button data-f="rejected" type="button">Rejected</button></div></div>
       <p class="pi-faint">Strong: the source ties this directly to your email. Possible: your email appears, but it may not be you. Uncertain: weak signal, so check before approving.</p>
       <div id="pi-findings" class="pi-findings"></div>
     </section>
@@ -64,6 +68,7 @@
 </main>
 <footer id="site-footer"></footer>
 <script src="assets/app.js"></script>
+<script src="assets/x/intel-progress.js"></script>
 <script src="assets/x/intel.js"></script>
 </body>
 </html>
