@@ -16,6 +16,7 @@
 <link rel="stylesheet" href="assets/x/accent.css">
 <link rel="stylesheet" href="assets/x/prefs.css">
 <link rel="stylesheet" href="assets/x/intel-memory.css">
+<link rel="stylesheet" href="assets/x/intel.css">
 <link rel="stylesheet" href="assets/x/viora-theme.css">
 <link rel="stylesheet" href="assets/x/fixes.css">
 <link rel="stylesheet" href="assets/x/app-polish.css">
@@ -793,11 +794,15 @@ kbd{display:inline-block;min-width:24px;padding:3px 8px;border:1px solid var(--l
   <input type="text" id="u-name" maxlength="60" aria-label="What should Viora call you?">
   <textarea id="u-about" maxlength="600" placeholder="What should Viora know about you? e.g. I'm in 10th grade, I love robotics, and I like short answers with examples." aria-label="About you"></textarea>
   <section class="pi-memory" id="pi-memory" aria-labelledby="pi-memory-title">
-    <div class="pi-memory-head"><div><h3 id="pi-memory-title">Personal Intelligence Discovery</h3><p>Public information you reviewed and approved. This is separate from the notes you write above.</p></div><span class="pi-memory-state" id="pi-memory-state">Loading…</span></div>
-    <label class="pi-memory-auto"><input type="checkbox" id="pi-memory-auto-approve"> Automatically approve strong matches</label>
+    <div class="pi-memory-head"><div><h3 id="pi-memory-title">Personal Intelligence Discovery</h3><p>Public information about you that you reviewed and approved. This is separate from the notes you write above.</p></div><span class="pi-memory-state" id="pi-memory-state">Loading…</span></div>
     <p class="pi-memory-status" id="pi-memory-status" role="status" aria-live="polite">Checking your private profile…</p>
+    <p class="pi-memory-last" id="pi-memory-last"></p>
+    <div class="pi-progress" id="pi-memory-progress" aria-live="polite" hidden></div>
+    <div class="pi-memory-new" id="pi-memory-new" hidden><h4>New findings to review</h4><div class="pi-findings" id="pi-memory-new-list"></div></div>
+    <label class="pi-memory-auto"><input type="checkbox" id="pi-memory-auto-approve"> Automatically approve strong matches</label>
     <div class="pi-memory-facts" id="pi-memory-facts"><p class="pi-memory-empty">Your approved discoveries will appear here.</p></div>
-    <div class="pi-memory-actions"><a href="intelligence.html">Review findings and manage discovery ↗</a><button class="btn" id="pi-memory-refresh" type="button">Refresh</button><button class="btn" id="pi-memory-disable" type="button" hidden>Turn off discovery</button></div>
+    <details class="pi-memory-uses"><summary>What Viora uses in AI conversations</summary><p>Only details you approved (or strong matches, if you turned on automatic approval) are ever used, and only the few that relate to what you are asking. They are passed to the AI as background, never as instructions, and never to the Humanizer. Pending, rejected and uncertain findings are never used. Pausing keeps your approved details in use; turning discovery off stops all use.</p></details>
+    <div class="pi-memory-actions"><a href="intelligence.html">Review all findings and manage discovery ↗</a><button class="btn btn-primary" id="pi-memory-refresh" type="button">Refresh Discovery</button><button class="btn" id="pi-memory-pause" type="button" hidden>Pause discovery</button><button class="btn" id="pi-memory-disable" type="button" hidden>Turn off discovery</button></div>
   </section>
   <h3 style="margin-top:14px">Memory</h3><p>Viora can remember explicit, non-sensitive preferences, interests, and goals you share. Memories stay on this device; review, edit, or delete them here. Passwords, health details, and other sensitive topics are skipped.</p>
   <label style="display:flex;gap:8px;align-items:center;margin-bottom:8px;font-size:14px"><input type="checkbox" id="m-auto"> Automatically remember details I share</label>
@@ -2119,6 +2124,7 @@ $('#input').addEventListener('input', () => { try { if (NP.get().saveDraft && $(
 render(); grow(); $('#input').focus();
 })();
 </script>
+<script src="assets/x/intel-progress.js"></script>
 <script type="module" src="assets/x/personal-intel-memory.js"></script>
 </body>
 </html>

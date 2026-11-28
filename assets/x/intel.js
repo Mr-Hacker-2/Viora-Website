@@ -1,12 +1,14 @@
 /* Personal Intelligence dashboard. Talks only to the auth server's /api/intel routes with the signed-in session token;
-   the server decides everything (verification, consent, ownership). All server text is rendered with textContent. */
+   the server decides everything (verification, consent, ownership). Discovery runs as a persistent server-side job: this page can
+   request a refresh and watch real progress, but never runs or schedules a search itself. All server text uses textContent. */
 (() => {
   if (document.body.dataset.page !== 'intelligence') return;
   const $ = s => document.querySelector(s);
   let s; try { s = JSON.parse(localStorage.getItem('viora_session') || 'null'); } catch { s = null; }
   if (!s || !s.token) { location.replace('login.html'); return; }
   const API = (window.VIORA && VIORA.authApi) || '';
-  let state = null, filter = 'pending';
+  const P = globalThis.VioraIntelProgress;
+  let state = null, filter = 'new', stopWatching = null;
 
   const el = (tag, props = {}, kids = []) => { const n = document.createElement(tag); Object.assign(n, props); for (const k of [].concat(kids)) n.append(k); return n; };
   const msg = (text, err) => { const m = $('#pi-msg'); m.hidden = !text; m.textContent = text || ''; m.classList.toggle('err', !!err); };
@@ -17,59 +19,77 @@
     if (!r.ok) throw new Error(d.error || 'Something went wrong. Please try again.');
     return d;
   }
-  const act = async (fn, okText) => { try { msg(''); const d = await fn(); if (d && d.findings) { state = d; render(); } if (okText) msg(d?.discoveryPending ? 'No public source completed the first search. It remains queued and will retry when you reopen Personal Intelligence.' : okText); return d; } catch (e) { msg(e.message, true); return null; } };
+  const act = async (fn, okText) => { try { msg(''); const d = await fn(); if (d && d.findings) { state = d; render(); } if (okText) msg(okText); return d; } catch (e) { msg(e.message, true); return null; } };
+  const running = () => P.isActive(state?.discovery);
+
+  function startWatching() {
+    if (stopWatching) return;
+    stopWatching = P.watch({
+      fetchStatus: async () => (await call('/api/intel/discovery')).discovery,
+      onUpdate: async (discovery, wasActive) => {
+        if (!state) return;
+        state.discovery = discovery;
+        if (!P.isActive(discovery)) {
+          stopWatching = null;
+          if (wasActive === true) { try { state = await call('/api/intel'); } catch (e) { msg(e.message, true); } }
+        }
+        render();
+      }
+    });
+  }
 
   function render() {
     $('#pi-email').textContent = s.email;
     const st = $('#pi-state');
-    st.textContent = state.enabled ? 'Discovery on' : 'Discovery off'; st.classList.toggle('on', state.enabled);
-    $('#pi-last').textContent = state.lastRunAt ? 'Last discovery: ' + new Date(state.lastRunAt).toLocaleString() : 'No discovery run yet';
+    st.textContent = !state.enabled ? 'Discovery off' : state.paused ? 'Discovery paused' : running() ? 'Discovering…' : 'Discovery on';
+    st.classList.toggle('on', state.enabled);
+    $('#pi-last').textContent = state.lastRunAt ? 'Last successful discovery: ' + new Date(state.lastRunAt).toLocaleString() : 'No successful discovery yet';
     $('#pi-unverified').hidden = state.emailVerified || state.enabled;
     $('#pi-consent').hidden = !state.emailVerified || state.enabled;
     $('#pi-main').hidden = !state.enabled && !state.findings.length;
-    $('#pi-run').disabled = !state.enabled;
+    const run = $('#pi-run');
+    run.disabled = !state.enabled || !!state.paused;
+    run.textContent = running() ? 'Searching…' : 'Refresh Discovery';
+    $('#pi-pause').hidden = !state.enabled;
+    $('#pi-pause').textContent = state.paused ? 'Resume discovery' : 'Pause discovery';
     $('#pi-disable').hidden = !state.enabled;
+    $('#pi-status-line').textContent = !state.enabled ? '' : state.paused ? 'Discovery is paused. Nothing will be searched until you resume.' : running() ? '' : 'Searches run on Viora’s server. Refresh whenever you like.';
     const autoBox = $('#pi-auto-approve'); if (autoBox) { autoBox.checked = state.autoApproveStrong === true; autoBox.disabled = !state.enabled || !state.emailVerified; }
     const autoStatus = $('#pi-auto-status'); if (autoStatus) autoStatus.textContent = state.autoApproveStrong ? 'Automatic approval is on for strong matches only.' : 'Automatic approval is off. All findings wait for your review.';
 
     $('#pi-sources').replaceChildren(...state.sources.map(x => el('li', { textContent: x.label + (x.configured ? '' : ' (not configured on this server yet)') })));
-    $('#pi-report').replaceChildren(...(state.lastRunReport || []).map(r => el('li', {}, [el('b', { textContent: r.source + ':' }), r.status === 'ok' ? `${r.count} result${r.count === 1 ? '' : 's'}` : r.status === 'not_configured' ? 'not configured' : r.status === 'rate_limited' ? 'rate limited, try later' : 'failed', r.detail ? ' — ' + r.detail : ''])));
+    P.render($('#pi-progress'), state.discovery);
 
-    const list = state.findings.filter(f => f.status === filter);
-    $('#pi-findings').replaceChildren(...(list.length ? list.map(card) : [el('p', { className: 'pi-faint', textContent: filter === 'pending' ? 'Nothing waiting for review.' : 'None yet.' })]));
-
+    const list = state.findings.filter(f => filter === 'new' ? f.isNew && f.status !== 'rejected' : f.status === filter);
+    const empty = filter === 'new' ? 'No new findings from the latest search.' : filter === 'pending' ? 'Nothing waiting for review.' : 'None yet.';
+    $('#pi-findings').replaceChildren(...(list.length ? list.map(f => P.findingCard(f, { act: decide, categories: state.categories })) : [el('p', { className: 'pi-faint', textContent: empty })]));
     $('#pi-profile').replaceChildren(...state.categories.map(c => el('label', {}, [c.label, el('textarea', { value: (state.profile[c.id] || []).join('\n'), name: c.id, placeholder: 'Nothing yet' })])));
+    if (running()) startWatching();
   }
 
-  function card(f) {
-    const label = { strong: 'Strong match', possible: 'Possible match', uncertain: 'Uncertain' }[f.confidence];
-    const btn = (text, cls, fn) => el('button', { className: 'btn ' + cls, type: 'button', textContent: text, onclick: fn });
-    const acts = [];
-    if (f.status !== 'approved') acts.push(btn('Approve', 'btn-primary', () => act(() => call('/api/intel/findings/' + f.id, 'POST', { status: 'approved' }), 'Approved. Its details were added to what Viora has learned.')));
-    if (f.autoApproved) acts.push(btn('Undo', 'btn-ghost', () => act(() => call('/api/intel/findings/' + f.id, 'POST', { status: 'pending' }), 'Automatic approval undone. The finding is pending review.')));
-    if (f.status !== 'rejected') acts.push(btn('Not me', 'btn-ghost', () => act(() => call('/api/intel/findings/' + f.id, 'POST', { status: 'rejected' }))));
-    acts.push(btn('Delete', 'btn-ghost', () => act(() => call('/api/intel/findings/' + f.id, 'DELETE'))));
-    return el('article', { className: 'pi-f' }, [
-      el('div', { className: 'pi-tags' }, [el('span', { className: 'pi-tag ' + f.confidence, textContent: label }), el('span', { className: 'pi-tag', textContent: f.source }), ...(f.autoApproved ? [el('span', { className: 'pi-tag auto-approved', textContent: 'Auto-approved' })] : [])]),
-      el('a', { href: f.url, target: '_blank', rel: 'noopener noreferrer nofollow', textContent: f.title || f.url }),
-      el('span', { className: 'url', textContent: f.url }),
-      f.snippet ? el('p', { className: 'snip', textContent: f.snippet }) : '',
-      el('p', { className: 'basis', textContent: 'Why: ' + f.matchBasis }),
-      f.facts.length ? el('p', { className: 'basis', textContent: 'Would add: ' + f.facts.map(x => x.text).slice(0, 6).join(' · ') + (f.facts.length > 6 ? ' …' : '') }) : '',
-      el('div', { className: 'acts' }, acts)
-    ]);
+  function decide(action, f, facts) {
+    call('/api/intel/discovery/ack', 'POST', {}).catch(() => {});
+    if (action === 'delete') return act(() => call('/api/intel/findings/' + f.id, 'DELETE'));
+    if (action === 'edit') return act(() => call('/api/intel/findings/' + f.id, 'PUT', { facts }), 'Saved. Your profile now reflects your edits.');
+    if (action === 'approve') return act(() => call('/api/intel/findings/' + f.id, 'POST', { status: 'approved' }), 'Approved. Its details were added to what Viora has learned.');
+    if (action === 'pending') return act(() => call('/api/intel/findings/' + f.id, 'POST', { status: 'pending' }), 'Automatic approval undone. The finding is pending review.');
+    return act(() => call('/api/intel/findings/' + f.id, 'POST', { status: 'rejected' }));
   }
 
   const updateConsentButton = () => { $('#pi-enable').disabled = !($('#pi-ack').checked && $('#pi-adult').checked); };
   $('#pi-ack').onchange = updateConsentButton;
   $('#pi-adult').onchange = updateConsentButton;
-  $('#pi-enable').onclick = () => act(async () => { const enabled = await call('/api/intel/consent', 'POST', { enable: true, acknowledge: true, adultConfirmed: true }); state = enabled; render(); return enabled.discoveryPending ? call('/api/intel/discover', 'POST', {}) : enabled; }, 'Discovery is enabled. Review the findings before approving anything.');
+  // Turning discovery on is all it takes: the server queues the first search itself.
+  $('#pi-enable').onclick = () => act(() => call('/api/intel/consent', 'POST', { enable: true, acknowledge: true, adultConfirmed: true }), 'Discovery is on. The first search is running on Viora’s server; review the findings before approving anything.');
   $('#pi-auto-approve').onchange = () => act(() => call('/api/intel/settings', 'POST', { autoApproveStrong: $('#pi-auto-approve').checked }), $('#pi-auto-approve').checked ? 'Automatic approval enabled for strong matches.' : 'Automatic approval turned off.');
-  $('#pi-disable').onclick = () => act(() => call('/api/intel/consent', 'POST', { enable: false }), 'Discovery is off. Viora will not search again or use your profile until you turn it back on.');
-  $('#pi-run').onclick = async () => { const b = $('#pi-run'); b.disabled = true; b.textContent = 'Searching…'; await act(() => call('/api/intel/discover', 'POST', {}), 'Discovery finished. Review the pending findings below.'); b.textContent = 'Run discovery'; b.disabled = !state?.enabled; };
+  $('#pi-disable').onclick = () => act(() => call('/api/intel/consent', 'POST', { enable: false }), 'Discovery is off. Any running search was stopped, and Viora will not use your profile until you turn it back on.');
+  $('#pi-pause').onclick = () => act(() => call('/api/intel/pause', 'POST', { paused: !state.paused }), state.paused ? 'Discovery resumed.' : 'Discovery paused. Any running search was stopped.');
+  // Refresh asks the server for a new search. If one is already running the server answers with it and we show its progress.
+  $('#pi-run').onclick = () => act(async () => { const d = await call('/api/intel/discover', 'POST', {}); if (stopWatching) { stopWatching(); stopWatching = null; } return d; });
   $('#pi-save').onclick = () => { const profile = {}; document.querySelectorAll('#pi-profile textarea').forEach(t => { profile[t.name] = t.value.split('\n').map(x => x.trim()).filter(Boolean); }); act(() => call('/api/intel/profile', 'PUT', { profile }), 'Saved.'); };
   $('#pi-delete').onclick = () => { if (!confirm('Delete all Personal Intelligence findings and your learned profile? This cannot be undone.')) return; act(async () => { await call('/api/intel', 'DELETE'); return call('/api/intel'); }, 'Your Personal Intelligence profile was deleted.'); };
   document.querySelectorAll('.pi-tabs button').forEach(b => b.onclick = () => { filter = b.dataset.f; document.querySelectorAll('.pi-tabs button').forEach(x => x.classList.toggle('on', x === b)); render(); });
 
-  act(async () => { const current = await call('/api/intel'); state = current; render(); return current.enabled && current.discoveryPending ? call('/api/intel/discover', 'POST', {}) : current; });
+  // Display only. The server queued and runs discovery whether or not this page was open.
+  act(async () => { const current = await call('/api/intel'); state = current; render(); if (current.discovery?.latest?.unseen && !running()) { call('/api/intel/discovery/ack', 'POST', {}).catch(() => {}); msg('Discovery finished while you were away: ' + (current.discovery.latest.summary?.newFindings || 0) + ' new finding(s) are ready to review.'); } return null; });
 })();

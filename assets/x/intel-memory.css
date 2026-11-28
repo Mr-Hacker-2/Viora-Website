@@ -15,3 +15,17 @@
 .pi-memory-actions a:hover{text-decoration:underline}
 .pi-memory-actions .btn{font-size:11px;padding:7px 10px}
 @media(max-width:620px){.pi-memory-facts{grid-template-columns:1fr}.pi-memory-actions a{width:100%}}
+.pi-memory-last{margin:0;color:var(--muted);font-size:12px}
+.pi-memory-new{display:grid;gap:8px}
+.pi-memory-new h4{margin:0;font-size:12px}
+.pi-memory-uses{font-size:12px;color:var(--muted)}
+.pi-memory-uses summary{cursor:pointer;color:var(--text)}
+.pi-memory-uses p{margin:6px 0 0;line-height:1.55}
+.pi-memory .pi-findings{display:grid;gap:8px}
+.pi-memory .pi-f{border:1px solid var(--line);border-radius:12px;padding:11px;display:grid;gap:5px;min-width:0;font-size:12px}
+.pi-memory .pi-f a{font-weight:600;overflow-wrap:anywhere;color:var(--text)}
+.pi-memory .pi-f .url{font-size:11px;color:var(--muted);overflow-wrap:anywhere}
+.pi-memory .pi-f p{margin:0;color:var(--muted)}
+.pi-memory .pi-f .acts,.pi-edit .acts{display:flex;gap:6px;flex-wrap:wrap}
+.pi-memory .pi-f .acts .btn{font-size:11px;padding:6px 9px}
+.pi-memory-actions .btn-primary{order:2}
