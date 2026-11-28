@@ -63,3 +63,15 @@ test('analytics does not render a disabled fake date-range dropdown', async () =
   assert.notEqual(start, -1);
   assert.doesNotMatch(html.slice(start, end), /<select[^>]*disabled/);
 });
+
+test('admin user management exposes server-backed account filters and audit search', async () => {
+  const html = await readFile(new URL('../admin/index.html', import.meta.url), 'utf8');
+  for (const id of ['user-status-filter','user-plan-filter','user-role-filter','user-provider-filter','user-clear-filters','activity-search','activity-clear-search']) {
+    assert.ok(html.includes('id="' + id + '"'), 'missing admin control ' + id);
+  }
+  assert.ok(html.includes("status:$('#user-status-filter').value"));
+  assert.ok(html.includes("plan:$('#user-plan-filter').value"));
+  assert.ok(html.includes("provider:$('#user-provider-filter').value"));
+  assert.ok(html.includes('function filterActivity()'));
+  assert.ok(html.includes('activityEvents.filter('));
+});
