@@ -61,6 +61,7 @@
       <button data-view="users"><span class="ico">♙</span>Users</button>
       <button data-view="storage"><span class="ico">▤</span>Blackblaze Storage</button>
       <button data-view="models"><span class="ico">✦</span>AI models</button>
+      <button data-view="discovery"><span class="ico">⌕</span>Discovery jobs</button>
       <button data-view="voice"><span class="ico">♪</span>Voice</button>
       <button data-view="monitoring"><span class="ico">⌁</span>API monitoring</button>
       <button data-view="analytics"><span class="ico">▥</span>Analytics</button>
@@ -146,6 +147,15 @@
         <div class="view-head"><div><div class="eyebrow">Inference</div><h2>AI model control center</h2><p>Names and key-configuration indicators come from the server. No key values are returned.</p></div></div>
         <div class="notice">Provider connection tests and model-availability switches are not exposed by the current API. “Configured” means a server key is present; it does not prove that the provider or model is reachable.</div>
         <div id="models-error" class="error" role="alert"></div><div class="grid model-grid" id="model-grid"><div class="card empty">Loading server model configuration…</div></div>
+      </section>
+
+      <section class="view" id="view-discovery">
+        <div class="view-head"><div><div class="eyebrow">Personal Intelligence</div><h2>Discovery jobs</h2><p>Queue, source health and recent background jobs. Counts and job metadata only: emails, findings and discovered content are never shown here.</p></div><div class="disc-actions"><label class="disc-auto"><input type="checkbox" id="disc-auto"> Auto-refresh</label><button class="btn" id="disc-refresh">↻ Refresh</button></div></div>
+        <div id="disc-error" class="error" role="alert"></div>
+        <div class="grid stats" id="disc-stats"></div>
+        <div class="disc-worker" id="disc-worker" role="status"></div>
+        <article class="card"><div class="card-head"><h3>Source health</h3><span class="subtle">Active and last 24 hours</span></div><div class="card-body disc-scroll"><table class="disc-table" id="disc-sources"><thead><tr><th>Source</th><th>Succeeded</th><th>Failed</th><th>Unavailable</th><th>Not configured</th><th>In progress</th><th>Retries</th></tr></thead><tbody></tbody></table></div></article>
+        <article class="card" style="margin-top:14px"><div class="card-head"><h3>Recent jobs</h3><div class="disc-filters"><input class="input" id="disc-search" type="search" placeholder="Search account id or kind" aria-label="Search jobs"><select class="select" id="disc-status" aria-label="Filter by status"><option value="">All statuses</option><option value="queued">Queued</option><option value="running">Running</option><option value="waiting">Retrying</option><option value="succeeded">Succeeded</option><option value="partial">Partial</option><option value="failed">Failed</option><option value="cancelled">Cancelled</option></select></div></div><div class="card-body disc-scroll"><table class="disc-table" id="disc-jobs"><thead><tr><th>Account</th><th>Kind</th><th>Status</th><th>Started</th><th>Duration</th><th>Sources</th><th>Notes</th></tr></thead><tbody></tbody></table><div class="empty" id="disc-empty" hidden>No jobs match.</div></div></article>
       </section>
 
       <section class="view" id="view-voice">
@@ -316,7 +326,54 @@ function updateStorageConfirmState(){const input=$('#storage-confirm-input'),che
 function closeStorageModal(){if(storageState.busy)return;$('#storage-modal').hidden=true;storageState.preview=null}
 async function executeStorageDeletion(){const preview=storageState.preview;if(!preview)return;const input=$('#storage-confirm-input'),check=$('#storage-second-confirm'),button=$('#storage-confirm-delete');if(input.value!==input.dataset.required||!check.checked){$('#storage-confirm-error').textContent='Enter the exact phrase and complete the second confirmation.';$('#storage-confirm-error').classList.add('show');return}button.disabled=true;button.textContent='Deleting and verifying…';storageSetBusy(true);try{const report=await api('/api/admin/storage/delete',{method:'POST',body:JSON.stringify({planId:preview.planId,confirmation:input.value,secondConfirm:true})});renderStorageDeleteReport(report);storageState.preview=null;storageState.selected.clear();storageState.categorySelection.clear();await loadStorageSummary();await loadStorageObjects(true);storageStatus(report.success?'Deletion completed and verified.':'Deletion is incomplete. Review the detailed report; do not assume storage is empty.',report.success?'success':'error')}catch(error){if(error.data&&error.data.mode){renderStorageDeleteReport(error.data);try{await loadStorageSummary();await loadStorageObjects(true)}catch(refreshError){showError('#storage-error','Deletion report loaded, but the refreshed inventory failed: '+refreshError.message)}}else $('#storage-confirm-error').textContent=error.message;$('#storage-confirm-error').classList.add('show')}finally{storageSetBusy(false);button.textContent='Confirm permanent deletion';button.disabled=true}}
 function renderStorageDeleteReport(report){$('#storage-preview-content').hidden=true;const root=$('#storage-delete-report');root.hidden=false;root.replaceChildren();const title=document.createElement('h4');title.textContent=report.success?'Deletion completed and verified':'Deletion incomplete — action required';title.className=report.success?'storage-report-success':'storage-report-error';const summary=document.createElement('p');summary.textContent=report.message+' Planned versions: '+report.plannedVersions+'. Deleted: '+report.deletedVersions+'. Failed: '+report.failedVersions+'. Remaining: '+(report.remainingVersions==null?'not verified':report.remainingVersions)+'. Verification: '+(report.verificationComplete?'complete':'incomplete')+'. Audit record: '+(report.auditLogged?'saved':'not confirmed')+'.';const errors=document.createElement('pre');errors.className='storage-key-manifest';errors.textContent=(report.errors||[]).map(item=>item.key+' ['+item.versionId+']: '+item.error).join('\n')||'No individual errors were reported.';root.append(title,summary,errors);$('#storage-modal-title').textContent='Deletion report';$('#storage-confirm-input').value='';$('#storage-second-confirm').checked=false}
-function showView(name){currentView=name;$$('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+name));$$('#nav button').forEach(el=>el.setAttribute('aria-current',String(el.dataset.view===name)));const selected=$('#nav button[data-view="'+name+'"]');$('#page-title').textContent=selected?selected.textContent.trim():'Overview';$('#sidebar').classList.remove('open');document.body.classList.remove('nav-open');if(name==='users')loadUsers();if(name==='storage')loadStorage();if(name==='models')loadModels();if(name==='voice')loadVoice();if(name==='monitoring'){loadOverview();loadHealth()}if(name==='health')loadHealth();if(name==='activity')loadActivity();if(name==='settings')loadSettings()}
+
+/* ---- Discovery jobs (Personal Intelligence background queue). Display only: this page never starts or changes a job. ---- */
+const discState={data:null,timer:null};
+function discText(tag,cls,text){const el=document.createElement(tag);if(cls)el.className=cls;if(text!=null)el.textContent=text;return el}
+function discDuration(ms){if(ms==null)return '—';if(ms<1000)return ms+' ms';const s=Math.round(ms/1000);return s<60?s+' s':Math.floor(s/60)+' min '+(s%60)+' s'}
+function discStat(label,value,note,tone){const card=discText('article','card stat');if(tone)card.dataset.tone=tone;card.append(discText('div','stat-label',label),discText('div','stat-value',String(value)),discText('div','stat-note',note));return card}
+function renderDiscovery(d){
+  const a=d.active,l=d.last24h;
+  $('#disc-stats').replaceChildren(
+    discStat('Queued',a.queued,a.delayed?a.delayed+' held back by the hourly budget':'Waiting for a worker'),
+    discStat('Running',a.running,a.stale?a.stale+' with an expired lease (will be recovered)':'In progress on the server',a.stale?'warn':''),
+    discStat('Retrying',a.waiting,'Waiting for a provider retry'),
+    discStat('Succeeded (24h)',l.succeeded+l.partial,l.partial?l.partial+' partial':'All sources answered'),
+    discStat('Failed (24h)',l.failed,l.cancelled+' cancelled',l.failed?'bad':''),
+    discStat('Average run',discDuration(l.avgDurationMs),'Started to finished, last 24 hours'),
+    discStat('Auto-retries scheduled',d.autoRetryScheduled,'Failed first runs that will retry by themselves'));
+  const w=d.worker;
+  $('#disc-worker').textContent=(w.running?'Worker running':'Worker NOT running')+' · '+w.activeRuns+' of '+w.maxConcurrent+' slots busy · checks every '+(w.tickMs/1000)+' s · '+w.maxAttempts+' attempts per source · '+w.maxStartsPerHour+' starts per account per hour'+(d.truncated?' · showing the first '+d.accountsScanned+' accounts':'');
+  $('#disc-worker').dataset.state=w.running?'ok':'bad';
+  const sb=$('#disc-sources tbody');sb.replaceChildren();
+  const ids=Object.keys(d.sources);
+  if(!ids.length){const tr=document.createElement('tr'),td=discText('td','',  'No source activity in the last 24 hours.');td.colSpan=7;tr.append(td);sb.append(tr)}
+  for(const id of ids){const r=d.sources[id],tr=document.createElement('tr');tr.append(discText('td','',r.label));for(const k of ['ok','failed','unavailable','notConfigured','inProgress','retries']){const td=discText('td','',String(r[k]));if((k==='failed'||k==='unavailable')&&r[k])td.className='disc-bad';tr.append(td)}sb.append(tr)}
+  drawDiscoveryJobs();
+}
+function drawDiscoveryJobs(){
+  const d=discState.data;if(!d)return;
+  const q=$('#disc-search').value.trim().toLowerCase(),st=$('#disc-status').value;
+  const rows=d.recent.filter(j=>(!st||j.status===st)&&(!q||j.account.includes(q)||String(j.kind).toLowerCase().includes(q)));
+  const body=$('#disc-jobs tbody');body.replaceChildren();$('#disc-empty').hidden=rows.length>0;
+  for(const j of rows){
+    const tr=document.createElement('tr');
+    const status=discText('span','disc-chip',({waiting:'retrying'})[j.status]||j.status);status.dataset.status=j.status;
+    const srcs=discText('td','');for(const s of j.sources){const chip=discText('span','disc-src',s.label+' · '+s.status+(s.attempts>1?' ×'+s.attempts:''));chip.dataset.status=s.status;srcs.append(chip)}
+    const sc=discText('td','');sc.append(status);
+    const notes=[j.delayed?'held back by hourly budget':'',j.recovered?'recovered after restart':'',j.message].filter(Boolean).join(' · ');
+    tr.append(discText('td','disc-mono',j.account),discText('td','',j.kind),sc,discText('td','',j.startedAt?new Date(j.startedAt).toLocaleString():'—'),discText('td','',discDuration(j.durationMs)),srcs,discText('td','disc-notes',notes));
+    body.append(tr);
+  }
+}
+async function loadDiscovery(){
+  clearError('#disc-error');
+  try{discState.data=await api('/api/admin/discovery?limit=100');renderDiscovery(discState.data)}
+  catch(e){showError('#disc-error',e.message||'Discovery data could not be loaded.')}
+}
+function discSchedule(){clearInterval(discState.timer);discState.timer=null;if($('#disc-auto')?.checked&&currentView==='discovery')discState.timer=setInterval(()=>{if(document.hidden||currentView!=='discovery')return;loadDiscovery()},10000)}
+$('#disc-refresh').addEventListener('click',loadDiscovery);$('#disc-search').addEventListener('input',drawDiscoveryJobs);$('#disc-status').addEventListener('change',drawDiscoveryJobs);$('#disc-auto').addEventListener('change',discSchedule);
+function showView(name){currentView=name;$$('.view').forEach(el=>el.classList.toggle('active',el.id==='view-'+name));$$('#nav button').forEach(el=>el.setAttribute('aria-current',String(el.dataset.view===name)));const selected=$('#nav button[data-view="'+name+'"]');$('#page-title').textContent=selected?selected.textContent.trim():'Overview';$('#sidebar').classList.remove('open');document.body.classList.remove('nav-open');if(name==='users')loadUsers();if(name==='storage')loadStorage();if(name==='models')loadModels();if(name==='voice')loadVoice();if(name==='discovery')loadDiscovery();discSchedule();if(name==='monitoring'){loadOverview();loadHealth()}if(name==='health')loadHealth();if(name==='activity')loadActivity();if(name==='settings')loadSettings()}
 async function loadOverview(){
   clearError('#overview-error');
   clearError('#monitor-error');

@@ -130,3 +130,24 @@ button:focus-visible,a:focus-visible,input:focus-visible,select:focus-visible,te
 @media(max-width:760px){.side{width:min(292px,86vw)}.top{height:62px;padding-inline:14px}.content{padding:22px 14px 36px}.view-head h2{font-size:24px}.storage-category-grid{grid-template-columns:1fr}.storage-toolbar{padding:0 12px}.storage-toolbar .input{width:100%;flex-basis:100%}.storage-toolbar .select{flex:1;min-width:150px}.storage-preview-stats{grid-template-columns:repeat(2,minmax(0,1fr))}.storage-modal{padding:8px}.storage-modal-panel{max-height:94dvh;border-radius:14px}}
 @media(max-width:480px){.storage-summary-grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}.storage-summary{padding:12px}.storage-summary strong{font-size:17px}.storage-toolbar{display:grid;grid-template-columns:repeat(2,minmax(0,1fr))}.storage-toolbar>*{min-width:0;width:100%}.storage-toolbar .input{grid-column:1/-1}.storage-toolbar .select{grid-column:1/-1}.storage-toolbar #storage-delete-selected{grid-column:1/-1}.storage-danger-actions .btn{width:100%}.storage-modal-panel .card-body{padding:12px}}
 @media(prefers-reduced-motion:reduce){*,*:before,*:after{animation-duration:.01ms!important;animation-iteration-count:1!important;transition-duration:.01ms!important;scroll-behavior:auto!important}}
+
+/* Discovery jobs view */
+.disc-actions{display:flex;gap:10px;align-items:center;flex-wrap:wrap}
+.disc-auto{display:flex;gap:7px;align-items:center;color:var(--muted);font-size:12px;cursor:pointer}
+.disc-worker{margin:14px 0;padding:10px 14px;border:1px solid #ffffff12;border-radius:12px;background:#ffffff06;color:var(--muted);font-size:12px}
+.disc-worker[data-state=ok]{border-color:#76e2bd40}.disc-worker[data-state=bad]{border-color:#ff819b66;color:var(--red)}
+.stat[data-tone=warn] .stat-value{color:var(--amber)}.stat[data-tone=bad] .stat-value{color:var(--red)}
+.disc-scroll{overflow-x:auto}
+.disc-table{width:100%;border-collapse:collapse;font-size:12px;min-width:640px}
+.disc-table th{text-align:left;color:var(--faint);font-weight:600;padding:8px 10px;border-bottom:1px solid #ffffff14;white-space:nowrap}
+.disc-table td{padding:9px 10px;border-bottom:1px solid #ffffff0b;vertical-align:top;color:var(--text)}
+.disc-mono{font-family:ui-monospace,SFMono-Regular,Menlo,monospace;color:var(--muted)}
+.disc-bad{color:var(--red)}
+.disc-notes{color:var(--muted);max-width:340px}
+.disc-filters{display:flex;gap:8px;flex-wrap:wrap}
+.disc-chip,.disc-src{display:inline-block;border:1px solid #ffffff1c;border-radius:999px;padding:2px 9px;font-size:11px;margin:0 4px 4px 0;white-space:nowrap}
+.disc-chip[data-status=succeeded],.disc-src[data-status=ok]{border-color:#76e2bd66;color:var(--green)}
+.disc-chip[data-status=partial],.disc-chip[data-status=waiting],.disc-src[data-status=waiting],.disc-src[data-status=unavailable]{border-color:#ffd18a66;color:var(--amber)}
+.disc-chip[data-status=failed],.disc-src[data-status=failed]{border-color:#ff819b66;color:var(--red)}
+.disc-chip[data-status=running]{border-color:#a58aff77;color:var(--violet)}
+@media(max-width:760px){.disc-filters{width:100%}.disc-filters .input,.disc-filters .select{flex:1;min-width:140px}}
