@@ -5,7 +5,7 @@ import { readFile } from 'node:fs/promises';
 test('monitoring view shows request count and chart on first load', async () => {
   const html = await readFile(new URL('../admin/index.html', import.meta.url), 'utf8');
   const start = html.indexOf('async function loadOverview(){');
-  const end = html.indexOf('\nasync function loadUsers()', start);
+  const end = html.indexOf('\nfunction renderUsersTable()', start) !== -1 ? html.indexOf('\nfunction renderUsersTable()', start) : html.indexOf('\nasync function loadUsers()', start);
   assert.notEqual(start, -1, 'admin overview loader exists');
   assert.notEqual(end, -1, 'admin users loader follows overview loader');
 
@@ -31,7 +31,7 @@ test('monitoring view shows request count and chart on first load', async () => 
   };
   const source = html.slice(start, end);
   const loadOverview = new Function(
-    '$', 'api', 'makeHealthRow', 'stateText', 'renderEvents', 'drawRequests', 'fmt', 'showError', 'clearError', 'setServiceStatus', 'currentView', 'requestData', 'document',
+    '$', 'api', 'makeHealthRow', 'stateText', 'renderEvents', 'drawRequests', 'fmt', 'showError', 'clearError', 'setServiceStatus', 'currentView', 'requestData', 'document', 'markRefreshed', 'renderDiagnostics', 'storageBytes',
     `return (${source});`
   )(
     $,
@@ -46,7 +46,10 @@ test('monitoring view shows request count and chart on first load', async () => 
     health => { $('.health-pill').dataset.state = health.storage === 'reachable' && health.aiProvider.credentialsConfigured ? 'online' : 'degraded'; },
     'monitoring',
     {},
-    { createElement: () => ({}) }
+    { createElement: () => ({}) },
+    () => {},
+    () => {},
+    v => String(v)
   );
 
   await loadOverview();
@@ -60,7 +63,7 @@ test('monitoring view shows request count and chart on first load', async () => 
 test('overview metrics remain available when optional health and activity endpoints fail', async () => {
   const html = await readFile(new URL('../admin/index.html', import.meta.url), 'utf8');
   const start = html.indexOf('async function loadOverview(){');
-  const end = html.indexOf('\nasync function loadUsers()', start);
+  const end = html.indexOf('\nfunction renderUsersTable()', start) !== -1 ? html.indexOf('\nfunction renderUsersTable()', start) : html.indexOf('\nasync function loadUsers()', start);
   const elements = new Map();
   const $ = selector => {
     if (!elements.has(selector)) elements.set(selector, { textContent: '', dataset: {}, replaceChildren() {}, append() {} });
@@ -69,7 +72,7 @@ test('overview metrics remain available when optional health and activity endpoi
   const errors = [];
   const charts = [];
   const loadOverview = new Function(
-    '$', 'api', 'makeHealthRow', 'stateText', 'renderEvents', 'drawRequests', 'fmt', 'showError', 'clearError', 'setServiceStatus', 'currentView', 'requestData', 'document',
+    '$', 'api', 'makeHealthRow', 'stateText', 'renderEvents', 'drawRequests', 'fmt', 'showError', 'clearError', 'setServiceStatus', 'currentView', 'requestData', 'document', 'markRefreshed', 'renderDiagnostics', 'storageBytes',
     `return (${html.slice(start, end)});`
   )(
     $,
@@ -90,7 +93,10 @@ test('overview metrics remain available when optional health and activity endpoi
     () => {},
     'overview',
     {},
-    { createElement: () => ({}) }
+    { createElement: () => ({}) },
+    () => {},
+    () => {},
+    v => String(v)
   );
 
   await loadOverview();
